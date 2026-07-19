@@ -1,0 +1,11 @@
+const fs = require('fs');
+const path = 'components/landingPage/PlatformLanding.tsx';
+let content = fs.readFileSync(path, 'utf8');
+const pattern = /<section id="pricing"[\s\S]*?<\/section>/;
+const replacement = `<section id="pricing" className="bg-[#0b1632] px-6 py-24 md:py-32"><div className="mx-auto max-w-3xl text-center"><p className="mb-4 text-xs font-bold uppercase tracking-[.18em] text-cyan-300">Simple pricing</p><h2 className="text-3xl font-semibold tracking-[-.045em] text-white md:text-5xl">Start protecting your web presence today.</h2><p className="mt-5 text-lg text-slate-300">Choose the level of visibility that fits your team. Upgrade as your security practice grows.</p></div><div className="mx-auto mt-14 grid max-w-6xl gap-5 lg:grid-cols-3">{pricingPlans.map((plan) => { const isHighlighted = Boolean(plan.highlighted); return (<motion.div key={plan.name} whileHover={{ y: -6 }} className={\`relative flex min-h-[435px] flex-col rounded-3xl border p-7 ${isHighlighted ? "border-blue-400 bg-gradient-to-b from-blue-600 to-[#183b92] text-white shadow-2xl shadow-blue-900/50" : "border-white/10 bg-white/[.055] text-white"}\`}>{isHighlighted && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-cyan-300 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-950">Most popular</span>}<p className="text-lg font-semibold">{plan.name}</p><p className={\`mt-2 text-sm ${isHighlighted ? "text-blue-100" : "text-slate-300"}\`}>{plan.description}</p><p className="mt-8 text-4xl font-semibold tracking-tight">{plan.price}</p><ul className="mt-8 space-y-4">{plan.features.map((item) => <li key={item} className="flex gap-3 text-sm text-slate-100"><Check className="mt-0.5 size-4 shrink-0 text-emerald-300" />{item}</li>)}</ul><a href="#contact" className={\`mt-auto rounded-xl px-4 py-3 text-center text-sm font-semibold transition ${isHighlighted ? "bg-white text-blue-700 hover:bg-blue-50" : "bg-white/10 text-white hover:bg-white/15"}\`}>{plan.cta}</a></motion.div>); })}</div></section>`;
+if (!pattern.test(content)) {
+  throw new Error('Pricing section not found');
+}
+content = content.replace(pattern, replacement);
+fs.writeFileSync(path, content, 'utf8');
+console.log('Updated pricing section');
