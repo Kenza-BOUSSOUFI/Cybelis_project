@@ -1,0 +1,330 @@
+// =======================================================
+// GENERATOR & DATASOURCE
+// =======================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =======================================================
+// ENUMS
+// =======================================================
+
+enum PlanType {
+  FREE
+  PRO
+  BUSINESS
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum ScanType {
+  FULL
+  CUSTOM
+}
+
+enum ScanStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ToolCategory {
+  WEBSITE_SECURITY
+  EMAIL_SECURITY
+  DNS_DOMAIN_SECURITY
+}
+
+enum ResultStatus {
+  PASS
+  WARNING
+  FAIL
+}
+
+// =======================================================
+// USER
+// =======================================================
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// UUID provenant de auth.users (Supabase Auth)
+  authUserId String @unique @db.Uuid
+
+  fullName String
+
+  email String @unique
+
+  companyName String
+
+  phone String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  // Relations
+
+  subscription Subscription?
+
+  websites Website[]
+
+  @@index([email])
+}
+
+// =======================================================
+// Subscription
+// =======================================================
+
+model Subscription {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan PlanType
+
+  status SubscriptionStatus
+
+  startDate DateTime
+
+  endDate DateTime
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+// =======================================================
+// Website
+// =======================================================
+
+model Website {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  domain String
+
+  url String
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  scans Scan[]
+
+  @@index([userId])
+  @@index([domain])
+}
+
+// =======================================================
+// SCAN
+// =======================================================
+
+model Scan {
+  id String @id @default(uuid()) @db.Uuid
+
+  websiteId String @db.Uuid
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  type ScanType
+
+  status ScanStatus
+
+  startedAt DateTime @default(now())
+
+  finishedAt DateTime?
+
+  selectedTools Int
+
+  completedTools Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  securityScore SecurityScore?
+
+  scanTools ScanTool[]
+
+  results ScanResult[]
+
+  @@index([websiteId])
+  @@index([status])
+}
+
+// =======================================================
+// SECURITY SCORE
+// =======================================================
+
+model SecurityScore {
+  id String @id @default(uuid()) @db.Uuid
+
+  scanId String @unique @db.Uuid
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  score Int
+
+  grade String
+
+  riskLevel SeverityLevel
+
+  passedChecks Int
+
+  failedChecks Int
+
+  warningChecks Int
+
+  createdAt DateTime @default(now())
+}
+
+// =======================================================
+// SECURITY TOOL
+// =======================================================
+
+model SecurityTool {
+  id String @id @default(uuid()) @db.Uuid
+
+  name String
+
+  slug String @unique
+
+  description String
+
+  category ToolCategory
+
+  displayOrder Int
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  scanTools ScanTool[]
+
+  results ScanResult[]
+}
+
+// =======================================================
+// SCAN TOOL
+// =======================================================
+
+model ScanTool {
+  id String @id @default(uuid()) @db.Uuid
+
+  scanId String @db.Uuid
+
+  toolId String @db.Uuid
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  tool SecurityTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@unique([scanId, toolId])
+  @@index([scanId])
+  @@index([toolId])
+}
+
+// =======================================================
+// SCAN RESULT
+// =======================================================
+
+model ScanResult {
+  id String @id @default(uuid()) @db.Uuid
+
+  scanId String @db.Uuid
+
+  toolId String @db.Uuid
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  tool SecurityTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  status ResultStatus
+
+  score Int
+
+  severity SeverityLevel
+
+  executionTime Int
+
+  result Json
+
+  createdAt DateTime @default(now())
+
+  recommendations Recommendation[]
+
+  @@index([scanId])
+  @@index([toolId])
+}
+
+// =======================================================
+// RECOMMENDATION
+// =======================================================
+
+model Recommendation {
+  id String @id @default(uuid()) @db.Uuid
+
+  scanResultId String @db.Uuid
+
+  scanResult ScanResult @relation(fields: [scanResultId], references: [id], onDelete: Cascade)
+
+  title String
+
+  description String
+
+  priority Priority
+
+  createdAt DateTime @default(now())
+
+  @@index([scanResultId])
+}
+
+// =======================================================
+// CONTACT MESSAGE
+// =======================================================
+
+model ContactMessage {
+  id String @id @default(uuid()) @db.Uuid
+
+  fullName String
+
+  email String
+
+  subject String
+
+  message String
+
+  createdAt DateTime @default(now())
+}
