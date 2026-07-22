@@ -1,4 +1,4 @@
-import { HttpResponseData } from '../collectors/http';
+import { HttpResponseData } from '../../collectors/http';
 
 export interface CorsIssue {
   severity: 'high' | 'medium' | 'low';

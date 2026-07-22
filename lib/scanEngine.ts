@@ -1,15 +1,26 @@
 import { HttpCollector } from './collectors/http';
 import { TlsCollector } from './collectors/tls';
+import { DnsCollector } from './collectors/dns';
+import { WhoisCollector } from './collectors/whois';
 
-import { SslChecker } from './tools/sslChecker';
-import { TlsAnalyzer } from './tools/tlsAnalyzer';
-import { HeadersChecker } from './tools/headersChecker';
-import { CookieAnalyzer } from './tools/cookieAnalyzer';
-import { HttpMethodsAnalyzer } from './tools/httpMethodsAnalyzer';
-import { CorsAnalyzer } from './tools/corsAnalyzer';
-import { CspValidator } from './tools/cspValidator';
-import { RobotsAnalyzer } from './tools/robotsAnalyzer';
-import { SitemapChecker } from './tools/sitemapChecker';
+import { SslChecker } from './tools/website-security/sslChecker';
+import { TlsAnalyzer } from './tools/website-security/tlsAnalyzer';
+import { HeadersChecker } from './tools/website-security/securityHeadersChecker';
+import { CookieAnalyzer } from './tools/website-security/cookieAnalyzer';
+import { HttpMethodsAnalyzer } from './tools/website-security/httpMethodsAnalyzer';
+import { CorsAnalyzer } from './tools/website-security/corsAnalyzer';
+import { CspValidator } from './tools/website-security/cspValidator';
+import { RedirectAnalyzer } from './tools/website-security/redirectAnalyzer';
+import { RobotsAnalyzer } from './tools/website-security/robotsAnalyzer';
+import { SitemapChecker } from './tools/website-security/sitemapChecker';
+
+import { SpfChecker } from './tools/email-security/spfChecker';
+import { DkimChecker } from './tools/email-security/dkimChecker';
+import { DmarcChecker } from './tools/email-security/dmarcChecker';
+
+import { DnsLookup } from './tools/dns-domain-security/dnsLookup';
+import { WhoisLookup } from './tools/dns-domain-security/whoisLookup';
+import { DomainAgeChecker } from './tools/dns-domain-security/domainAgeChecker';
 
 export interface ScanReport {
   targetUrl: string;
@@ -24,8 +35,15 @@ export interface ScanReport {
     methods: ReturnType<typeof HttpMethodsAnalyzer.analyze>;
     cors: ReturnType<typeof CorsAnalyzer.analyze>;
     csp: ReturnType<typeof CspValidator.analyze>;
+    redirect: ReturnType<typeof RedirectAnalyzer.analyze>;
     robots: ReturnType<typeof RobotsAnalyzer.analyze>;
     sitemap: ReturnType<typeof SitemapChecker.analyze>;
+    dns: ReturnType<typeof DnsLookup.analyze>;
+    spf: ReturnType<typeof SpfChecker.analyze>;
+    dkim: ReturnType<typeof DkimChecker.analyze>;
+    dmarc: ReturnType<typeof DmarcChecker.analyze>;
+    whois: ReturnType<typeof WhoisLookup.analyze>;
+    domainAge: ReturnType<typeof DomainAgeChecker.analyze>;
   };
 }
 
@@ -98,12 +116,16 @@ export class ScanEngine {
       httpData,
       optionsData,
       tlsData,
+      dnsData,
+      whoisData,
       robotsData,
       sitemapData
     ] = await Promise.all([
       HttpCollector.collectGet(baseUrl),
       HttpCollector.collectOptions(baseUrl),
       TlsCollector.collect(domain),
+      DnsCollector.collect(domain),
+      WhoisCollector.collect(domain),
       HttpCollector.collectGet(`${origin}/robots.txt`, true),
       HttpCollector.collectGet(`${origin}/sitemap.xml`, true)
     ]);
@@ -116,8 +138,17 @@ export class ScanEngine {
     const methodsResult = HttpMethodsAnalyzer.analyze(optionsData);
     const corsResult = CorsAnalyzer.analyze(optionsData);
     const cspResult = CspValidator.analyze(httpData);
+    const redirectResult = RedirectAnalyzer.analyze(httpData);
     const robotsResult = RobotsAnalyzer.analyze(robotsData);
     const sitemapResult = SitemapChecker.analyze(sitemapData);
+
+    const dnsResult = DnsLookup.analyze(dnsData);
+    const spfResult = SpfChecker.analyze(dnsData);
+    const dkimResult = DkimChecker.analyze(dnsData);
+    const dmarcResult = DmarcChecker.analyze(dnsData);
+
+    const whoisResult = WhoisLookup.analyze(whoisData);
+    const domainAgeResult = DomainAgeChecker.analyze(whoisData);
 
     // 4. Agrégation des scores
     const scores = [
@@ -128,8 +159,15 @@ export class ScanEngine {
       methodsResult.scoreNum,
       corsResult.scoreNum,
       cspResult.scoreNum,
+      redirectResult.scoreNum,
       robotsResult.scoreNum,
-      sitemapResult.scoreNum
+      sitemapResult.scoreNum,
+      dnsResult.scoreNum,
+      spfResult.scoreNum,
+      dkimResult.scoreNum,
+      dmarcResult.scoreNum,
+      whoisResult.scoreNum,
+      domainAgeResult.scoreNum
     ];
 
     const globalScore = this.calculateGlobalScore(scores);
@@ -148,8 +186,15 @@ export class ScanEngine {
         methods: methodsResult,
         cors: corsResult,
         csp: cspResult,
+        redirect: redirectResult,
         robots: robotsResult,
-        sitemap: sitemapResult
+        sitemap: sitemapResult,
+        dns: dnsResult,
+        spf: spfResult,
+        dkim: dkimResult,
+        dmarc: dmarcResult,
+        whois: whoisResult,
+        domainAge: domainAgeResult
       }
     };
   }

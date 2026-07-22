@@ -1,4 +1,4 @@
-import { HttpCollectionResult, HttpResponseData } from '../collectors/http';
+import { HttpCollectionResult, HttpResponseData } from '../../collectors/http';
 
 export interface CookieIssue {
   severity: 'high' | 'medium' | 'low';

@@ -1,4 +1,4 @@
-import { TlsCollectionResult } from '../collectors/tls';
+import { TlsCollectionResult } from '../../collectors/tls';
 
 export interface TlsIssue {
   severity: 'high' | 'medium' | 'low';

@@ -1,4 +1,4 @@
-import { HttpCollectionResult } from '../collectors/http';
+import { HttpCollectionResult } from '../../collectors/http';
 
 export interface CspIssue {
   severity: 'high' | 'medium' | 'low';

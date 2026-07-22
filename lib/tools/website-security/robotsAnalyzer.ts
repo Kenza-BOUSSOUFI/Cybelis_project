@@ -1,4 +1,4 @@
-import { HttpCollectionResult } from '../collectors/http';
+import { HttpCollectionResult } from '../../collectors/http';
 
 export interface RobotsIssue {
   severity: 'high' | 'medium' | 'low';

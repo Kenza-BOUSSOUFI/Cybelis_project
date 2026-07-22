@@ -1,4 +1,5 @@
-import { HttpCollectionResult } from '../collectors/http';
+import { HttpCollectionResult } from '../../collectors/http';
+
 
 export interface HeaderIssue {
   severity: 'high' | 'medium' | 'low';
@@ -167,3 +168,6 @@ export class HeadersChecker {
     };
   }
 }
+
+
+export { HeadersChecker as SecurityHeadersChecker };

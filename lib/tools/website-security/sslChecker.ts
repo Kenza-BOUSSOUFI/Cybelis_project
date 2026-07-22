@@ -1,4 +1,4 @@
-import { TlsCollectionResult, TlsCertificateData } from '../collectors/tls';
+import { TlsCollectionResult, TlsCertificateData } from '../../collectors/tls';
 
 export interface SslIssue {
   severity: 'high' | 'medium' | 'low';
@@ -55,7 +55,7 @@ export class SslChecker {
     // 1. Vérification dans les Subject Alternative Names (SANs) - Standard moderne
     if (cert.subjectaltname) {
       // Format typique: "DNS:example.com, DNS:*.example.com"
-      const sans = cert.subjectaltname.split(',').map(s => s.trim());
+      const sans = cert.subjectaltname.split(',').map((s: string) => s.trim());
       for (const san of sans) {
         if (san.startsWith('DNS:')) {
           const domain = san.substring(4);
