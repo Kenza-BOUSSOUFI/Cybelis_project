@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, User, Building2, ArrowRight } from "lucide-react";
+import { Lock, Mail, User, Building2, Phone, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   AuthCardReflection,
@@ -14,6 +14,7 @@ import {
   authFadeUp,
   authInputCx,
 } from "@/components/auth/AuthPageShell";
+import { createClient } from "@/lib/supabase/client";
 
 interface FieldProps {
   label: string;
@@ -41,19 +42,47 @@ export function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
   const [agree, setAgree] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agree) return;
+
     setIsLoading(true);
-    setTimeout(() => {
+    setError(null);
+    setSuccessMessage(null);
+
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      phone: phone || undefined,
+      options: {
+        data: {
+          full_name: name,
+          company: company,
+          phone: phone || undefined,
+        },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
       setIsLoading(false);
-      router.push("/dashboard");
-    }, 1500);
+      return;
+    }
+
+    setSuccessMessage("Account created successfully! Redirecting to login...");
+    setIsLoading(false);
+    setTimeout(() => {
+      router.push("/login");
+    }, 2500);
   };
 
   return (
@@ -62,6 +91,28 @@ export function RegisterPage() {
 
       <motion.div variants={authFadeUp} className={authCardCx}>
         <AuthCardReflection />
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 text-xs text-emerald-400"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>{successMessage}</span>
+          </motion.div>
+        )}
 
         <form onSubmit={handleRegister} className="relative space-y-4">
           <Field label="Full name" icon={<User className="h-4 w-4" />}>
@@ -82,6 +133,16 @@ export function RegisterPage() {
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="Company"
+              className={authInputCx}
+            />
+          </Field>
+
+          <Field label="Phone number" icon={<Phone className="h-4 w-4" />}>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+212 600-000000"
               className={authInputCx}
             />
           </Field>

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   Shield, 
   LayoutDashboard, 
@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Lock
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export function DashboardLayout({
   children,
@@ -28,11 +29,49 @@ export function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  // Nav items list
+  const [userName, setUserName] = useState<string>("Utilisateur");
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [userInitials, setUserInitials] = useState<string>("U");
+  const [userCompany, setUserCompany] = useState<string>("Cybelis");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const fullName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilisateur";
+        const email = user.email || "";
+        const company = user.user_metadata?.company || "Cybelis";
+        setUserName(fullName);
+        setUserEmail(email);
+        setUserCompany(company);
+
+        const initials = fullName
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2) || "U";
+        setUserInitials(initials);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    setShowUserDropdown(false);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
   const navItems = [
     { name: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
     { name: "Lancer un Scan", href: "/dashboard/scan", icon: Activity },
@@ -44,7 +83,6 @@ export function DashboardLayout({
     { name: "Centre d'Aide", href: "/dashboard/help", icon: HelpCircle },
   ];
 
-  // Mock Notifications
   const [notifications, setNotifications] = useState([
     { id: 1, title: "SSL critique", text: "Le certificat SSL de client-site.ma expire dans 12 jours.", time: "Il y a 2h", read: false },
     { id: 2, title: "Nouveau scan complété", text: "L'analyse globale de mon-startup.ma est terminée. Score: 85/100", time: "Il y a 1 jour", read: true },
@@ -68,8 +106,8 @@ export function DashboardLayout({
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
               <Shield className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <span className="text-base font-bold text-white tracking-tight">Cybelis</span>
+            <div className="overflow-hidden">
+              <span className="text-base font-bold text-white tracking-tight truncate block max-w-[140px]">{userCompany}</span>
               <span className="text-[9px] block font-mono text-indigo-400">DASHBOARD</span>
             </div>
           </Link>
@@ -104,11 +142,11 @@ export function DashboardLayout({
         <div className="p-4 border-t border-neutral-900 bg-neutral-950/80">
           <div className="flex items-center gap-3 p-2 rounded-xl bg-neutral-900/50 border border-neutral-800">
             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-bold text-xs text-indigo-400">
-              HBS
+              {userInitials}
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-bold text-white truncate">Amina & Kenza</div>
-              <div className="text-[9px] text-neutral-500 font-mono">Stage MVP v2</div>
+              <div className="text-xs font-bold text-white truncate">{userName}</div>
+              <div className="text-[9px] text-neutral-500 font-mono truncate">{userEmail || "Membre Cybelis"}</div>
             </div>
           </div>
         </div>
@@ -186,10 +224,10 @@ export function DashboardLayout({
                 className="flex items-center gap-2 p-1.5 pr-3.5 rounded-xl bg-neutral-900 border border-neutral-800 text-left hover:border-neutral-700 transition-colors"
               >
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                  AM
+                  {userInitials}
                 </div>
                 <div className="hidden md:block">
-                  <div className="text-xs font-bold text-white truncate max-w-[100px]">Amina Marzak</div>
+                  <div className="text-xs font-bold text-white truncate max-w-[120px]">{userName}</div>
                 </div>
                 <ChevronDown className="w-3 h-3 text-neutral-500" />
               </button>
@@ -197,8 +235,8 @@ export function DashboardLayout({
               {showUserDropdown && (
                 <div className="absolute right-0 mt-3 w-52 p-3 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl z-50 space-y-1">
                   <div className="px-2 py-1.5 border-b border-neutral-800 mb-1.5">
-                    <span className="block text-xs font-bold text-white">Amina Marzak</span>
-                    <span className="block text-[9px] text-neutral-500 font-mono truncate">amina.marzak@cybelis.ma</span>
+                    <span className="block text-xs font-bold text-white truncate">{userName}</span>
+                    <span className="block text-[9px] text-neutral-500 font-mono truncate">{userEmail}</span>
                   </div>
                   <Link 
                     href="/dashboard/settings" 
@@ -216,14 +254,13 @@ export function DashboardLayout({
                     <CreditCard className="w-4 h-4" />
                     <span>Abonnement</span>
                   </Link>
-                  <Link 
-                    href="/login" 
-                    onClick={() => setShowUserDropdown(false)}
-                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors border-t border-neutral-800 mt-1.5"
+                  <button 
+                    onClick={handleSignOut}
+                    className="w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors border-t border-neutral-800 mt-1.5"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Déconnexion</span>
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
@@ -282,14 +319,19 @@ export function DashboardLayout({
               </nav>
             </div>
 
-            <div className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center gap-2.5 text-xs text-neutral-400">
-              <div className="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-xs">
-                AM
+            <div className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0">
+                  {userInitials}
+                </div>
+                <div className="overflow-hidden">
+                  <div className="font-bold text-white truncate">{userName}</div>
+                  <div className="text-[10px] text-neutral-500 font-mono truncate">{userEmail}</div>
+                </div>
               </div>
-              <div>
-                <div className="font-bold text-white">Amina Marzak</div>
-                <div className="text-[10px] text-neutral-500 font-mono">Développeur</div>
-              </div>
+              <button onClick={handleSignOut} className="p-1 text-red-400 hover:bg-red-500/10 rounded">
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
 
           </div>

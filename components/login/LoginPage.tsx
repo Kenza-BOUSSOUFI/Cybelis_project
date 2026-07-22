@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   AuthCardReflection,
@@ -14,20 +14,34 @@ import {
   authFadeUp,
   authInputCx,
 } from "@/components/auth/AuthPageShell";
+import { createClient } from "@/lib/supabase/client";
 
 export function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("demo@cybelis.ma");
-  const [password, setPassword] = useState("cybelis2026");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    setError(null);
+
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError(authError.message);
       setIsLoading(false);
-      router.push("/dashboard");
-    }, 1200);
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -37,6 +51,16 @@ export function LoginPage() {
       <motion.div variants={authFadeUp} className={authCardCx}>
         <AuthCardReflection />
 
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
 
         <form onSubmit={handleLogin} className="relative space-y-4">
           <motion.div variants={authFadeUp} className="space-y-1.5">
