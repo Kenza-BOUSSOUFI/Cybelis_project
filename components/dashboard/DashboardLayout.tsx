@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Activity,
@@ -32,6 +32,14 @@ export function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const supabase = createClient();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   // Nav items list
   const navItems = [
@@ -90,8 +98,8 @@ export function DashboardLayout({
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${isActive
-                    ? "bg-blue-50 text-blue-700 shadow-sm border-r-2 border-blue-600 ring-1 ring-sky-100"
-                    : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
+                  ? "bg-blue-50 text-blue-700 shadow-sm border-r-2 border-blue-600 ring-1 ring-sky-100"
+                  : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
                   }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? "text-blue-700" : "text-slate-400"}`} />
@@ -234,7 +242,7 @@ export function DashboardLayout({
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Déconnexion</span>
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -280,8 +288,8 @@ export function DashboardLayout({
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
-                          ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-sky-100"
-                          : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
+                        ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-sky-100"
+                        : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
                         }`}
                     >
                       <Icon className="w-4 h-4" />

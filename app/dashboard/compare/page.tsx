@@ -88,8 +88,8 @@ export default function ComparePage() {
   const canCompare = scanA && scanB;
 
   const getWinner = (key: string, a: ScanRecord, b: ScanRecord) => {
-    const va = (a as Record<string, number>)[key];
-    const vb = (b as Record<string, number>)[key];
+    const va = (a as unknown as Record<string, number>)[key];
+    const vb = (b as unknown as Record<string, number>)[key];
     const lowerIsBetter = ["critical", "high", "medium", "duration"].includes(key);
     if (va === vb) return "tie";
     if (lowerIsBetter) return va < vb ? "a" : "b";
@@ -148,8 +148,8 @@ export default function ComparePage() {
           {/* Metrics rows */}
           <div className="space-y-3">
             {COMPARE_METRICS.map(({ key, label, format }) => {
-              const va = (scanA as Record<string, number>)[key];
-              const vb = (scanB as Record<string, number>)[key];
+              const va = (scanA as unknown as Record<string, number>)[key];
+              const vb = (scanB as unknown as Record<string, number>)[key];
               const winner = getWinner(key, scanA, scanB);
               return (
                 <div key={key} className="grid grid-cols-3 gap-4 items-center py-2.5 border-b border-slate-50 last:border-0">
