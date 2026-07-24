@@ -2,24 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { 
-  Shield, 
-  LayoutDashboard, 
-  Activity, 
-  Sliders, 
-  TrendingUp, 
-  History, 
-  CreditCard, 
-  Settings, 
-  HelpCircle, 
-  Bell, 
-  Menu, 
-  X, 
-  User, 
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Activity,
+  Sliders,
+  TrendingUp,
+  History,
+  Settings,
+  HelpCircle,
+  Bell,
+  Menu,
+  X,
+  User,
   LogOut,
   ChevronDown,
-  Lock
+  FileText,
+  Search
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -34,55 +33,20 @@ export function DashboardLayout({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const [userName, setUserName] = useState<string>("Utilisateur");
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [userInitials, setUserInitials] = useState<string>("U");
-  const [userCompany, setUserCompany] = useState<string>("Cybelis");
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const fullName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Utilisateur";
-        const email = user.email || "";
-        const company = user.user_metadata?.company || "Cybelis";
-        setUserName(fullName);
-        setUserEmail(email);
-        setUserCompany(company);
-
-        const initials = fullName
-          .split(" ")
-          .map((n: string) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2) || "U";
-        setUserInitials(initials);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const handleSignOut = async () => {
-    setShowUserDropdown(false);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  };
-
+  // Nav items list
   const navItems = [
-    { name: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Lancer un Scan", href: "/dashboard/scan", icon: Activity },
-    { name: "Outils de Sécurité", href: "/dashboard/tools", icon: Sliders },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Nouveau Scan", href: "/dashboard/scan", icon: Activity },
     { name: "Historique", href: "/dashboard/history", icon: History },
-    { name: "Comparateur", href: "/dashboard/compare", icon: TrendingUp },
-    { name: "Abonnement & Offres", href: "/dashboard/billing", icon: CreditCard },
+    { name: "Rapports", href: "/dashboard/reports", icon: FileText },
+    { name: "Outils", href: "/dashboard/tools", icon: Sliders },
+    { name: "Comparaison", href: "/dashboard/compare", icon: TrendingUp },
     { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
-    { name: "Centre d'Aide", href: "/dashboard/help", icon: HelpCircle },
+    { name: "Profil", href: "/dashboard/profile", icon: User },
+    { name: "Aide", href: "/dashboard/help", icon: HelpCircle },
   ];
 
+  // Mock Notifications
   const [notifications, setNotifications] = useState([
     { id: 1, title: "SSL critique", text: "Le certificat SSL de client-site.ma expire dans 12 jours.", time: "Il y a 2h", read: false },
     { id: 2, title: "Nouveau scan complété", text: "L'analyse globale de mon-startup.ma est terminée. Score: 85/100", time: "Il y a 1 jour", read: true },
@@ -95,19 +59,19 @@ export function DashboardLayout({
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex font-sans selection:bg-indigo-500 selection:text-white">
-      
+    <div className="min-h-screen bg-[#f8fbff] text-slate-900 flex font-sans selection:bg-blue-500 selection:text-white">
+
       {/* 1. SIDEBAR (DESKTOP) */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-neutral-900 bg-neutral-950 shrink-0">
-        
+      <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200 bg-white shrink-0 shadow-sm z-10">
+
         {/* Sidebar Logo */}
-        <div className="h-20 px-6 border-b border-neutral-900 flex items-center justify-between">
+        <div className="h-20 px-6 border-b border-slate-200 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 overflow-hidden flex items-center shrink-0">
+              <img src="/logo.png" alt="Cybelis Logo" className="block h-8 w-auto origin-left scale-[2.4]" />
             </div>
-            <div className="overflow-hidden">
-              <span className="text-base font-bold text-white tracking-tight truncate block max-w-[140px]">{userCompany}</span>
+            <div>
+              <span className="text-base font-bold text-white tracking-tight">Cybelis</span>
               <span className="text-[9px] block font-mono text-indigo-400">DASHBOARD</span>
             </div>
           </Link>
@@ -115,23 +79,22 @@ export function DashboardLayout({
 
         {/* Sidebar Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1">
-          <div className="px-3 mb-2 text-[10px] font-mono text-neutral-500 uppercase tracking-widest">
+          <div className="px-3 mb-2 text-[10px] font-mono font-bold text-blue-600 uppercase tracking-widest">
             Audit SaaS
           </div>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <Link 
-                key={item.href} 
+              <Link
+                key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
-                  isActive 
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 border-r-2 border-white" 
-                    : "text-neutral-400 hover:text-white hover:bg-neutral-900/60"
-                }`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${isActive
+                    ? "bg-blue-50 text-blue-700 shadow-sm border-r-2 border-blue-600 ring-1 ring-sky-100"
+                    : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
+                  }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-neutral-400"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-blue-700" : "text-slate-400"}`} />
                 <span>{item.name}</span>
               </Link>
             );
@@ -142,11 +105,11 @@ export function DashboardLayout({
         <div className="p-4 border-t border-neutral-900 bg-neutral-950/80">
           <div className="flex items-center gap-3 p-2 rounded-xl bg-neutral-900/50 border border-neutral-800">
             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center font-bold text-xs text-indigo-400">
-              {userInitials}
+              HBS
             </div>
             <div className="overflow-hidden">
-              <div className="text-xs font-bold text-white truncate">{userName}</div>
-              <div className="text-[9px] text-neutral-500 font-mono truncate">{userEmail || "Membre Cybelis"}</div>
+              <div className="text-xs font-bold text-white truncate">Amina & Kenza</div>
+              <div className="text-[9px] text-neutral-500 font-mono">Stage MVP v2</div>
             </div>
           </div>
         </div>
@@ -155,58 +118,68 @@ export function DashboardLayout({
 
       {/* 2. MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        
+
         {/* Top Header */}
-        <header className="h-20 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
-          
+        <header className="h-20 border-b border-slate-200 bg-white/85 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
+
           {/* Mobile hamburger & title */}
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
+              className="lg:hidden p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 shadow-sm"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="hidden sm:block">
-              <h2 className="text-sm font-bold text-white">Espace Cybelis Scan Engine</h2>
-              <p className="text-[10px] text-neutral-500">Statut de la plateforme : <span className="text-emerald-400 font-semibold font-mono">ONLINE</span></p>
-            </div>
+            {/* Search bar */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) router.push(`/dashboard/history`); }}
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 w-56"
+            >
+              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher un domaine…"
+                className="bg-transparent border-0 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0 w-full"
+              />
+            </form>
           </div>
 
           {/* User & Notifications Controls */}
           <div className="flex items-center gap-4 relative">
-            
+
             {/* Notifications Popover */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => {
                   setShowNotifications(!showNotifications);
                   setShowUserDropdown(false);
                 }}
-                className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-colors relative"
+                className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors relative"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-indigo-600 border border-neutral-950 text-[9px] font-bold text-white flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-blue-600 border border-white text-[9px] font-bold text-white flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-3 w-80 p-4 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl z-50 space-y-3">
-                  <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                    <span className="text-xs font-bold text-white">Notifications</span>
-                    <button onClick={markAllRead} className="text-[10px] text-indigo-400 hover:underline">Marquer comme lu</button>
+                <div className="absolute right-0 mt-3 w-80 p-4 rounded-2xl bg-white border border-slate-200 shadow-[0_12px_40px_-20px_rgba(59,130,246,0.14)] z-50 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span className="text-xs font-bold text-slate-900">Notifications</span>
+                    <button onClick={markAllRead} className="text-[10px] text-blue-600 hover:underline font-medium">Marquer comme lu</button>
                   </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {notifications.map((n) => (
-                      <div key={n.id} className={`p-2.5 rounded-xl border text-xs ${n.read ? "bg-neutral-900 border-neutral-800/40 opacity-70" : "bg-indigo-500/5 border-indigo-500/10"}`}>
+                      <div key={n.id} className={`p-2.5 rounded-xl border text-xs ${n.read ? "bg-slate-50 border-slate-100 opacity-70" : "bg-blue-50/50 border-blue-100"}`}>
                         <div className="flex justify-between items-start">
-                          <span className="font-bold text-white">{n.title}</span>
-                          <span className="text-[9px] text-neutral-500 font-mono">{n.time}</span>
+                          <span className="font-bold text-slate-900">{n.title}</span>
+                          <span className="text-[9px] text-slate-500 font-mono">{n.time}</span>
                         </div>
-                        <p className="text-[10px] text-neutral-400 mt-1 leading-normal">{n.text}</p>
+                        <p className="text-[10px] text-slate-600 mt-1 leading-normal">{n.text}</p>
                       </div>
                     ))}
                   </div>
@@ -216,47 +189,48 @@ export function DashboardLayout({
 
             {/* Profile Menu Dropdown */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => {
                   setShowUserDropdown(!showUserDropdown);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 pr-3.5 rounded-xl bg-neutral-900 border border-neutral-800 text-left hover:border-neutral-700 transition-colors"
+                className="flex items-center gap-2 p-1.5 pr-3.5 rounded-xl bg-white border border-slate-200 text-left hover:border-slate-300 hover:bg-slate-50 transition-colors shadow-sm"
               >
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                  {userInitials}
+                  AM
                 </div>
                 <div className="hidden md:block">
-                  <div className="text-xs font-bold text-white truncate max-w-[120px]">{userName}</div>
+                  <div className="text-xs font-bold text-white truncate max-w-[100px]">Amina Marzak</div>
                 </div>
-                <ChevronDown className="w-3 h-3 text-neutral-500" />
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
               {showUserDropdown && (
                 <div className="absolute right-0 mt-3 w-52 p-3 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl z-50 space-y-1">
                   <div className="px-2 py-1.5 border-b border-neutral-800 mb-1.5">
-                    <span className="block text-xs font-bold text-white truncate">{userName}</span>
-                    <span className="block text-[9px] text-neutral-500 font-mono truncate">{userEmail}</span>
+                    <span className="block text-xs font-bold text-white">Amina Marzak</span>
+                    <span className="block text-[9px] text-neutral-500 font-mono truncate">amina.marzak@cybelis.ma</span>
                   </div>
-                  <Link 
-                    href="/dashboard/settings" 
+                  <Link
+                    href="/dashboard/settings"
                     onClick={() => setShowUserDropdown(false)}
-                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-blue-700 hover:bg-slate-50 transition-colors"
                   >
                     <Settings className="w-4 h-4" />
+                    <span>Paramètres</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-blue-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
                     <span>Mon Profil</span>
                   </Link>
-                  <Link 
-                    href="/dashboard/billing" 
+                  <Link
+                    href="/login"
                     onClick={() => setShowUserDropdown(false)}
-                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Abonnement</span>
-                  </Link>
-                  <button 
-                    onClick={handleSignOut}
-                    className="w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors border-t border-neutral-800 mt-1.5"
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors border-t border-neutral-800 mt-1.5"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Déconnexion</span>
@@ -277,20 +251,20 @@ export function DashboardLayout({
 
       {/* 3. MOBILE MENU DRAWER */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden bg-neutral-950/80 backdrop-blur-sm animate-fade-in">
-          
-          <div className="w-64 bg-neutral-950 border-r border-neutral-900 p-6 flex flex-col justify-between">
+        <div className="fixed inset-0 z-50 flex lg:hidden bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+
+          <div className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col justify-between shadow-xl">
             <div className="space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-neutral-900">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                 <Link href="/" className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-white" />
+                  <div className="w-7 h-7 overflow-hidden flex items-center shrink-0">
+                    <img src="/logo.png" alt="Cybelis Logo" className="block h-7 w-auto origin-left scale-[2.4]" />
                   </div>
-                  <span className="font-bold text-white text-base">Cybelis</span>
+                  <span className="text-lg font-bold tracking-tight text-slate-900">Cybelis</span>
                 </Link>
-                <button 
+                <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-400"
+                  className="p-1 rounded bg-white border border-slate-200 text-slate-500 shadow-sm"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -301,15 +275,14 @@ export function DashboardLayout({
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
                   return (
-                    <Link 
-                      key={item.href} 
+                    <Link
+                      key={item.href}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                        isActive 
-                          ? "bg-indigo-600 text-white shadow-lg" 
-                          : "text-neutral-400 hover:text-white hover:bg-neutral-900/60"
-                      }`}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
+                          ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-sky-100"
+                          : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                       <span>{item.name}</span>
@@ -319,15 +292,13 @@ export function DashboardLayout({
               </nav>
             </div>
 
-            <div className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0">
-                  {userInitials}
-                </div>
-                <div className="overflow-hidden">
-                  <div className="font-bold text-white truncate">{userName}</div>
-                  <div className="text-[10px] text-neutral-500 font-mono truncate">{userEmail}</div>
-                </div>
+            <div className="p-2 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center gap-2.5 text-xs text-neutral-400">
+              <div className="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-xs">
+                AM
+              </div>
+              <div>
+                <div className="font-bold text-white">Amina Marzak</div>
+                <div className="text-[10px] text-neutral-500 font-mono">Développeur</div>
               </div>
               <button onClick={handleSignOut} className="p-1 text-red-400 hover:bg-red-500/10 rounded">
                 <LogOut className="w-4 h-4" />

@@ -98,24 +98,15 @@ function LogoHexAccent({ className }: { className?: string }) {
 export function AuthLogoHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <motion.div variants={fadeUp} className="mb-8 text-center">
-      <div className="mb-5 flex justify-center">
-        <div className="relative">
-          <LogoHexAccent className="pointer-events-none absolute -left-5 top-1/2 h-14 w-12 -translate-y-1/2 text-cyan-400/20" />
-          <LogoHexAccent className="pointer-events-none absolute -right-5 top-1/2 h-14 w-12 -translate-y-1/2 text-cyan-400/20" />
-
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0f2d4f] via-[#0a2340] to-[#061528] px-7 py-4 shadow-[0_16px_44px_-14px_rgba(6,21,40,0.65)] ring-1 ring-cyan-300/20">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-transparent" />
-            <div className="pointer-events-none absolute -left-4 top-0 h-16 w-16 rounded-full bg-cyan-400/10 blur-2xl" />
-            <div className="pointer-events-none absolute bottom-0 right-0 h-12 w-12 rounded-full bg-sky-500/10 blur-xl" />
-            <LogoHexAccent className="pointer-events-none absolute left-3 top-1/2 h-10 w-9 -translate-y-1/2 text-cyan-300/10" />
-
-            <img
-              src="/logo.png"
-              alt="Cybelis"
-              className="relative z-10 mx-auto block h-9 w-auto origin-center scale-[2.15]"
-            />
-          </div>
+      <div className="mb-6 flex items-center justify-center gap-3">
+        <div className="w-10 h-10 overflow-hidden flex items-center shrink-0">
+          <img
+            src="/logo.png"
+            alt="Cybelis Logo"
+            className="block h-10 w-auto origin-left scale-[2.4]"
+          />
         </div>
+        <span className="text-2xl font-bold tracking-tight text-slate-900">Cybelis</span>
       </div>
       <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
       <p className="mt-1.5 text-sm text-slate-500">{subtitle}</p>
