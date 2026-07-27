@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -15,114 +15,153 @@ import {
   ChevronUp,
   RefreshCw,
   Mail,
-  Server
+  Server,
+  Loader2
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+interface Issue {
+  id: string;
+  category: "website" | "email" | "dns";
+  tool: string;
+  title: string;
+  severity: "critical" | "high" | "medium" | "low";
+  description: string;
+  impact: string;
+  fix: string;
+  resolved: boolean;
+}
+
+function getFixTextForTool(slug: string, title: string): string | null {
+  const tLower = title.toLowerCase();
+  if (slug === 'ssl-checker') {
+    return "Configurez le renouvellement automatique via votre hébergeur ou Let's Encrypt (Certbot), ou installez un certificat SSL valide auprès de votre autorité de certification.";
+  }
+  if (slug === 'tls-analyzer') {
+    return "Désactivez les protocoles obsolètes (TLS 1.0, TLS 1.1) dans les réglages système ou de votre serveur web (Nginx/Apache). Configurez le serveur pour n'autoriser que TLS 1.2 et TLS 1.3.";
+  }
+  if (slug === 'security-headers') {
+    if (tLower.includes('hsts') || tLower.includes('strict-transport')) {
+      return "Ajoutez l'en-tête suivant dans la configuration de votre serveur web (Nginx: 'add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;', Apache: 'Header always set Strict-Transport-Security \"max-age=31536000; includeSubDomains\"').";
+    }
+    if (tLower.includes('frame') || tLower.includes('clickjacking')) {
+      return "Ajoutez l'en-tête 'X-Frame-Options: DENY' ou 'X-Frame-Options: SAMEORIGIN' sur toutes les réponses HTTP.";
+    }
+    return "Ajoutez l'en-tête de sécurité manquant dans les configurations de réponse HTTP de votre serveur web.";
+  }
+  if (slug === 'cookie-analyzer') {
+    return "Ajoutez les attributs 'Secure' (force le HTTPS), 'HttpOnly' (interdit la lecture par JavaScript) et 'SameSite=Lax/Strict' sur tous les cookies de session ou d'authentification.";
+  }
+  if (slug === 'csp-validator') {
+    return "Mettez en place une politique d'en-tête Content-Security-Policy (CSP) stricte (ex: default-src 'self'). Testez-la d'abord via l'en-tête Content-Security-Policy-Report-Only.";
+  }
+  if (slug === 'dmarc-checker') {
+    return "Créez ou mettez à jour votre enregistrement DNS TXT sous le sous-domaine '_dmarc.votre-domaine.com' (valeur recommandée: 'v=DMARC1; p=reject; rua=mailto:dmarc-reports@votre-domaine.com').";
+  }
+  if (slug === 'spf-checker') {
+    return "Vérifiez la liste de vos serveurs d'envoi légitimes (Google Workspace, Mailgun...) et remplacez le suffixe permissif '~all' par le mode strict '-all' dans votre enregistrement DNS TXT SPF.";
+  }
+  return null;
+}
+
+function getImpactTextForTool(slug: string, title: string): string | null {
+  const tLower = title.toLowerCase();
+  if (slug === 'ssl-checker') {
+    return "Les navigateurs modernes bloquent immédiatement l'accès au site, causant une perte totale de trafic et de confiance.";
+  }
+  if (slug === 'tls-analyzer') {
+    return "Possibilité d'intercepter, d'écouter et de déchiffrer les données sensibles transmises par les utilisateurs sur le réseau local ou public.";
+  }
+  if (slug === 'security-headers') {
+    if (tLower.includes('hsts')) {
+      return "Les attaquants locaux peuvent forcer les requêtes de vos utilisateurs à basculer vers HTTP (SSL Stripping) pour voler leurs cookies.";
+    }
+    return "Vulnérabilité aux attaques par intégration de frame (Clickjacking), injection de MIME type ou vols d'identifiants.";
+  }
+  if (slug === 'cookie-analyzer') {
+    return "Les scripts malveillants (XSS) ou les connexions non chiffrées peuvent intercepter les identifiants de session et usurper le compte de la victime.";
+  }
+  if (slug === 'csp-validator') {
+    return "Vulnérabilité critique aux failles Cross-Site Scripting (XSS), permettant à des scripts distants non autorisés de s'exécuter à la place du site légitime.";
+  }
+  if (slug === 'dmarc-checker') {
+    return "N'importe qui peut forger des emails légitimes usurpant votre domaine, ruinant votre réputation d'expéditeur et piégeant vos clients par hameçonnage.";
+  }
+  return null;
+}
+
 export function ReportDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const rawDomain = (params?.domain as string) || "cybelis.ma";
-  const domain = decodeURIComponent(rawDomain);
+  const scanId = params?.scanId as string;
 
   const reportRef = useRef<HTMLDivElement>(null);
+  
+  const [scan, setScan] = useState<any>(null);
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState<"website" | "email" | "dns">("website");
   const [severityFilter, setSeverityFilter] = useState<"all" | "critical" | "high" | "medium" | "low">("all");
   const [isExporting, setIsExporting] = useState(false);
   const [expandedIssue, setExpandedIssue] = useState<string | null>(null);
 
-  // Mock list of issues detected
-  const [issues, setIssues] = useState([
-    {
-      id: "ssl_exp",
-      category: "website",
-      tool: "SSL Checker",
-      title: "Le certificat SSL expire dans 12 jours",
-      severity: "critical",
-      description: "Le certificat SSL de votre serveur web expire très bientôt (le 20 juillet 2026). S'il n'est pas renouvelé, les navigateurs bloqueront l'accès à votre site avec un message d'avertissement de sécurité décourageant vos visiteurs.",
-      impact: "Indisponibilité visuelle du site et rupture de confiance pour tous les utilisateurs.",
-      fix: "Configurez le renouvellement automatique via votre hébergeur ou Let's Encrypt (Certbot), ou achetez et réinstallez un certificat SSL mis à jour auprès de votre autorité de certification.",
-      resolved: false
-    },
-    {
-      id: "hsts_missing",
-      category: "website",
-      tool: "Security Headers",
-      title: "En-tête HSTS absent (Strict-Transport-Security)",
-      severity: "high",
-      description: "L'en-tête de sécurité HTTP Strict Transport Security (HSTS) n'est pas renvoyé par votre serveur web. Sans lui, votre site est vulnérable aux attaques par rétrogradation de protocole (SSL stripping) et au piratage de cookies.",
-      impact: "Un attaquant sur le même réseau Wifi public peut intercepter les requêtes HTTP de vos utilisateurs avant leur redirection vers HTTPS.",
-      fix: "Ajoutez l'en-tête suivant dans la configuration de votre serveur web (Nginx: 'add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;', Apache: 'Header always set Strict-Transport-Security \"max-age=31536000; includeSubDomains\"').",
-      resolved: false
-    },
-    {
-      id: "tls_obsolete",
-      category: "website",
-      tool: "TLS Analyzer",
-      title: "Protocoles obsolètes TLS 1.0 & TLS 1.1 activés",
-      severity: "high",
-      description: "Votre serveur accepte les connexions chiffrées en TLS 1.0 et TLS 1.1. Ces protocoles cryptographiques datent de plus de 20 ans et présentent de nombreuses failles connues (e.g. BEAST, POODLE). Ils sont dépréciés par l'IETF depuis 2021.",
-      impact: "Risque de décryptage des communications confidentielles par un attaquant en position d'écoute passive.",
-      fix: "Modifiez les paramètres SSL/TLS de votre serveur (Apache / Nginx) ou de votre CDN (Cloudflare) pour rejeter les protocoles inférieurs à TLS 1.2. Privilégiez TLS 1.3.",
-      resolved: false
-    },
-    {
-      id: "cookie_insecure",
-      category: "website",
-      tool: "Cookie Analyzer",
-      title: "Cookies de session sans flag 'Secure'",
-      severity: "medium",
-      description: "Certains cookies de session (Set-Cookie) retournés par le serveur web ne possèdent pas le flag 'Secure'. Ce flag indique au navigateur que le cookie doit uniquement être transmis via une connexion HTTPS chiffrée.",
-      impact: "Un cookie contenant des données de session sensibles peut fuiter en clair si l'utilisateur accède par mégarde à une URL en http://.",
-      fix: "Dans le code de votre application (ex: PHP session.cookie_secure, Node.js express-session secure: true), activez systématiquement le flag 'Secure' ainsi que 'HttpOnly' et 'SameSite=Lax'.",
-      resolved: false
-    },
-    {
-      id: "dmarc_missing",
-      category: "email",
-      tool: "SPF/DKIM/DMARC",
-      title: "Enregistrement DNS DMARC manquant",
-      severity: "high",
-      description: "Aucun enregistrement DNS TXT n'a été trouvé pour la clé DMARC (_dmarc.domain). DMARC (Domain-based Message Authentication) permet de spécifier aux serveurs récepteurs de messagerie comment traiter vos e-mails s'ils échouent aux tests SPF/DKIM.",
-      impact: "Risque très élevé d'usurpation de votre identité de domaine (email spoofing) pour envoyer des campagnes de phishing à votre nom.",
-      fix: "Créez un enregistrement TXT DNS sous l'hôte '_dmarc' avec une valeur initiale : 'v=DMARC1; p=none; rua=mailto:dmarc-reports@votre-domaine.com'. Augmentez plus tard la politique à 'p=quarantine' ou 'p=reject'.",
-      resolved: false
-    },
-    {
-      id: "csp_missing",
-      category: "website",
-      tool: "CSP Validator",
-      title: "Content Security Policy (CSP) non configurée",
-      severity: "medium",
-      description: "Votre serveur ne transmet aucun en-tête Content-Security-Policy. La CSP indique au navigateur quelles sources de scripts, d'images et de styles sont autorisées à s'exécuter, bloquant de fait les attaques XSS.",
-      impact: "Si votre site contient une faille d'injection de script, des codes malveillants tiers peuvent s'exécuter dans le navigateur de vos clients.",
-      fix: "Configurez l'en-tête 'Content-Security-Policy' en spécifiant des directives strictes. Exemple simple: \"default-src 'self'; script-src 'self' https://trustedscripts.com; style-src 'self' 'unsafe-inline';\".",
-      resolved: false
-    },
-    {
-      id: "spf_loose",
-      category: "email",
-      tool: "SPF/DKIM/DMARC",
-      title: "Enregistrement DNS SPF trop permis (~all)",
-      severity: "low",
-      description: "Le mécanisme de votre enregistrement DNS SPF se termine par '~all' (SoftFail) ou '+all' au lieu de '-all' (HardFail). Les serveurs de réception considèrent cela comme une tolérance envers les expéditeurs non autorisés.",
-      impact: "Les e-mails usurpant votre adresse ont plus de chances d'arriver dans la boîte de spam de vos clients au lieu d'être rejetés d'emblée.",
-      fix: "Modifiez l'enregistrement TXT SPF de votre DNS pour remplacer '~all' par '-all' une fois que vous avez identifié toutes les passerelles d'envoi légitimes.",
-      resolved: false
-    },
-    {
-      id: "caa_missing",
-      category: "dns",
-      tool: "DNS Lookup",
-      title: "Enregistrement DNS CAA absent",
-      severity: "low",
-      description: "L'enregistrement CAA (Certification Authority Authorization) n'est pas configuré. Cet enregistrement spécifie quelles autorités de certification (par exemple Let's Encrypt, Sectigo) sont autorisées à émettre des certificats SSL pour votre domaine.",
-      impact: "N'importe quelle autorité de certification peut techniquement émettre un certificat SSL pour votre site si elle est sollicitée par un tiers malveillant.",
-      fix: "Ajoutez un enregistrement DNS de type CAA avec la valeur '0 issue \"letsencrypt.org\"' pour limiter la génération de certificats à votre fournisseur habituel.",
-      resolved: false
+  useEffect(() => {
+    if (!scanId) return;
+
+    async function fetchScanDetails() {
+      try {
+        const response = await fetch(`/api/scans/${scanId}`);
+        const json = await response.json();
+        
+        if (json.success && json.data) {
+          setScan(json.data);
+          
+          // Map DB results to Page UI issues format
+          const mapped: Issue[] = [];
+          for (const result of json.data.results) {
+            for (const rec of result.recommendations) {
+              let category: "website" | "email" | "dns" = "website";
+              if (result.tool.category === "EMAIL_SECURITY") category = "email";
+              else if (result.tool.category === "DNS_DOMAIN_SECURITY") category = "dns";
+
+              let severity: "critical" | "high" | "medium" | "low" = "low";
+              const sev = result.severity?.toLowerCase();
+              if (sev === "critical") severity = "critical";
+              else if (sev === "high") severity = "high";
+              else if (sev === "medium") severity = "medium";
+
+              const fixText = getFixTextForTool(result.tool.slug, rec.title) || rec.description;
+              const impactText = getImpactTextForTool(result.tool.slug, rec.title) || "Risque d'exposition et de compromission des données ou de la disponibilité de la plateforme.";
+
+              mapped.push({
+                id: rec.id,
+                category,
+                tool: result.tool.name,
+                title: rec.title,
+                severity,
+                description: rec.description,
+                impact: impactText,
+                fix: fixText,
+                resolved: false
+              });
+            }
+          }
+          setIssues(mapped);
+        } else {
+          setError(json.error || "Impossible de charger les détails du scan.");
+        }
+      } catch (err) {
+        setError("Erreur lors de la récupération des détails du scan.");
+      } finally {
+        setLoading(false);
+      }
     }
-  ]);
+
+    fetchScanDetails();
+  }, [scanId]);
 
   // Handle marking an issue as resolved (purely client-side for UX interaction)
   const toggleResolve = (id: string) => {
@@ -133,7 +172,7 @@ export function ReportDetailPage() {
 
   // PDF generation method using html2canvas & jsPDF
   const exportPDF = async () => {
-    if (!reportRef.current) return;
+    if (!reportRef.current || !scan) return;
     setIsExporting(true);
     try {
       const element = reportRef.current;
@@ -160,13 +199,44 @@ export function ReportDetailPage() {
         heightLeft -= pageHeight;
       }
 
-      pdf.save(`Rapport_Cybelis_${domain}.pdf`);
+      pdf.save(`Rapport_Cybelis_${scan.website.domain}.pdf`);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
     } finally {
       setIsExporting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+        <span className="text-xs text-neutral-400 font-medium">Chargement du rapport détaillé...</span>
+      </div>
+    );
+  }
+
+  if (error || !scan) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
+        <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-sm font-bold text-neutral-200">Erreur de chargement</h3>
+          <p className="text-xs text-neutral-400 max-w-xs mx-auto">{error || "Rapport introuvable."}</p>
+        </div>
+        <Link
+          href="/dashboard"
+          className="px-4 py-2 rounded-xl bg-neutral-800 border border-neutral-700 text-xs font-semibold text-neutral-300 hover:bg-neutral-700 transition-colors"
+        >
+          Retour au tableau de bord
+        </Link>
+      </div>
+    );
+  }
+
+  const domain = scan.website.domain;
 
   // Filter issues based on active Tab and severity filter
   const activeIssues = issues.filter(issue => {
@@ -179,7 +249,7 @@ export function ReportDetailPage() {
     return true;
   });
 
-  // Calculate live score
+  // Calculate live score dynamically
   const unresolvedIssues = issues.filter(i => !i.resolved);
   const calculatedScore = Math.max(0, 100 - unresolvedIssues.reduce((acc, curr) => {
     let penalty = 0;
@@ -202,7 +272,9 @@ export function ReportDetailPage() {
 
   const getScoreGrade = (score: number) => {
     if (score >= 90) return { grade: "A", desc: "Excellent", color: "text-emerald-500 border-emerald-500/20" };
-    if (score >= 70) return { grade: "C", desc: "Moyen", color: "text-yellow-500 border-yellow-500/20" };
+    if (score >= 70) return { grade: "B", desc: "Bon", color: "text-teal-500 border-teal-500/20" };
+    if (score >= 50) return { grade: "C", desc: "Moyen", color: "text-yellow-500 border-yellow-500/20" };
+    if (score >= 30) return { grade: "D", desc: "Faible", color: "text-orange-500 border-orange-500/20" };
     return { grade: "F", desc: "Critique", color: "text-red-500 border-red-500/20" };
   };
 
@@ -265,12 +337,12 @@ export function ReportDetailPage() {
             <div className="grid grid-cols-2 gap-4 text-xs font-mono text-neutral-400">
               <div className="space-y-1">
                 <span className="block text-[10px] text-neutral-500 uppercase font-semibold">IP Résolue</span>
-                <span className="text-white">185.190.140.15</span>
+                <span className="text-white">Résolution IP Auto</span>
               </div>
               <div className="space-y-1">
                 <span className="block text-[10px] text-neutral-500 uppercase font-semibold">Date d'analyse</span>
                 <span className="text-white flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" /> {new Date().toLocaleDateString("fr-FR")}
+                  <Calendar className="w-3.5 h-3.5" /> {new Date(scan.createdAt).toLocaleDateString("fr-FR")}
                 </span>
               </div>
             </div>
@@ -286,7 +358,7 @@ export function ReportDetailPage() {
           <div className="lg:col-span-4 flex flex-wrap gap-3 justify-center items-center">
             <div className="text-center p-4 rounded-2xl bg-neutral-950 border border-neutral-900 w-24">
               <span className="block text-xl font-bold text-white font-mono">{issues.length}</span>
-              <span className="text-[9px] text-neutral-500 uppercase font-mono">Tests</span>
+              <span className="text-[9px] text-neutral-500 uppercase font-mono">Alertes</span>
             </div>
             <div className="text-center p-4 rounded-2xl bg-neutral-950 border border-neutral-900 w-24">
               <span className="block text-xl font-bold text-red-500 font-mono">
@@ -302,7 +374,7 @@ export function ReportDetailPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-3 flex flex-col items-center justify-center p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-center gap-2">
+          <div className="lg:col-span-3 flex flex-col items-center justify-center p-4 rounded-2xl bg-neutral-950 border border-neutral-850 text-center gap-2">
             <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Score de Sécurité</span>
             <div className="text-5xl font-extrabold text-indigo-400 font-mono">
               {calculatedScore}<span className="text-xs text-neutral-500">/100</span>

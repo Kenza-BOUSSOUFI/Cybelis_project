@@ -28,22 +28,22 @@ export interface ScanReport {
   globalScore: number;
   globalGrade: 'A' | 'B' | 'C' | 'D' | 'F';
   modules: {
-    ssl: ReturnType<typeof SslChecker.analyze>;
-    tls: ReturnType<typeof TlsAnalyzer.analyze>;
-    headers: ReturnType<typeof HeadersChecker.analyze>;
-    cookies: ReturnType<typeof CookieAnalyzer.analyze>;
-    methods: ReturnType<typeof HttpMethodsAnalyzer.analyze>;
-    cors: ReturnType<typeof CorsAnalyzer.analyze>;
-    csp: ReturnType<typeof CspValidator.analyze>;
-    redirect: ReturnType<typeof RedirectAnalyzer.analyze>;
-    robots: ReturnType<typeof RobotsAnalyzer.analyze>;
-    sitemap: ReturnType<typeof SitemapChecker.analyze>;
-    dns: ReturnType<typeof DnsLookup.analyze>;
-    spf: ReturnType<typeof SpfChecker.analyze>;
-    dkim: ReturnType<typeof DkimChecker.analyze>;
-    dmarc: ReturnType<typeof DmarcChecker.analyze>;
-    whois: ReturnType<typeof WhoisLookup.analyze>;
-    domainAge: ReturnType<typeof DomainAgeChecker.analyze>;
+    ssl?: ReturnType<typeof SslChecker.analyze>;
+    tls?: ReturnType<typeof TlsAnalyzer.analyze>;
+    headers?: ReturnType<typeof HeadersChecker.analyze>;
+    cookies?: ReturnType<typeof CookieAnalyzer.analyze>;
+    methods?: ReturnType<typeof HttpMethodsAnalyzer.analyze>;
+    cors?: ReturnType<typeof CorsAnalyzer.analyze>;
+    csp?: ReturnType<typeof CspValidator.analyze>;
+    redirect?: ReturnType<typeof RedirectAnalyzer.analyze>;
+    robots?: ReturnType<typeof RobotsAnalyzer.analyze>;
+    sitemap?: ReturnType<typeof SitemapChecker.analyze>;
+    dns?: ReturnType<typeof DnsLookup.analyze>;
+    spf?: ReturnType<typeof SpfChecker.analyze>;
+    dkim?: ReturnType<typeof DkimChecker.analyze>;
+    dmarc?: ReturnType<typeof DmarcChecker.analyze>;
+    whois?: ReturnType<typeof WhoisLookup.analyze>;
+    domainAge?: ReturnType<typeof DomainAgeChecker.analyze>;
   };
 }
 
@@ -92,9 +92,16 @@ export class ScanEngine {
   }
 
   /**
-   * Lance un scan de sécurité complet sur la cible
+   * Lance un scan de sécurité complet sur la cible (compatibilité descendante)
    */
   static async runFullScan(targetUrl: string): Promise<ScanReport> {
+    return this.run(targetUrl);
+  }
+
+  /**
+   * Lance un scan (complet ou ciblé par outil) sur la cible
+   */
+  static async run(targetUrl: string, selectedToolSlugs?: string[]): Promise<ScanReport> {
     // 1. Normalisation de l'URL
     let baseUrl = targetUrl.trim();
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
@@ -111,7 +118,19 @@ export class ScanEngine {
       throw new Error(`L'URL fournie ("${targetUrl}") est invalide.`);
     }
 
-    // 2. Phase de Collecte (Requêtes réseau exécutées en parallèle)
+    const runAll = !selectedToolSlugs || selectedToolSlugs.length === 0;
+    const slugs = selectedToolSlugs || [];
+
+    // Détermination des collecteurs requis
+    const needHttp = runAll || slugs.some(s => ['security-headers', 'cookie-analyzer', 'csp-validator', 'redirect-analyzer'].includes(s));
+    const needOptions = runAll || slugs.some(s => ['http-methods', 'cors-analyzer'].includes(s));
+    const needTls = runAll || slugs.some(s => ['ssl-checker', 'tls-analyzer'].includes(s));
+    const needDns = runAll || slugs.some(s => ['spf-checker', 'dkim-checker', 'dmarc-checker', 'dns-lookup'].includes(s));
+    const needWhois = runAll || slugs.some(s => ['whois-lookup', 'domain-age-checker'].includes(s));
+    const needRobots = runAll || slugs.includes('robots-analyzer');
+    const needSitemap = runAll || slugs.includes('sitemap-checker');
+
+    // 2. Phase de Collecte (Requêtes réseau exécutées en parallèle si nécessaires)
     const [
       httpData,
       optionsData,
@@ -121,81 +140,113 @@ export class ScanEngine {
       robotsData,
       sitemapData
     ] = await Promise.all([
-      HttpCollector.collectGet(baseUrl),
-      HttpCollector.collectOptions(baseUrl),
-      TlsCollector.collect(domain),
-      DnsCollector.collect(domain),
-      WhoisCollector.collect(domain),
-      HttpCollector.collectGet(`${origin}/robots.txt`, true),
-      HttpCollector.collectGet(`${origin}/sitemap.xml`, true)
+      needHttp ? HttpCollector.collectGet(baseUrl) : Promise.resolve(null),
+      needOptions ? HttpCollector.collectOptions(baseUrl) : Promise.resolve(null),
+      needTls ? TlsCollector.collect(domain) : Promise.resolve(null),
+      needDns ? DnsCollector.collect(domain) : Promise.resolve(null),
+      needWhois ? WhoisCollector.collect(domain) : Promise.resolve(null),
+      needRobots ? HttpCollector.collectGet(`${origin}/robots.txt`, true) : Promise.resolve(null),
+      needSitemap ? HttpCollector.collectGet(`${origin}/sitemap.xml`, true) : Promise.resolve(null)
     ]);
 
-    // 3. Phase d'Analyse (Distribution stricte des données)
-    const sslResult = SslChecker.analyze(tlsData);
-    const tlsResult = TlsAnalyzer.analyze(tlsData);
-    const headersResult = HeadersChecker.analyze(httpData);
-    const cookiesResult = CookieAnalyzer.analyze(httpData);
-    const methodsResult = HttpMethodsAnalyzer.analyze(optionsData);
-    const corsResult = CorsAnalyzer.analyze(optionsData);
-    const cspResult = CspValidator.analyze(httpData);
-    const redirectResult = RedirectAnalyzer.analyze(httpData);
-    const robotsResult = RobotsAnalyzer.analyze(robotsData);
-    const sitemapResult = SitemapChecker.analyze(sitemapData);
+    // 3. Phase d'Analyse
+    const modules: ScanReport['modules'] = {};
+    const scores: number[] = [];
 
-    const dnsResult = DnsLookup.analyze(dnsData);
-    const spfResult = SpfChecker.analyze(dnsData);
-    const dkimResult = DkimChecker.analyze(dnsData);
-    const dmarcResult = DmarcChecker.analyze(dnsData);
+    // WEBSITE_SECURITY
+    if (runAll || slugs.includes('ssl-checker')) {
+      const res = SslChecker.analyze(tlsData || { hostname: domain, error: 'Non exécuté' } as any);
+      modules.ssl = res;
+      scores.push(this.convertGradeToScore(res.score));
+    }
+    if (runAll || slugs.includes('tls-analyzer')) {
+      const res = TlsAnalyzer.analyze(tlsData || { hostname: domain, error: 'Non exécuté' } as any);
+      modules.tls = res;
+      scores.push(this.convertGradeToScore(res.score));
+    }
+    if (runAll || slugs.includes('security-headers')) {
+      const res = HeadersChecker.analyze(httpData || { url: baseUrl, headers: {}, body: '', status: 0, error: 'Non exécuté' } as any);
+      modules.headers = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('cookie-analyzer')) {
+      const res = CookieAnalyzer.analyze(httpData || { url: baseUrl, headers: {}, body: '', status: 0, error: 'Non exécuté' } as any);
+      modules.cookies = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('http-methods')) {
+      const res = HttpMethodsAnalyzer.analyze(optionsData || { url: baseUrl, allowedMethods: [], error: 'Non exécuté' } as any);
+      modules.methods = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('cors-analyzer')) {
+      const res = CorsAnalyzer.analyze(optionsData || { url: baseUrl, allowedMethods: [], error: 'Non exécuté' } as any);
+      modules.cors = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('csp-validator')) {
+      const res = CspValidator.analyze(httpData || { url: baseUrl, headers: {}, body: '', status: 0, error: 'Non exécuté' } as any);
+      modules.csp = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('redirect-analyzer')) {
+      const res = RedirectAnalyzer.analyze(httpData || { url: baseUrl, headers: {}, body: '', status: 0, error: 'Non exécuté' } as any);
+      modules.redirect = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('robots-analyzer')) {
+      const res = RobotsAnalyzer.analyze(robotsData || { url: `${origin}/robots.txt`, headers: {}, body: '', status: 0, error: 'Non exécuté' } as any);
+      modules.robots = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('sitemap-checker')) {
+      const res = SitemapChecker.analyze(sitemapData || { url: `${origin}/sitemap.xml`, headers: {}, body: '', status: 0, error: 'Non exécuté' } as any);
+      modules.sitemap = res;
+      scores.push(res.scoreNum);
+    }
 
-    const whoisResult = WhoisLookup.analyze(whoisData);
-    const domainAgeResult = DomainAgeChecker.analyze(whoisData);
+    // EMAIL_SECURITY
+    if (runAll || slugs.includes('spf-checker')) {
+      const res = SpfChecker.analyze(dnsData || { domain, records: [], error: 'Non exécuté' } as any);
+      modules.spf = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('dkim-checker')) {
+      const res = DkimChecker.analyze(dnsData || { domain, records: [], error: 'Non exécuté' } as any);
+      modules.dkim = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('dmarc-checker')) {
+      const res = DmarcChecker.analyze(dnsData || { domain, records: [], error: 'Non exécuté' } as any);
+      modules.dmarc = res;
+      scores.push(res.scoreNum);
+    }
 
-    // 4. Agrégation des scores
-    const scores = [
-      this.convertGradeToScore(sslResult.score),
-      this.convertGradeToScore(tlsResult.score),
-      headersResult.scoreNum,
-      cookiesResult.scoreNum,
-      methodsResult.scoreNum,
-      corsResult.scoreNum,
-      cspResult.scoreNum,
-      redirectResult.scoreNum,
-      robotsResult.scoreNum,
-      sitemapResult.scoreNum,
-      dnsResult.scoreNum,
-      spfResult.scoreNum,
-      dkimResult.scoreNum,
-      dmarcResult.scoreNum,
-      whoisResult.scoreNum,
-      domainAgeResult.scoreNum
-    ];
+    // DNS_DOMAIN_SECURITY
+    if (runAll || slugs.includes('dns-lookup')) {
+      const res = DnsLookup.analyze(dnsData || { domain, records: [], error: 'Non exécuté' } as any);
+      modules.dns = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('whois-lookup')) {
+      const res = WhoisLookup.analyze(whoisData || { domain, rawData: '', error: 'Non exécuté' } as any);
+      modules.whois = res;
+      scores.push(res.scoreNum);
+    }
+    if (runAll || slugs.includes('domain-age-checker')) {
+      const res = DomainAgeChecker.analyze(whoisData || { domain, rawData: '', error: 'Non exécuté' } as any);
+      modules.domainAge = res;
+      scores.push(res.scoreNum);
+    }
 
     const globalScore = this.calculateGlobalScore(scores);
 
-    // 5. Génération du Rapport JSON
     return {
       targetUrl: baseUrl,
       scanDate: new Date().toISOString(),
       globalScore,
       globalGrade: this.getGlobalGrade(globalScore),
-      modules: {
-        ssl: sslResult,
-        tls: tlsResult,
-        headers: headersResult,
-        cookies: cookiesResult,
-        methods: methodsResult,
-        cors: corsResult,
-        csp: cspResult,
-        redirect: redirectResult,
-        robots: robotsResult,
-        sitemap: sitemapResult,
-        dns: dnsResult,
-        spf: spfResult,
-        dkim: dkimResult,
-        dmarc: dmarcResult,
-        whois: whoisResult,
-        domainAge: domainAgeResult
-      }
+      modules
     };
   }
 }
