@@ -1,11 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, Download, Eye, Globe, ChevronRight, X, AlertTriangle } from "lucide-react";
-import { MOCK_REPORTS, MOCK_SCANS } from "@/lib/mock-data";
-import type { Report, Vulnerability } from "@/lib/types";
+import { FileText, Download, Globe, ChevronRight, X, AlertTriangle, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/ui/EmptyState";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Report {
+  id: string;
+  domain: string;
+  score: number;
+  createdAt: string;
+  summary: string;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+}
+
+interface Vulnerability {
+  id: string;
+  title: string;
+  description: string;
+  severity: "critical" | "high" | "medium" | "low" | "info";
+  remediation: string;
+}
+
+interface ScanDetails {
+  id: string;
+  domain: string;
+  score: number;
+  createdAt: string;
+  vulnerabilities: Vulnerability[];
+  modules: string[];
+}
+
+// ── Design helpers (identical to original) ────────────────────────────────────
 
 const scoreBadge = (score: number) => {
   if (score >= 90) return "bg-emerald-50 text-emerald-600 border border-emerald-200";
@@ -13,33 +44,241 @@ const scoreBadge = (score: number) => {
   return "bg-red-50 text-red-600 border border-red-200";
 };
 
-const severityColor = {
+const severityColor: Record<string, string> = {
   critical: "bg-red-50 text-red-600 border border-red-200",
-  high: "bg-orange-50 text-orange-600 border border-orange-200",
-  medium: "bg-amber-50 text-amber-600 border border-amber-200",
-  low: "bg-sky-50 text-sky-600 border border-sky-200",
-  info: "bg-slate-50 text-slate-600 border border-slate-200",
+  high:     "bg-orange-50 text-orange-600 border border-orange-200",
+  medium:   "bg-amber-50 text-amber-600 border border-amber-200",
+  low:      "bg-sky-50 text-sky-600 border border-sky-200",
+  info:     "bg-slate-50 text-slate-600 border border-slate-200",
 };
 
-const severityLabel = {
+const severityLabel: Record<string, string> = {
   critical: "Critique",
-  high: "Élevé",
-  medium: "Moyen",
-  low: "Faible",
-  info: "Info",
+  high:     "Élevé",
+  medium:   "Moyen",
+  low:      "Faible",
+  info:     "Info",
 };
+
+// ── PDF generation — jsPDF only, no html2canvas/canvg ────────────────────────
+
+async function generateAndDownloadPDF(reportId: string) {
+  const res = await fetch(`/api/reports/${reportId}`);
+  if (!res.ok) {
+    alert("Impossible de récupérer les données du rapport.");
+    return;
+  }
+  const data: ScanDetails = await res.json();
+
+  // Dynamic import: never bundled server-side → fixes canvg/core-js errors
+  const { jsPDF } = await import("jspdf");
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const PW = 210;
+  const M = 16;
+  const CW = PW - M * 2;
+  let y = 20;
+
+  // helpers
+  const line = (
+    text: string,
+    size = 10,
+    bold = false,
+    color: [number, number, number] = [30, 30, 30]
+  ) => {
+    doc.setFontSize(size);
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setTextColor(...color);
+    doc.text(text, M, y);
+    y += size * 0.45 + 2;
+  };
+
+  const wrapped = (
+    text: string,
+    size = 9,
+    color: [number, number, number] = [80, 80, 80]
+  ) => {
+    doc.setFontSize(size);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, CW) as string[];
+    doc.text(lines, M, y);
+    y += lines.length * (size * 0.45 + 1.5) + 1;
+  };
+
+  const sep = () => {
+    doc.setDrawColor(220, 220, 220);
+    doc.line(M, y, PW - M, y);
+    y += 5;
+  };
+
+  const checkPage = (need = 30) => {
+    if (y + need > 282) { doc.addPage(); y = 20; }
+  };
+
+  // ── Blue header bar ──────────────────────────────────────────────────────
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, PW, 14, "F");
+  doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+  doc.text("CYBELIS — Rapport d'Audit de Sécurité", M, 9);
+  doc.setFontSize(8); doc.setFont("helvetica", "normal");
+  doc.text(`Généré le ${new Date().toLocaleDateString("fr-FR")}`, PW - M, 9, { align: "right" });
+  y = 22;
+
+  // ── Summary ──────────────────────────────────────────────────────────────
+  line(`Domaine : ${data.domain}`, 13, true);
+  y += 1;
+  line(
+    `Date du scan : ${new Date(data.createdAt).toLocaleDateString("fr-FR", {
+      day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
+    })}`,
+    9, false, [100, 100, 100]
+  );
+  y += 3;
+
+  const score = data.score;
+  const scoreRGB: [number, number, number] =
+    score >= 80 ? [5, 150, 105] : score >= 60 ? [217, 119, 6] : [220, 38, 38];
+  doc.setFillColor(...scoreRGB);
+  doc.roundedRect(M, y, 42, 10, 2, 2, "F");
+  doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+  doc.text(`Score : ${score} / 100`, M + 4, y + 6.5);
+  y += 16;
+
+  if (data.modules.length > 0) {
+    line("Modules analysés :", 9, true);
+    wrapped(data.modules.join("  •  "), 8, [60, 80, 180]);
+    y += 2;
+  }
+  sep();
+
+  // ── Severity summary ─────────────────────────────────────────────────────
+  const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+  data.vulnerabilities.forEach((v) => {
+    if (v.severity in counts) counts[v.severity as keyof typeof counts]++;
+  });
+
+  checkPage(30);
+  line("Résumé des vulnérabilités", 11, true);
+  y += 2;
+  (
+    [
+      ["Critique", counts.critical, [220, 38,  38]  as [number,number,number]],
+      ["Élevé",    counts.high,     [234, 88,  12]  as [number,number,number]],
+      ["Moyen",    counts.medium,   [202, 138, 4]   as [number,number,number]],
+      ["Faible",   counts.low,      [14,  165, 233] as [number,number,number]],
+    ] as [string, number, [number, number, number]][]
+  ).forEach(([label, count, color]) => {
+    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(...color);
+    doc.text(`${label} :  ${count}`, M + 4, y);
+    y += 5.5;
+  });
+  y += 2;
+  sep();
+
+  // ── Vulnerability detail ─────────────────────────────────────────────────
+  if (data.vulnerabilities.length === 0) {
+    line("✓ Aucune vulnérabilité détectée.", 10, false, [5, 150, 105]);
+  } else {
+    checkPage(20);
+    line("Détail des vulnérabilités", 11, true);
+    y += 3;
+
+    data.vulnerabilities.forEach((v, idx) => {
+      checkPage(40);
+
+      const sevRGB: [number, number, number] =
+        v.severity === "critical" ? [220, 38,  38]  :
+        v.severity === "high"     ? [234, 88,  12]  :
+        v.severity === "medium"   ? [202, 138, 4]   :
+                                    [14,  165, 233];
+
+      // severity pill
+      doc.setFillColor(...sevRGB);
+      doc.roundedRect(M, y, 24, 5.5, 1.2, 1.2, "F");
+      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+      doc.text((severityLabel[v.severity] ?? v.severity).toUpperCase(), M + 2, y + 3.8);
+
+      // title
+      doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(20, 20, 20);
+      const titleLines = doc.splitTextToSize(`${idx + 1}. ${v.title}`, CW - 28) as string[];
+      doc.text(titleLines, M + 27, y + 3.8);
+      y += Math.max(8, titleLines.length * 4.5 + 2);
+
+      wrapped(`Description : ${v.description}`, 8.5);
+      y += 1;
+      wrapped(`Remédiation : ${v.remediation}`, 8.5, [37, 99, 235]);
+      y += 5;
+
+      doc.setDrawColor(235, 235, 235);
+      doc.line(M + 8, y - 3, PW - M, y - 3);
+    });
+  }
+
+  // ── Page footer ───────────────────────────────────────────────────────────
+  const total = doc.getNumberOfPages();
+  for (let p = 1; p <= total; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(160, 160, 160);
+    doc.text(`Cybelis Security Audit — ${data.domain} — Page ${p}/${total}`, M, 292);
+  }
+
+  doc.save(`Rapport_Cybelis_${data.domain}_${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
-  const [reports] = useState<Report[]>(MOCK_REPORTS);
+  const [reports, setReports]           = useState<Report[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [scanDetails, setScanDetails]   = useState<ScanDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [exportingId, setExportingId]   = useState<string | null>(null);
 
-  // Get full scan details for the selected report
-  const scanDetails = selectedReport
-    ? MOCK_SCANS.find((s) => s.id === selectedReport.scanId)
-    : null;
+  // Fetch report list
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/reports");
+        if (res.ok) setReports(await res.json());
+      } finally {
+        setLoadingReports(false);
+      }
+    })();
+  }, []);
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  // Fetch scan detail when a report is selected
+  useEffect(() => {
+    if (!selectedReport) { setScanDetails(null); return; }
+    (async () => {
+      setLoadingDetails(true);
+      try {
+        const res = await fetch(`/api/reports/${selectedReport.id}`);
+        if (res.ok) setScanDetails(await res.json());
+      } finally {
+        setLoadingDetails(false);
+      }
+    })();
+  }, [selectedReport]);
+
+  const handleSelect = (r: Report) =>
+    setSelectedReport(selectedReport?.id === r.id ? null : r);
+
+  const handlePDF = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setExportingId(id);
+    try { await generateAndDownloadPDF(id); }
+    finally { setExportingId(null); }
+  };
+
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleDateString("fr-FR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -65,7 +304,9 @@ export default function ReportsPage() {
 
         {/* Reports list */}
         <div className="space-y-3">
-          {reports.length === 0 ? (
+          {loadingReports ? (
+            <div className="text-center py-12 text-slate-400 text-xs">Chargement des rapports...</div>
+          ) : reports.length === 0 ? (
             <EmptyState
               icon={FileText}
               title="Aucun rapport disponible"
@@ -77,7 +318,7 @@ export default function ReportsPage() {
             reports.map((report) => (
               <div
                 key={report.id}
-                onClick={() => setSelectedReport(selectedReport?.id === report.id ? null : report)}
+                onClick={() => handleSelect(report)}
                 className={`p-5 rounded-2xl bg-white border shadow-sm cursor-pointer transition-all hover:shadow-md ${
                   selectedReport?.id === report.id
                     ? "border-blue-200 ring-1 ring-blue-100"
@@ -91,7 +332,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-slate-900 truncate">{report.domain}</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{formatDate(report.createdAt)}</div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{fmt(report.createdAt)}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -112,11 +353,15 @@ export default function ReportsPage() {
                     <span className="text-[10px] text-emerald-500 font-semibold font-mono">✓ Aucune faille critique</span>
                   )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); /* TODO: export PDF */ }}
-                    className="ml-auto flex items-center gap-1 text-[10px] text-slate-400 hover:text-blue-600 transition-colors font-medium"
-                    title="Télécharger (bientôt)"
+                    onClick={(e) => handlePDF(e, report.id)}
+                    disabled={exportingId === report.id}
+                    className="ml-auto flex items-center gap-1 text-[10px] text-slate-400 hover:text-blue-600 transition-colors font-medium disabled:opacity-50"
+                    title="Télécharger le PDF"
                   >
-                    <Download className="w-3.5 h-3.5" /> PDF
+                    {exportingId === report.id
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <Download className="w-3.5 h-3.5" />}
+                    PDF
                   </button>
                 </div>
               </div>
@@ -125,12 +370,12 @@ export default function ReportsPage() {
         </div>
 
         {/* Detail panel */}
-        {selectedReport && scanDetails && (
+        {selectedReport && (
           <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm h-fit space-y-5">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-sm font-bold text-slate-900">{selectedReport.domain}</h2>
-                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{formatDate(selectedReport.createdAt)}</p>
+                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{fmt(selectedReport.createdAt)}</p>
               </div>
               <button onClick={() => setSelectedReport(null)} className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 border border-slate-200 transition-colors">
                 <X className="w-4 h-4" />
@@ -154,49 +399,58 @@ export default function ReportsPage() {
             </div>
 
             {/* Vulnerabilities */}
-            <div>
-              <h3 className="text-xs font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Vulnérabilités détectées ({scanDetails.vulnerabilities.length})
-              </h3>
-              {scanDetails.vulnerabilities.length === 0 ? (
-                <p className="text-[11px] text-emerald-600 font-medium">✓ Aucune vulnérabilité détectée.</p>
-              ) : (
-                <div className="space-y-2.5">
-                  {scanDetails.vulnerabilities.map((v: Vulnerability) => (
-                    <div key={v.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                      <div className="flex items-start gap-2">
-                        <span className={`shrink-0 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded ${severityColor[v.severity]}`}>
-                          {severityLabel[v.severity].toUpperCase()}
-                        </span>
-                        <div className="text-xs font-semibold text-slate-900 leading-snug">{v.title}</div>
-                      </div>
-                      <p className="text-[10px] text-slate-500 leading-relaxed">{v.description}</p>
-                      <div className="pt-1.5 border-t border-slate-200">
-                        <p className="text-[10px] text-blue-700 font-medium">Remédiation : {v.remediation}</p>
-                      </div>
+            {loadingDetails ? (
+              <div className="text-center py-4 text-slate-400 text-xs">Chargement des détails...</div>
+            ) : scanDetails ? (
+              <>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    Vulnérabilités détectées ({scanDetails.vulnerabilities.length})
+                  </h3>
+                  {scanDetails.vulnerabilities.length === 0 ? (
+                    <p className="text-[11px] text-emerald-600 font-medium">✓ Aucune vulnérabilité détectée.</p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {scanDetails.vulnerabilities.map((v) => (
+                        <div key={v.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className={`shrink-0 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded ${severityColor[v.severity] ?? severityColor.info}`}>
+                              {(severityLabel[v.severity] ?? v.severity).toUpperCase()}
+                            </span>
+                            <div className="text-xs font-semibold text-slate-900 leading-snug">{v.title}</div>
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-relaxed">{v.description}</p>
+                          <div className="pt-1.5 border-t border-slate-200">
+                            <p className="text-[10px] text-blue-700 font-medium">Remédiation : {v.remediation}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Modules run */}
-            <div>
-              <h3 className="text-xs font-bold text-slate-900 mb-2">Modules analysés</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {scanDetails.modules.map((m) => (
-                  <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-mono">{m}</span>
-                ))}
-              </div>
-            </div>
+                {/* Modules run */}
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 mb-2">Modules analysés</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {scanDetails.modules.map((m) => (
+                      <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-mono">{m}</span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : null}
 
             <button
-              onClick={() => { /* TODO: export PDF */ }}
-              className="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors shadow-sm"
+              onClick={(e) => handlePDF(e, selectedReport.id)}
+              disabled={exportingId === selectedReport.id}
+              className="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
             >
-              <Download className="w-4 h-4" />
-              Exporter en PDF (bientôt)
+              {exportingId === selectedReport.id
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <Download className="w-4 h-4" />}
+              {exportingId === selectedReport.id ? "Génération en cours..." : "Exporter en PDF"}
             </button>
           </div>
         )}

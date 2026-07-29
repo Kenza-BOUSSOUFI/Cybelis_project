@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Shield, 
@@ -13,20 +13,69 @@ import {
   Trash2, 
   Plus
 } from "lucide-react";
+import { LoadingState } from "@/components/dashboard/ui/LoadingState";
+import { EmptyState } from "@/components/dashboard/ui/EmptyState";
+import { toast } from "sonner";
+import axios from "axios";
+
+interface RecentScan {
+  id: string;
+  domain: string;
+  score: number;
+  date: string;
+  status: string;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+}
+
+interface DashboardData {
+  totalScans: number;
+  avgScore: number;
+  totalCritical: number;
+  totalHigh: number;
+  totalMedium: number;
+  totalLow: number;
+  recentScans: RecentScan[];
+  plan: string;
+}
 
 export function DashboardHome() {
   const [scanDomain, setScanDomain] = useState("");
-  
-  // Mock Data for Dashboard
-  const [recentScans, setRecentScans] = useState([
-    { id: "1", domain: "cybelis.ma", score: 72, date: "08/07/2026 14:22", critical: 1, high: 3, medium: 2, low: 1 },
-    { id: "2", domain: "hbsmanagement.com", score: 91, date: "07/07/2026 09:15", critical: 0, high: 0, medium: 1, low: 3 },
-    { id: "3", domain: "ecommerce-demo.ma", score: 48, date: "05/07/2026 18:40", critical: 3, high: 2, medium: 4, low: 2 },
-    { id: "4", domain: "stage-test.net", score: 85, date: "29/06/2026 11:05", critical: 0, high: 1, medium: 2, low: 0 }
-  ]);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const deleteScan = (id: string) => {
-    setRecentScans(prev => prev.filter(item => item.id !== id));
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await axios.get<DashboardData>('/api/dashboard');
+        setData(response.data);
+      } catch (error) {
+        console.error("Failed to load dashboard data", error);
+        toast.error("Impossible de charger le tableau de bord");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboard();
+  }, []);
+
+  const deleteScan = async (id: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer ce scan ?")) return;
+    try {
+      await axios.delete(`/api/scans/${id}`);
+      if (data) {
+        setData({
+          ...data,
+          recentScans: data.recentScans.filter(item => item.id !== id)
+        });
+      }
+      toast.success("Scan supprimé");
+    } catch (error) {
+      toast.error("Erreur lors de la suppression");
+    }
   };
 
   const getScoreBadge = (score: number) => {
@@ -35,15 +84,29 @@ export function DashboardHome() {
     return "bg-red-50 text-red-600 border border-red-200";
   };
 
-  // Calculate global dashboard values
-  const totalScans = recentScans.length;
-  const avgScore = totalScans > 0 
-    ? Math.round(recentScans.reduce((acc, curr) => acc + curr.score, 0) / totalScans)
-    : 0;
+  const formatDate = (isoString: string) => {
+    return new Date(isoString).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
 
-  const totalCritical = recentScans.reduce((acc, curr) => acc + curr.critical, 0);
-  const totalHigh = recentScans.reduce((acc, curr) => acc + curr.high, 0);
-  const totalMedium = recentScans.reduce((acc, curr) => acc + curr.medium, 0);
+  if (loading) {
+    return <LoadingState message="Chargement de vos statistiques..." />;
+  }
+
+  if (!data) {
+    return (
+      <EmptyState 
+        icon={Activity} 
+        title="Erreur de chargement" 
+        description="Veuillez rafraîchir la page." 
+      />
+    );
+  }
+
+  const { totalScans, avgScore, totalCritical, totalHigh, totalMedium, totalLow, recentScans } = data;
+  const totalVulnerabilities = totalCritical + totalHigh + totalMedium + totalLow;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -126,8 +189,9 @@ export function DashboardHome() {
             <TrendingUp className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900 font-mono">74%</span>
-            <span className="text-xs text-slate-500">conformité</span>
+            <span className="text-3xl font-bold text-slate-900 font-mono">
+              {totalScans > 0 && avgScore >= 70 ? "Bon" : totalScans === 0 ? "N/A" : "Faible"}
+            </span>
           </div>
           <div className="text-[10px] text-slate-500 font-mono">
             Mise en conformité générale RFC/DNS
@@ -197,7 +261,7 @@ export function DashboardHome() {
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                 <div 
                   className="bg-red-500 h-full rounded-full transition-all" 
-                  style={{ width: `${Math.min(100, (totalCritical / 10) * 100)}%` }} 
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalCritical / totalVulnerabilities) * 100 : 0}%` }} 
                 />
               </div>
             </div>
@@ -213,7 +277,7 @@ export function DashboardHome() {
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                 <div 
                   className="bg-orange-500 h-full rounded-full transition-all" 
-                  style={{ width: `${Math.min(100, (totalHigh / 10) * 100)}%` }} 
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalHigh / totalVulnerabilities) * 100 : 0}%` }} 
                 />
               </div>
             </div>
@@ -229,7 +293,7 @@ export function DashboardHome() {
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                 <div 
                   className="bg-amber-500 h-full rounded-full transition-all" 
-                  style={{ width: `${Math.min(100, (totalMedium / 15) * 100)}%` }} 
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalMedium / totalVulnerabilities) * 100 : 0}%` }} 
                 />
               </div>
             </div>
@@ -240,12 +304,12 @@ export function DashboardHome() {
                 <span className="text-sky-400 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-sky-400" /> Faible
                 </span>
-                <span className="text-slate-500 font-mono">6 failles</span>
+                <span className="text-slate-500 font-mono">{totalLow} failles</span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                 <div 
                   className="bg-sky-400 h-full rounded-full transition-all" 
-                  style={{ width: "40%" }} 
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalLow / totalVulnerabilities) * 100 : 0}%` }} 
                 />
               </div>
             </div>
@@ -295,45 +359,57 @@ export function DashboardHome() {
                       <Globe className="w-4 h-4 text-slate-400" />
                       <span>{scan.domain}</span>
                     </td>
-                    <td className="py-4 text-slate-500 font-mono">{scan.date}</td>
+                    <td className="py-4 text-slate-500 font-mono">{formatDate(scan.date)}</td>
                     <td className="py-4">
-                      <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${getScoreBadge(scan.score)}`}>
-                        {scan.score}%
-                      </span>
+                      {scan.status === "COMPLETED" ? (
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${getScoreBadge(scan.score)}`}>
+                          {scan.score}%
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-50 text-blue-600 border border-blue-200">
+                          {scan.status}
+                        </span>
+                      )}
                     </td>
                     <td className="py-4">
-                      <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold">
-                        {scan.critical > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
-                            {scan.critical} Crit.
-                          </span>
-                        )}
-                        {scan.high > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 border border-orange-100">
-                            {scan.high} Élev.
-                          </span>
-                        )}
-                        {scan.medium > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100">
-                            {scan.medium} Moy.
-                          </span>
-                        )}
-                        {scan.critical === 0 && scan.high === 0 && scan.medium === 0 && (
-                          <span className="text-emerald-500 font-semibold flex items-center gap-1">
-                            <CheckCircle className="w-3.5 h-3.5" /> Sécurisé
-                          </span>
-                        )}
-                      </div>
+                      {scan.status === "COMPLETED" ? (
+                        <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold">
+                          {scan.critical > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
+                              {scan.critical} Crit.
+                            </span>
+                          )}
+                          {scan.high > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 border border-orange-100">
+                              {scan.high} Élev.
+                            </span>
+                          )}
+                          {scan.medium > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100">
+                              {scan.medium} Moy.
+                            </span>
+                          )}
+                          {scan.critical === 0 && scan.high === 0 && scan.medium === 0 && (
+                            <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                              <CheckCircle className="w-3.5 h-3.5" /> Sécurisé
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-slate-400">En cours...</span>
+                      )}
                     </td>
                     <td className="py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link 
-                          href={`/dashboard/reports/${scan.domain}`}
-                          className="p-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-500 hover:text-blue-600 border border-slate-200 transition-colors shadow-sm"
-                          title="Consulter le rapport"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
+                        {scan.status === "COMPLETED" && (
+                          <Link 
+                            href={`/dashboard/reports/${scan.id}`}
+                            className="p-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-500 hover:text-blue-600 border border-slate-200 transition-colors shadow-sm"
+                            title="Consulter le rapport"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        )}
                         <button 
                           onClick={() => deleteScan(scan.id)}
                           className="p-1.5 rounded-lg bg-white hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 transition-colors shadow-sm"

@@ -1,18 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Settings, Bell, Lock, Trash2, CheckCircle } from "lucide-react";
-import { MOCK_USER } from "@/lib/mock-data";
+import { LoadingState } from "@/components/dashboard/ui/LoadingState";
+import axios from "axios";
+import { toast } from "sonner";
 
 type SettingsTab = "account" | "notifications" | "security";
+
+interface UserProfile {
+  fullName: string;
+  email: string;
+  companyName: string;
+  plan: string;
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Account form state
-  const [name, setName] = useState(MOCK_USER.name);
-  const [email, setEmail] = useState(MOCK_USER.email);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [plan, setPlan] = useState("");
 
   // Notification preferences
   const [notifPrefs, setNotifPrefs] = useState({
@@ -22,13 +35,50 @@ export default function SettingsPage() {
     marketing: false,
   });
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get<UserProfile>('/api/settings');
+        setName(response.data.fullName);
+        setEmail(response.data.email);
+        setCompanyName(response.data.companyName);
+        setPlan(response.data.plan);
+      } catch (error) {
+        console.error("Failed to fetch profile", error);
+        toast.error("Erreur lors du chargement des paramètres");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   const toggleNotif = (key: keyof typeof notifPrefs) => {
     setNotifPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleSave = () => {
-    // TODO: persist via API
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await axios.patch('/api/settings', {
+        fullName: name,
+        email: email,
+        companyName: companyName
+      });
+      setSaved(true);
+      toast.success("Modifications enregistrées avec succès");
+      setTimeout(() => setSaved(false), 2500);
+    } catch (error) {
+      console.error("Failed to save settings", error);
+      toast.error("Erreur lors de la sauvegarde des paramètres");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveLocal = () => {
     setSaved(true);
+    toast.success("Préférences enregistrées");
     setTimeout(() => setSaved(false), 2500);
   };
 
@@ -37,6 +87,10 @@ export default function SettingsPage() {
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Sécurité", icon: Lock },
   ];
+
+  if (loading) {
+    return <LoadingState message="Chargement des paramètres..." />;
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -86,6 +140,15 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Entreprise</label>
+              <input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
               <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Adresse email</label>
               <input
                 type="email"
@@ -95,13 +158,9 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Rôle</label>
-              <input type="text" value={MOCK_USER.role} readOnly className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-sm text-slate-500 cursor-not-allowed" />
-            </div>
-            <div className="space-y-1.5">
               <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Plan actuel</label>
               <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-blue-50 border border-blue-200">
-                <span className="text-sm font-bold text-blue-700">{MOCK_USER.plan}</span>
+                <span className="text-sm font-bold text-blue-700">{plan}</span>
                 <span className="text-[10px] text-blue-500 font-mono">• Actif</span>
               </div>
             </div>
@@ -110,9 +169,10 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               onClick={handleSave}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-md shadow-blue-600/15"
+              disabled={saving}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-md shadow-blue-600/15 disabled:opacity-70"
             >
-              Enregistrer les modifications
+              {saving ? "Enregistrement..." : "Enregistrer les modifications"}
             </button>
             {saved && (
               <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
@@ -151,7 +211,7 @@ export default function SettingsPage() {
           </div>
 
           <button
-            onClick={handleSave}
+            onClick={handleSaveLocal}
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-md shadow-blue-600/15"
           >
             Sauvegarder les préférences
@@ -175,7 +235,7 @@ export default function SettingsPage() {
               </div>
             ))}
             <button
-              onClick={handleSave}
+              onClick={handleSaveLocal}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-md shadow-blue-600/15"
             >
               Mettre à jour le mot de passe

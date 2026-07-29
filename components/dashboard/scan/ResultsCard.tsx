@@ -352,7 +352,7 @@ export function ResultsCard({ scanId, onReset }: ResultsCardProps) {
           Nouveau scan
         </button>
         <button
-          onClick={() => router.push(`/dashboard/reports/${scanId}`)}
+          onClick={() => router.push(`/dashboard/reports?scan=${scanId}`)}
           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 text-white text-xs font-semibold transition-opacity shadow-md shadow-blue-600/15"
         >
           Consulter le rapport complet

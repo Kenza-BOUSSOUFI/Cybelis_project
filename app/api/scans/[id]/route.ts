@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db/prisma';
-
+import { AuthService } from '@/lib/db/services/auth.service';
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -35,9 +35,12 @@ export async function GET(
     }
 
     // Verify ownership
-    const dbUser = await prisma.user.findUnique({
-      where: { authUserId: user.id }
-    });
+    const dbUser = await AuthService.upsertUser(
+      user.id,
+      user.email ?? '',
+      user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+      user.user_metadata?.company_name ?? ''
+    );
 
     if (!dbUser || scan.website.userId !== dbUser.id) {
       return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });

@@ -18,8 +18,6 @@ import {
   Server,
   Loader2
 } from "lucide-react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 interface Issue {
   id: string;
@@ -170,11 +168,13 @@ export function ReportDetailPage() {
     ));
   };
 
-  // PDF generation method using html2canvas & jsPDF
   const exportPDF = async () => {
     if (!reportRef.current || !scan) return;
     setIsExporting(true);
     try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
       const element = reportRef.current;
       const canvas = await html2canvas(element, {
         scale: 2,
