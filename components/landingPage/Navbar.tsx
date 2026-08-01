@@ -6,12 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { href: "#platform", label: "About" },
-  { href: "#features", label: "Features" },
-  { href: "#tools", label: "Tools" },
-  { href: "#team", label: "Team" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#resources", label: "Resources" },
+  { href: "#platform", label: "À propos" },
+  { href: "#features", label: "Fonctionnalités" },
+  { href: "#tools", label: "Outils" },
+  { href: "#team", label: "Équipe" },
+  { href: "#pricing", label: "Tarifs" },
+  { href: "#resources", label: "Ressources" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -84,13 +84,13 @@ export function Navbar() {
               href="/login"
               className="text-sm font-medium text-slate-300 hover:text-white transition-colors px-3 py-2"
             >
-              Log in
+              Connexion
             </Link>
             <Link
               href="/dashboard"
               className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:opacity-90 transition-opacity"
             >
-              Get started
+              Commencer
             </Link>
           </div>
 
@@ -130,13 +130,13 @@ export function Navbar() {
                     href="/login"
                     className="text-sm text-slate-300 hover:text-white transition-colors py-2"
                   >
-                    Log in
+                    Connexion
                   </Link>
                   <Link
                     href="/dashboard"
                     className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white text-center"
                   >
-                    Get started
+                    Commencer
                   </Link>
                 </div>
               </div>

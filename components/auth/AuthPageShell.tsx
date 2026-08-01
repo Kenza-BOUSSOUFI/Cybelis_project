@@ -49,7 +49,7 @@ export function AuthPageShell({ children, staggerDelay = 0.09 }: AuthPageShellPr
           className="inline-flex items-center gap-2 text-xs font-medium text-slate-400 transition-colors hover:text-sky-600"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to site
+          Retour au site
         </Link>
       </header>
 
@@ -68,7 +68,7 @@ export function AuthPageShell({ children, staggerDelay = 0.09 }: AuthPageShellPr
       </main>
 
       <footer className="relative z-10 border-t border-sky-100/80 py-5 text-center text-[10px] text-slate-400">
-        2026 Cybelis - Web Security Audits for SMEs
+        2026 Cybelis - Audits de sécurité web pour PME
       </footer>
     </div>
   );

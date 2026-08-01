@@ -39,7 +39,7 @@ export function TrustMarquee() {
 
       {/* Label */}
       <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 mb-8">
-        Trusted technology stack
+        Technologies de confiance
       </p>
 
       {/* Scrolling track */}

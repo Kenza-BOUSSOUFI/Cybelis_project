@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, Download, Globe, ChevronRight, X, AlertTriangle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FileText, Download, Globe, ChevronRight, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/ui/EmptyState";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -42,14 +43,6 @@ const scoreBadge = (score: number) => {
   if (score >= 90) return "bg-emerald-50 text-emerald-600 border border-emerald-200";
   if (score >= 70) return "bg-amber-50 text-amber-600 border border-amber-200";
   return "bg-red-50 text-red-600 border border-red-200";
-};
-
-const severityColor: Record<string, string> = {
-  critical: "bg-red-50 text-red-600 border border-red-200",
-  high:     "bg-orange-50 text-orange-600 border border-orange-200",
-  medium:   "bg-amber-50 text-amber-600 border border-amber-200",
-  low:      "bg-sky-50 text-sky-600 border border-sky-200",
-  info:     "bg-slate-50 text-slate-600 border border-slate-200",
 };
 
 const severityLabel: Record<string, string> = {
@@ -229,11 +222,9 @@ async function generateAndDownloadPDF(reportId: string) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [reports, setReports]           = useState<Report[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [scanDetails, setScanDetails]   = useState<ScanDetails | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
   const [exportingId, setExportingId]   = useState<string | null>(null);
 
   // Fetch report list
@@ -248,22 +239,9 @@ export default function ReportsPage() {
     })();
   }, []);
 
-  // Fetch scan detail when a report is selected
-  useEffect(() => {
-    if (!selectedReport) { setScanDetails(null); return; }
-    (async () => {
-      setLoadingDetails(true);
-      try {
-        const res = await fetch(`/api/reports/${selectedReport.id}`);
-        if (res.ok) setScanDetails(await res.json());
-      } finally {
-        setLoadingDetails(false);
-      }
-    })();
-  }, [selectedReport]);
-
+  // Navigate to the full-page report detail
   const handleSelect = (r: Report) =>
-    setSelectedReport(selectedReport?.id === r.id ? null : r);
+    router.push(`/dashboard/reports/${r.id}`);
 
   const handlePDF = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -300,9 +278,8 @@ export default function ReportsPage() {
         </Link>
       </div>
 
-      <div className={`grid gap-6 ${selectedReport ? "lg:grid-cols-[1fr_420px]" : "grid-cols-1"}`}>
-
-        {/* Reports list */}
+      {/* Reports list — always full width, no side panel */}
+      <div className="grid gap-6 grid-cols-1">
         <div className="space-y-3">
           {loadingReports ? (
             <div className="text-center py-12 text-slate-400 text-xs">Chargement des rapports...</div>
@@ -319,11 +296,7 @@ export default function ReportsPage() {
               <div
                 key={report.id}
                 onClick={() => handleSelect(report)}
-                className={`p-5 rounded-2xl bg-white border shadow-sm cursor-pointer transition-all hover:shadow-md ${
-                  selectedReport?.id === report.id
-                    ? "border-blue-200 ring-1 ring-blue-100"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
+                className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm cursor-pointer transition-all hover:shadow-md hover:border-slate-300"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
@@ -339,7 +312,7 @@ export default function ReportsPage() {
                     <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${scoreBadge(report.score)}`}>
                       {report.score}%
                     </span>
-                    <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${selectedReport?.id === report.id ? "rotate-90" : ""}`} />
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
                   </div>
                 </div>
 
@@ -368,92 +341,6 @@ export default function ReportsPage() {
             ))
           )}
         </div>
-
-        {/* Detail panel */}
-        {selectedReport && (
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm h-fit space-y-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">{selectedReport.domain}</h2>
-                <p className="text-[10px] text-slate-400 font-mono mt-0.5">{fmt(selectedReport.createdAt)}</p>
-              </div>
-              <button onClick={() => setSelectedReport(null)} className="p-1.5 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 border border-slate-200 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Score gauge mini */}
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-              <span className={`text-2xl font-extrabold font-mono ${selectedReport.score >= 80 ? "text-emerald-600" : selectedReport.score >= 60 ? "text-amber-600" : "text-red-600"}`}>
-                {selectedReport.score}<span className="text-sm font-bold">/100</span>
-              </span>
-              <div className="flex-1">
-                <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${selectedReport.score >= 80 ? "bg-emerald-500" : selectedReport.score >= 60 ? "bg-amber-400" : "bg-red-500"}`}
-                    style={{ width: `${selectedReport.score}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 mt-1 font-mono">Score de sécurité global</p>
-              </div>
-            </div>
-
-            {/* Vulnerabilities */}
-            {loadingDetails ? (
-              <div className="text-center py-4 text-slate-400 text-xs">Chargement des détails...</div>
-            ) : scanDetails ? (
-              <>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-900 mb-3 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    Vulnérabilités détectées ({scanDetails.vulnerabilities.length})
-                  </h3>
-                  {scanDetails.vulnerabilities.length === 0 ? (
-                    <p className="text-[11px] text-emerald-600 font-medium">✓ Aucune vulnérabilité détectée.</p>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {scanDetails.vulnerabilities.map((v) => (
-                        <div key={v.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                          <div className="flex items-start gap-2">
-                            <span className={`shrink-0 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded ${severityColor[v.severity] ?? severityColor.info}`}>
-                              {(severityLabel[v.severity] ?? v.severity).toUpperCase()}
-                            </span>
-                            <div className="text-xs font-semibold text-slate-900 leading-snug">{v.title}</div>
-                          </div>
-                          <p className="text-[10px] text-slate-500 leading-relaxed">{v.description}</p>
-                          <div className="pt-1.5 border-t border-slate-200">
-                            <p className="text-[10px] text-blue-700 font-medium">Remédiation : {v.remediation}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Modules run */}
-                <div>
-                  <h3 className="text-xs font-bold text-slate-900 mb-2">Modules analysés</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {scanDetails.modules.map((m) => (
-                      <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-mono">{m}</span>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : null}
-
-            <button
-              onClick={(e) => handlePDF(e, selectedReport.id)}
-              disabled={exportingId === selectedReport.id}
-              className="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
-            >
-              {exportingId === selectedReport.id
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <Download className="w-4 h-4" />}
-              {exportingId === selectedReport.id ? "Génération en cours..." : "Exporter en PDF"}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

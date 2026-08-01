@@ -120,7 +120,7 @@ export function RegisterPage() {
         </>
       ) : (
         <>
-          <AuthLogoHeader title="Create your account" subtitle="Scan your Websites and get reports for free" />
+          <AuthLogoHeader title="Créer votre compte" subtitle="Analysez vos sites web et obtenez des rapports gratuitement" />
 
           <motion.div variants={authFadeUp} className={authCardCx}>
             <AuthCardReflection />
@@ -137,29 +137,29 @@ export function RegisterPage() {
             )}
 
             <form onSubmit={handleRegister} className="relative space-y-4">
-              <Field label="Full name" icon={<User className="h-4 w-4" />}>
+              <Field label="Nom complet" icon={<User className="h-4 w-4" />}>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Full name"
+                  placeholder="Nom complet"
                   className={authInputCx}
                 />
               </Field>
 
-              <Field label="Company" icon={<Building2 className="h-4 w-4" />}>
+              <Field label="Entreprise" icon={<Building2 className="h-4 w-4" />}>
                 <input
                   type="text"
                   required
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Company"
+                  placeholder="Entreprise"
                   className={authInputCx}
                 />
               </Field>
 
-              <Field label="Phone number" icon={<Phone className="h-4 w-4" />}>
+              <Field label="Numéro de téléphone" icon={<Phone className="h-4 w-4" />}>
                 <input
                   type="tel"
                   value={phone}
@@ -169,24 +169,24 @@ export function RegisterPage() {
                 />
               </Field>
 
-              <Field label="Email address" icon={<Mail className="h-4 w-4" />}>
+              <Field label="Adresse e-mail" icon={<Mail className="h-4 w-4" />}>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
+                  placeholder="vous@entreprise.com"
                   className={authInputCx}
                 />
               </Field>
 
-              <Field label="Password" icon={<Lock className="h-4 w-4" />}>
+              <Field label="Mot de passe" icon={<Lock className="h-4 w-4" />}>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 8 characters"
+                  placeholder="Minimum 8 caractères"
                   className={authInputCx}
                 />
               </Field>
@@ -201,13 +201,13 @@ export function RegisterPage() {
                   className="mt-0.5 h-4 w-4 cursor-pointer rounded border-sky-200 bg-white text-sky-500 focus:ring-sky-300"
                 />
                 <label htmlFor="agree" className="cursor-pointer select-none text-[11px] leading-normal text-slate-500">
-                  I agree to the{" "}
+                  J'accepte les{" "}
                   <a href="#" className="text-sky-600 transition-colors hover:text-sky-500">
-                    Terms of Use
+                    Conditions d'utilisation
                   </a>{" "}
-                  and the{" "}
+                  et la{" "}
                   <a href="#" className="text-sky-600 transition-colors hover:text-sky-500">
-                    Privacy Policy
+                    Politique de confidentialité
                   </a>
                   .
                 </label>
@@ -224,11 +224,11 @@ export function RegisterPage() {
                 {isLoading ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Creating account...
+                    Création du compte...
                   </>
                 ) : (
                   <>
-                    Create my account
+                    Créer mon compte
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -236,9 +236,9 @@ export function RegisterPage() {
             </form>
 
             <p className="relative mt-6 text-center text-xs text-slate-500">
-              Already registered?{" "}
+              Déjà inscrit ?{" "}
               <Link href="/login" className="font-medium text-sky-600 transition-colors hover:text-sky-500">
-                Sign in
+                Se connecter
               </Link>
             </p>
           </motion.div>

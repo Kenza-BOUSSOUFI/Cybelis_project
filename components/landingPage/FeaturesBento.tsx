@@ -21,9 +21,9 @@ const stagger = {
 const cells = [
   {
     icon: ShieldAlert,
-    tag: "Vulnerabilities",
-    title: "Vulnerability Detection",
-    body: "Automated identification of OWASP Top 10 flaws: SQL injection, cross-site scripting (XSS), and cross-site request forgery (CSRF). Each vector is ranked by CVSS severity and paired with an actionable remediation path.",
+    tag: "Vulnérabilités",
+    title: "Détection de vulnérabilités",
+    body: "Identification automatisée des failles du Top 10 OWASP : injection SQL, cross-site scripting (XSS) et falsification de requêtes intersites (CSRF). Chaque vecteur est classé par gravité CVSS et accompagné d'une voie de remédiation concrète.",
     accent: "from-blue-600/10 to-cyan-500/5",
     border: "border-blue-500/20",
     iconColor: "text-blue-400",
@@ -31,9 +31,9 @@ const cells = [
   },
   {
     icon: Lock,
-    tag: "Cryptography",
-    title: "TLS/SSL Analysis",
-    body: "X.509 certificate chain validation, detection of obsolete protocols (SSLv3, TLS 1.0/1.1), weak cipher suite checks, and certificate transparency (CT Logs) verification via OpenSSL.",
+    tag: "Cryptographie",
+    title: "Analyse TLS/SSL",
+    body: "Validation de la chaîne de certificats X.509, détection des protocoles obsolètes (SSLv3, TLS 1.0/1.1), vérification des suites de chiffrement faibles et vérification de la transparence des certificats (CT Logs) via OpenSSL.",
     accent: "from-cyan-600/10 to-blue-500/5",
     border: "border-cyan-500/20",
     iconColor: "text-cyan-400",
@@ -42,8 +42,8 @@ const cells = [
   {
     icon: Globe2,
     tag: "HTTP",
-    title: "HTTP Headers Audit",
-    body: "Full review of security header policies: HSTS, Content-Security-Policy, X-Frame-Options, Referrer-Policy, Permissions-Policy. Each missing or misconfigured setting triggers a warning with a fix example.",
+    title: "Audit des en-têtes HTTP",
+    body: "Examen complet des stratégies d'en-tête de sécurité : HSTS, Content-Security-Policy, X-Frame-Options, Referrer-Policy, Permissions-Policy. Chaque paramètre manquant ou mal configuré déclenche un avertissement avec un exemple de correction.",
     accent: "from-indigo-600/10 to-blue-500/5",
     border: "border-indigo-500/20",
     iconColor: "text-indigo-400",
@@ -52,8 +52,8 @@ const cells = [
   {
     icon: FileSearch,
     tag: "DNS",
-    title: "Email Authentication",
-    body: "Verification of SPF, DKIM, and DMARC records to prevent domain spoofing and targeted phishing attacks.",
+    title: "Authentification des e-mails",
+    body: "Vérification des enregistrements SPF, DKIM et DMARC pour prévenir l'usurpation de domaine et les attaques de phishing ciblées.",
     accent: "from-sky-600/10 to-cyan-500/5",
     border: "border-sky-500/20",
     iconColor: "text-sky-400",
@@ -61,9 +61,9 @@ const cells = [
   },
   {
     icon: Zap,
-    tag: "Scoring",
-    title: "Overall Security Score",
-    body: "A synthetic risk index calculated from the weighted results of 14 analysis modules. Track how your security posture evolves over time.",
+    tag: "Notation",
+    title: "Score de sécurité global",
+    body: "Un indice de risque synthétique calculé à partir des résultats pondérés de 14 modules d'analyse. Suivez l'évolution de votre posture de sécurité au fil du temps.",
     accent: "from-blue-600/10 to-indigo-500/5",
     border: "border-blue-500/20",
     iconColor: "text-blue-300",
@@ -84,13 +84,13 @@ export function FeaturesBento() {
           className="mb-12 text-center"
         >
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-400">
-            Analysis modules
+            Modules d'analyse
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            Complete technical coverage.
+            Couverture technique complète.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-400 max-w-xl mx-auto">
-            Each scan activates 14 specialized modules simultaneously to assess your entire exposed attack surface.
+            Chaque scan active 14 modules spécialisés simultanément pour évaluer l'ensemble de votre surface d'attaque exposée.
           </p>
         </motion.div>
 

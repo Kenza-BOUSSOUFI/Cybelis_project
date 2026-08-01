@@ -92,7 +92,7 @@ function LoginForm() {
       <form onSubmit={handleLogin} className="relative space-y-4">
         <motion.div variants={authFadeUp} className="space-y-1.5">
           <label className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400">
-            Email address
+            Adresse e-mail
           </label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -101,7 +101,7 @@ function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
+              placeholder="vous@entreprise.com"
               className={authInputCx}
             />
           </div>
@@ -110,10 +110,10 @@ function LoginForm() {
         <motion.div variants={authFadeUp} className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400">
-              Password
+              Mot de passe
             </label>
             <a href="#" className="text-[11px] text-slate-400 transition-colors hover:text-sky-600">
-              Forgot password?
+              Mot de passe oublié ?
             </a>
           </div>
           <div className="relative">
@@ -123,7 +123,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
+              placeholder="Votre mot de passe"
               className={authInputCx}
             />
           </div>
@@ -140,11 +140,11 @@ function LoginForm() {
           {isLoading ? (
             <>
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              Verifying...
+              Vérification...
             </>
           ) : (
             <>
-              Sign in
+              Se connecter
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -152,9 +152,9 @@ function LoginForm() {
       </form>
 
       <p className="relative mt-6 text-center text-xs text-slate-500">
-        New to the platform?{" "}
+        Nouveau sur la plateforme ?{" "}
         <Link href="/register" className="font-medium text-sky-600 transition-colors hover:text-sky-500">
-          Create an account
+          Créer un compte
         </Link>
       </p>
     </motion.div>
@@ -164,7 +164,7 @@ function LoginForm() {
 export function LoginPage() {
   return (
     <AuthPageShell>
-      <AuthLogoHeader title="Welcome back" subtitle="Sign in to your Cybelis workspace" />
+      <AuthLogoHeader title="Bon retour" subtitle="Connectez-vous à votre espace Cybelis" />
       <Suspense fallback={<div className="h-48 bg-slate-900/50 rounded-2xl animate-pulse" />}>
         <LoginForm />
       </Suspense>

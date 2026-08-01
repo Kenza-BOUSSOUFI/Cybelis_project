@@ -73,7 +73,7 @@ export function DashboardLayout({
 
   // Nav items list
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
     { name: "Nouveau Scan", href: "/dashboard/scan", icon: Activity },
     { name: "Historique", href: "/dashboard/history", icon: History },
     { name: "Rapports", href: "/dashboard/reports", icon: FileText },
