@@ -88,7 +88,48 @@ const lightCardCx = "rounded-2xl border border-sky-100/80 bg-white/85 shadow-[0_
 export function PlatformLanding() {
   const [openFaq, setOpenFaq] = useState(0);
   const [sent, setSent] = useState(false);
-  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSent(true); event.currentTarget.reset(); };
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  // Contact form state
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactCompany, setContactCompany] = useState("");
+  const [contactSubject, setContactSubject] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: contactName,
+          email: contactEmail,
+          subject: contactSubject || contactCompany || "Message depuis la landing page",
+          message: contactMessage,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setSent(true);
+        setContactName("");
+        setContactEmail("");
+        setContactCompany("");
+        setContactSubject("");
+        setContactMessage("");
+      } else {
+        setSendError(json.error || "Une erreur est survenue.");
+      }
+    } catch {
+      setSendError("Erreur de connexion avec le serveur.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return <main className="overflow-hidden bg-white text-slate-900">
 
@@ -220,9 +261,32 @@ export function PlatformLanding() {
         <div>
           <form onSubmit={submit} className={`relative overflow-hidden p-6 md:p-8 ${lightCardCx}`}>
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-sky-50/50 to-transparent" />
-            <div className="relative grid gap-5 sm:grid-cols-2">{[["Nom complet","text","Votre nom"],["Email","email","vous@entreprise.com"],["Entreprise","text","Votre entreprise"],["Sujet","text","Comment pouvons-nous vous aider ?"]].map(([label,type,placeholder]) => <label key={label} className="text-sm font-medium text-slate-700">{label}<input required={label !== "Entreprise" && label !== "Sujet"} type={type} placeholder={placeholder} className="mt-2 w-full rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" /></label>)}</div>
-            <label className="relative mt-5 block text-sm font-medium text-slate-700">Message<textarea required rows={5} placeholder="Parlez-nous un peu de vos besoins." className="mt-2 w-full resize-none rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" /></label>
-            <button className="relative mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-cyan-400 px-5 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-200/60 transition hover:-translate-y-0.5 hover:from-sky-500 hover:to-cyan-500"><Send className="size-4" />{sent ? "Message envoyé" : "Envoyer le message"}</button>
+            <div className="relative grid gap-5 sm:grid-cols-2">
+              <label className="text-sm font-medium text-slate-700">Nom complet
+                <input required type="text" placeholder="Votre nom" value={contactName} onChange={e => setContactName(e.target.value)} className="mt-2 w-full rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" />
+              </label>
+              <label className="text-sm font-medium text-slate-700">Email
+                <input required type="email" placeholder="vous@entreprise.com" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" />
+              </label>
+              <label className="text-sm font-medium text-slate-700">Entreprise
+                <input type="text" placeholder="Votre entreprise" value={contactCompany} onChange={e => setContactCompany(e.target.value)} className="mt-2 w-full rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" />
+              </label>
+              <label className="text-sm font-medium text-slate-700">Sujet
+                <input type="text" placeholder="Comment pouvons-nous vous aider ?" value={contactSubject} onChange={e => setContactSubject(e.target.value)} className="mt-2 w-full rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" />
+              </label>
+            </div>
+            <label className="relative mt-5 block text-sm font-medium text-slate-700">Message
+              <textarea required rows={5} placeholder="Parlez-nous un peu de vos besoins." value={contactMessage} onChange={e => setContactMessage(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-sky-100 bg-white/90 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100" />
+            </label>
+            {sendError && (
+              <p className="mt-3 text-xs text-red-600 font-medium">{sendError}</p>
+            )}
+            {sent && (
+              <p className="mt-3 text-xs text-emerald-600 font-semibold">✓ Message envoyé avec succès ! Nous vous répondrons très prochainement.</p>
+            )}
+            <button disabled={sending} className="relative mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-cyan-400 px-5 py-3.5 text-sm font-semibold text-white shadow-md shadow-sky-200/60 transition hover:-translate-y-0.5 hover:from-sky-500 hover:to-cyan-500 disabled:opacity-70 disabled:cursor-not-allowed">
+              <Send className="size-4" />{sending ? "Envoi en cours..." : sent ? "Message envoyé ✓" : "Envoyer le message"}
+            </button>
           </form>
           <div className={`relative mt-10 overflow-hidden p-6 ${lightCardCx}`}>
             <p className="text-sm font-semibold text-slate-900">Questions fréquemment posées</p>

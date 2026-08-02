@@ -82,15 +82,9 @@ export function Navbar() {
           <div className="hidden sm:flex items-center gap-3">
             <Link
               href="/login"
-              className="text-sm font-medium text-slate-300 hover:text-white transition-colors px-3 py-2"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/dashboard"
               className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-blue-600/20 hover:opacity-90 transition-opacity"
             >
-              Commencer
+              Connexion
             </Link>
           </div>
 
@@ -128,15 +122,9 @@ export function Navbar() {
                 <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
                   <Link
                     href="/login"
-                    className="text-sm text-slate-300 hover:text-white transition-colors py-2"
-                  >
-                    Connexion
-                  </Link>
-                  <Link
-                    href="/dashboard"
                     className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white text-center"
                   >
-                    Commencer
+                    Connexion
                   </Link>
                 </div>
               </div>

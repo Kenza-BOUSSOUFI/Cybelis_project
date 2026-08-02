@@ -62,6 +62,15 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { fullName, companyName, phone } = body;
 
+    // Mettre à jour les métadonnées globales Supabase pour la synchronisation
+    await supabase.auth.updateUser({
+      data: {
+        full_name: fullName !== undefined ? fullName : user.user_metadata?.full_name,
+        company: companyName !== undefined ? companyName : user.user_metadata?.company,
+        phone: phone !== undefined ? phone : user.user_metadata?.phone,
+      }
+    });
+
     const updatedUser = await prisma.user.update({
       where: { authUserId: user.id },
       data: {

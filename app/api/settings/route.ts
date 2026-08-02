@@ -16,7 +16,7 @@ export async function GET() {
       user.id,
       user.email ?? '',
       user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
-      user.user_metadata?.company_name ?? ''
+      user.user_metadata?.company ?? ''
     );
     if (!dbUser) {
       return NextResponse.json({ error: "User not found in DB" }, { status: 404 });
@@ -47,7 +47,7 @@ export async function PATCH(request: Request) {
       user.id,
       user.email ?? '',
       user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
-      user.user_metadata?.company_name ?? ''
+      user.user_metadata?.company ?? ''
     );
     if (!dbUser) {
       return NextResponse.json({ error: "User not found in DB" }, { status: 404 });
@@ -56,16 +56,22 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { fullName, email, companyName } = body;
 
-    // Optional: If email is changed, it should probably be updated in Supabase auth as well.
-    // For now, we update the Prisma user profile.
+    // Update Supabase auth metadata to keep it in sync with DB
+    await supabase.auth.updateUser({
+      data: {
+        full_name: fullName !== undefined ? fullName : user.user_metadata?.full_name,
+        company: companyName !== undefined ? companyName : user.user_metadata?.company,
+      }
+    });
+
     const updatedUser = await prisma.user.update({
       where: {
         id: dbUser.id
       },
       data: {
-        fullName: fullName || dbUser.fullName,
-        email: email || dbUser.email,
-        companyName: companyName || dbUser.companyName,
+        fullName: fullName !== undefined ? fullName : dbUser.fullName,
+        email: email !== undefined ? email : dbUser.email,
+        companyName: companyName !== undefined ? companyName : dbUser.companyName,
       }
     });
 

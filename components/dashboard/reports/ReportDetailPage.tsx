@@ -196,39 +196,121 @@ export function ReportDetailPage() {
   };
 
   const exportPDF = async () => {
-    if (!reportRef.current || !scan) return;
+    if (!scan) return;
     setIsExporting(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const PW = 210;
+      const M = 16;
+      const CW = PW - M * 2;
+      let y = 20;
 
-      const element = reportRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff"
+      // helpers
+      const checkPage = (needed: number) => {
+        if (y + needed > 280) { doc.addPage(); y = 20; }
+      };
+      const line = (text: string, size = 10, bold = false, color: [number, number, number] = [30, 30, 30]) => {
+        checkPage(size * 0.6 + 4);
+        doc.setFontSize(size);
+        doc.setFont("helvetica", bold ? "bold" : "normal");
+        doc.setTextColor(...color);
+        doc.text(text, M, y);
+        y += size * 0.45 + 3;
+      };
+      const wrapped = (text: string, size = 9, color: [number, number, number] = [80, 80, 80]) => {
+        doc.setFontSize(size);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(text, CW);
+        lines.forEach((l: string) => { checkPage(8); doc.text(l, M, y); y += 5; });
+      };
+      const sep = () => {
+        checkPage(8);
+        doc.setDrawColor(220, 220, 230);
+        doc.line(M, y, PW - M, y);
+        y += 6;
+      };
+
+      // ── HEADER ────────────────────────────────────────────────────────────
+      doc.setFillColor(10, 20, 60);
+      doc.rect(0, 0, PW, 28, "F");
+      doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+      doc.text("Rapport de Sécurité — Cybelis", M, 12);
+      doc.setFontSize(9); doc.setFont("helvetica", "normal");
+      doc.text(`Domaine : ${scan.website.domain}   |   Date : ${new Date(scan.createdAt).toLocaleDateString("fr-FR")}`, M, 21);
+      y = 36;
+
+      // ── SCORE ─────────────────────────────────────────────────────────────
+      const score = scan.securityScore?.score ?? 0;
+      const grade = scan.securityScore?.grade ?? (score >= 90 ? "A" : score >= 70 ? "B" : score >= 50 ? "C" : score >= 30 ? "D" : "F");
+      line(`Score de sécurité : ${score}/100  (Grade ${grade})`, 12, true, [14, 80, 200]);
+      y += 2;
+      sep();
+
+      // ── SUMMARY ──────────────────────────────────────────────────────────
+      line("Résumé des vulnérabilités", 11, true);
+      y += 2;
+      const critical = issues.filter(i => i.severity === "critical").length;
+      const high = issues.filter(i => i.severity === "high").length;
+      const medium = issues.filter(i => i.severity === "medium").length;
+      const low = issues.filter(i => i.severity === "low").length;
+      ([
+        ["Critique", critical, [220, 38, 38]],
+        ["Élevé", high, [234, 88, 12]],
+        ["Moyen", medium, [202, 138, 4]],
+        ["Faible", low, [14, 165, 233]],
+      ] as [string, number, [number, number, number]][]).forEach(([label, count, color]) => {
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(...color);
+        doc.text(`${label} : ${count}`, M + 4, y);
+        y += 5.5;
       });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210; // A4 size
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+      y += 2;
+      sep();
 
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      // ── ISSUES DETAIL ─────────────────────────────────────────────────────
+      if (issues.length === 0) {
+        line("✓ Aucune vulnérabilité détectée.", 10, false, [5, 150, 105]);
+      } else {
+        line("Détail des vulnérabilités", 11, true);
+        y += 3;
+        issues.forEach((issue, idx) => {
+          checkPage(28);
+          const sevColor: [number, number, number] =
+            issue.severity === "critical" ? [220, 38, 38] :
+            issue.severity === "high" ? [234, 88, 12] :
+            issue.severity === "medium" ? [202, 138, 4] : [14, 165, 233];
+          doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...sevColor);
+          doc.text(`[${issue.severity.toUpperCase()}]`, M, y);
+          doc.setTextColor(30, 30, 30);
+          doc.text(`${idx + 1}. ${issue.title}`, M + 20, y);
+          y += 5.5;
+          doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 120);
+          doc.text(`Outil : ${issue.tool}`, M + 4, y);
+          y += 5;
+          wrapped(issue.description);
+          if (issue.fix) {
+            doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(5, 150, 105);
+            doc.text("Correction :", M + 4, y); y += 5;
+            wrapped(issue.fix, 8, [5, 150, 105]);
+          }
+          y += 3;
+        });
+      }
+      sep();
 
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // ── FOOTER ───────────────────────────────────────────────────────────
+      const total = doc.getNumberOfPages();
+      for (let p = 1; p <= total; p++) {
+        doc.setPage(p);
+        doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(160, 160, 160);
+        doc.text(`Cybelis Security Audit — ${scan.website.domain} — Page ${p}/${total}`, M, 292);
       }
 
-      pdf.save(`Rapport_Cybelis_${scan.website.domain}.pdf`);
+      doc.save(`Rapport_Cybelis_${scan.website.domain}_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
+      alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
     }
