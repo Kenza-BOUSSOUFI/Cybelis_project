@@ -47,185 +47,120 @@ const scoreBadge = (score: number) => {
 
 const severityLabel: Record<string, string> = {
   critical: "Critique",
-  high:     "Élevé",
-  medium:   "Moyen",
-  low:      "Faible",
-  info:     "Info",
+  high: "Élevé",
+  medium: "Moyen",
+  low: "Faible",
+  info: "Info",
 };
 
-// ── PDF generation — jsPDF only, no html2canvas/canvg ────────────────────────
+// ── PDF generation — delegates to shared professional generator ───────────────
 
 async function generateAndDownloadPDF(reportId: string) {
-  const res = await fetch(`/api/reports/${reportId}`);
+  // 1. Fetch the full scan data (same endpoint used by ReportDetailPage)
+  const res = await fetch(`/api/scans/${reportId}`);
   if (!res.ok) {
     alert("Impossible de récupérer les données du rapport.");
     return;
   }
-  const data: ScanDetails = await res.json();
+  const json = await res.json();
+  if (!json.success || !json.data) {
+    alert("Données de rapport invalides.");
+    return;
+  }
+  const scanData = json.data;
 
-  // Dynamic import: never bundled server-side → fixes canvg/core-js errors
-  const { jsPDF } = await import("jspdf");
+  // 2. Dynamically import enrichment utilities (client-side only)
+  const [
+    { getOwaspMapping },
+    { fetchCveForFinding },
+    { calculateIso27001Compliance },
+    { generateCybelisPDF },
+  ] = await Promise.all([
+    import("@/lib/enrichment/owasp"),
+    import("@/lib/enrichment/cve"),
+    import("@/lib/enrichment/iso27001"),
+    import("@/lib/pdf/generateReport"),
+  ]);
 
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const PW = 210;
-  const M = 16;
-  const CW = PW - M * 2;
-  let y = 20;
+  // 3. Calculate ISO 27001 compliance from real scan results
+  const isoCompliance = calculateIso27001Compliance(scanData.results || []);
 
-  // helpers
-  const line = (
-    text: string,
-    size = 10,
-    bold = false,
-    color: [number, number, number] = [30, 30, 30]
-  ) => {
-    doc.setFontSize(size);
-    doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.setTextColor(...color);
-    doc.text(text, M, y);
-    y += size * 0.45 + 2;
+  // 4. Build enriched issues list (same logic as ReportDetailPage)
+  const issues: any[] = [];
+  const getFixText = (slug: string) => {
+    if (slug === "ssl-checker") return "Configurez le renouvellement automatique via Let's Encrypt (Certbot) ou installez un certificat SSL valide.";
+    if (slug === "tls-analyzer") return "Désactivez TLS 1.0/1.1. Autorisez uniquement TLS 1.2 et TLS 1.3 dans la configuration de votre serveur.";
+    if (slug === "security-headers") return "Ajoutez les en-têtes de sécurité manquants (HSTS, CSP, X-Frame-Options) dans la configuration de votre serveur web.";
+    if (slug === "cookie-analyzer") return "Ajoutez les attributs Secure, HttpOnly et SameSite=Lax/Strict sur tous les cookies de session.";
+    if (slug === "dmarc-checker") return "Créez un enregistrement TXT DNS '_dmarc.domaine.com' avec une politique p=reject.";
+    if (slug === "spf-checker") return "Corrigez votre enregistrement SPF en remplaçant '~all' par '-all'.";
+    return "Vérifiez la configuration du module et appliquez les recommandations de sécurité correspondantes.";
+  };
+  const getImpactText = (slug: string) => {
+    if (slug === "ssl-checker") return "Les navigateurs bloquent l'accès au site, causant une perte totale de trafic.";
+    if (slug === "tls-analyzer") return "Les données transmises peuvent être interceptées et déchiffrées par un attaquant.";
+    if (slug === "security-headers") return "Vulnérabilité aux attaques Clickjacking, XSS ou injection de contenu non autorisé.";
+    if (slug === "cookie-analyzer") return "Les scripts malveillants peuvent voler les cookies de session et usurper l'identité de l'utilisateur.";
+    if (slug === "dmarc-checker") return "N'importe qui peut forger des emails usurpant votre domaine (phishing).";
+    return "Risque d'exposition et de compromission des données ou de disponibilité de la plateforme.";
   };
 
-  const wrapped = (
-    text: string,
-    size = 9,
-    color: [number, number, number] = [80, 80, 80]
-  ) => {
-    doc.setFontSize(size);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...color);
-    const lines = doc.splitTextToSize(text, CW) as string[];
-    doc.text(lines, M, y);
-    y += lines.length * (size * 0.45 + 1.5) + 1;
-  };
+  for (const result of scanData.results || []) {
+    const toolSlug = result.tool.slug;
+    let category: "website" | "email" | "dns" = "website";
+    if (result.tool.category === "EMAIL_SECURITY") category = "email";
+    else if (result.tool.category === "DNS_DOMAIN_SECURITY") category = "dns";
 
-  const sep = () => {
-    doc.setDrawColor(220, 220, 220);
-    doc.line(M, y, PW - M, y);
-    y += 5;
-  };
+    const recs = result.recommendations && result.recommendations.length > 0
+      ? result.recommendations
+      : (result.status === "FAIL" || result.status === "WARNING") ? [null] : [];
 
-  const checkPage = (need = 30) => {
-    if (y + need > 282) { doc.addPage(); y = 20; }
-  };
+    for (const rec of recs) {
+      let severity: "critical" | "high" | "medium" | "low" = "low";
+      const sev = ((rec?.priority || result.severity) ?? "").toLowerCase();
+      if (sev === "critical") severity = "critical";
+      else if (sev === "high") severity = "high";
+      else if (sev === "medium") severity = "medium";
 
-  // ── Blue header bar ──────────────────────────────────────────────────────
-  doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, PW, 14, "F");
-  doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
-  doc.text("CYBELIS — Rapport d'Audit de Sécurité", M, 9);
-  doc.setFontSize(8); doc.setFont("helvetica", "normal");
-  doc.text(`Généré le ${new Date().toLocaleDateString("fr-FR")}`, PW - M, 9, { align: "right" });
-  y = 22;
+      const owasp = getOwaspMapping(result.result);
+      const cve = await fetchCveForFinding(result.result);
 
-  // ── Summary ──────────────────────────────────────────────────────────────
-  line(`Domaine : ${data.domain}`, 13, true);
-  y += 1;
-  line(
-    `Date du scan : ${new Date(data.createdAt).toLocaleDateString("fr-FR", {
-      day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
-    })}`,
-    9, false, [100, 100, 100]
+      issues.push({
+        id: rec?.id ?? result.id,
+        category,
+        tool: result.tool.name,
+        toolSlug,
+        title: rec?.title ?? `Alerte de sécurité : ${result.tool.name}`,
+        severity,
+        description: rec?.description ?? `Le module ${result.tool.name} a détecté une anomalie (Statut : ${result.status}).`,
+        impact: getImpactText(toolSlug),
+        fix: getFixText(toolSlug),
+        resolved: false,
+        owasp,
+        cve,
+      });
+    }
+  }
+
+  // 5. Generate the professional PDF using the shared utility
+  await generateCybelisPDF(
+    {
+      website: { domain: scanData.website.domain },
+      createdAt: scanData.createdAt,
+      securityScore: scanData.securityScore,
+    },
+    issues,
+    isoCompliance
   );
-  y += 3;
-
-  const score = data.score;
-  const scoreRGB: [number, number, number] =
-    score >= 80 ? [5, 150, 105] : score >= 60 ? [217, 119, 6] : [220, 38, 38];
-  doc.setFillColor(...scoreRGB);
-  doc.roundedRect(M, y, 42, 10, 2, 2, "F");
-  doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
-  doc.text(`Score : ${score} / 100`, M + 4, y + 6.5);
-  y += 16;
-
-  if (data.modules.length > 0) {
-    line("Modules analysés :", 9, true);
-    wrapped(data.modules.join("  •  "), 8, [60, 80, 180]);
-    y += 2;
-  }
-  sep();
-
-  // ── Severity summary ─────────────────────────────────────────────────────
-  const counts = { critical: 0, high: 0, medium: 0, low: 0 };
-  data.vulnerabilities.forEach((v) => {
-    if (v.severity in counts) counts[v.severity as keyof typeof counts]++;
-  });
-
-  checkPage(30);
-  line("Résumé des vulnérabilités", 11, true);
-  y += 2;
-  (
-    [
-      ["Critique", counts.critical, [220, 38,  38]  as [number,number,number]],
-      ["Élevé",    counts.high,     [234, 88,  12]  as [number,number,number]],
-      ["Moyen",    counts.medium,   [202, 138, 4]   as [number,number,number]],
-      ["Faible",   counts.low,      [14,  165, 233] as [number,number,number]],
-    ] as [string, number, [number, number, number]][]
-  ).forEach(([label, count, color]) => {
-    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(...color);
-    doc.text(`${label} :  ${count}`, M + 4, y);
-    y += 5.5;
-  });
-  y += 2;
-  sep();
-
-  // ── Vulnerability detail ─────────────────────────────────────────────────
-  if (data.vulnerabilities.length === 0) {
-    line("✓ Aucune vulnérabilité détectée.", 10, false, [5, 150, 105]);
-  } else {
-    checkPage(20);
-    line("Détail des vulnérabilités", 11, true);
-    y += 3;
-
-    data.vulnerabilities.forEach((v, idx) => {
-      checkPage(40);
-
-      const sevRGB: [number, number, number] =
-        v.severity === "critical" ? [220, 38,  38]  :
-        v.severity === "high"     ? [234, 88,  12]  :
-        v.severity === "medium"   ? [202, 138, 4]   :
-                                    [14,  165, 233];
-
-      // severity pill
-      doc.setFillColor(...sevRGB);
-      doc.roundedRect(M, y, 24, 5.5, 1.2, 1.2, "F");
-      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
-      doc.text((severityLabel[v.severity] ?? v.severity).toUpperCase(), M + 2, y + 3.8);
-
-      // title
-      doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(20, 20, 20);
-      const titleLines = doc.splitTextToSize(`${idx + 1}. ${v.title}`, CW - 28) as string[];
-      doc.text(titleLines, M + 27, y + 3.8);
-      y += Math.max(8, titleLines.length * 4.5 + 2);
-
-      wrapped(`Description : ${v.description}`, 8.5);
-      y += 1;
-      wrapped(`Remédiation : ${v.remediation}`, 8.5, [37, 99, 235]);
-      y += 5;
-
-      doc.setDrawColor(235, 235, 235);
-      doc.line(M + 8, y - 3, PW - M, y - 3);
-    });
-  }
-
-  // ── Page footer ───────────────────────────────────────────────────────────
-  const total = doc.getNumberOfPages();
-  for (let p = 1; p <= total; p++) {
-    doc.setPage(p);
-    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(160, 160, 160);
-    doc.text(`Cybelis Security Audit — ${data.domain} — Page ${p}/${total}`, M, 292);
-  }
-
-  doc.save(`Rapport_Cybelis_${data.domain}_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
   const router = useRouter();
-  const [reports, setReports]           = useState<Report[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
-  const [exportingId, setExportingId]   = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   // Fetch report list
   useEffect(() => {

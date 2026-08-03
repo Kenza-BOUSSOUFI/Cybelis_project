@@ -44,31 +44,31 @@ interface Issue {
 function getFixTextForTool(slug: string, title: string): string | null {
   const tLower = title.toLowerCase();
   if (slug === 'ssl-checker') {
-    return "Configurez le renouvellement automatique via votre hébergeur ou Let's Encrypt (Certbot), ou installez un certificat SSL valide auprès de votre autorité de certification.";
+    return "Configurez le renouvellement automatique via votre hÃ©bergeur ou Let's Encrypt (Certbot), ou installez un certificat SSL valide auprÃ¨s de votre autoritÃ© de certification.";
   }
   if (slug === 'tls-analyzer') {
-    return "Désactivez les protocoles obsolètes (TLS 1.0, TLS 1.1) dans les réglages système ou de votre serveur web (Nginx/Apache). Configurez le serveur pour n'autoriser que TLS 1.2 et TLS 1.3.";
+    return "DÃ©sactivez les protocoles obsolÃ¨tes (TLS 1.0, TLS 1.1) dans les rÃ©glages systÃ¨me ou de votre serveur web (Nginx/Apache). Configurez le serveur pour n'autoriser que TLS 1.2 et TLS 1.3.";
   }
   if (slug === 'security-headers') {
     if (tLower.includes('hsts') || tLower.includes('strict-transport')) {
-      return "Ajoutez l'en-tête suivant dans la configuration de votre serveur web (Nginx: 'add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;', Apache: 'Header always set Strict-Transport-Security \"max-age=31536000; includeSubDomains\"').";
+      return "Ajoutez l'en-tÃªte suivant dans la configuration de votre serveur web (Nginx: 'add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;', Apache: 'Header always set Strict-Transport-Security \"max-age=31536000; includeSubDomains\"').";
     }
     if (tLower.includes('frame') || tLower.includes('clickjacking')) {
-      return "Ajoutez l'en-tête 'X-Frame-Options: DENY' ou 'X-Frame-Options: SAMEORIGIN' sur toutes les réponses HTTP.";
+      return "Ajoutez l'en-tÃªte 'X-Frame-Options: DENY' ou 'X-Frame-Options: SAMEORIGIN' sur toutes les rÃ©ponses HTTP.";
     }
-    return "Ajoutez l'en-tête de sécurité manquant dans les configurations de réponse HTTP de votre serveur web.";
+    return "Ajoutez l'en-tÃªte de sÃ©curitÃ© manquant dans les configurations de rÃ©ponse HTTP de votre serveur web.";
   }
   if (slug === 'cookie-analyzer') {
     return "Ajoutez les attributs 'Secure' (force le HTTPS), 'HttpOnly' (interdit la lecture par JavaScript) et 'SameSite=Lax/Strict' sur tous les cookies de session ou d'authentification.";
   }
   if (slug === 'csp-validator') {
-    return "Mettez en place une politique d'en-tête Content-Security-Policy (CSP) stricte (ex: default-src 'self'). Testez-la d'abord via l'en-tête Content-Security-Policy-Report-Only.";
+    return "Mettez en place une politique d'en-tÃªte Content-Security-Policy (CSP) stricte (ex: default-src 'self'). Testez-la d'abord via l'en-tÃªte Content-Security-Policy-Report-Only.";
   }
   if (slug === 'dmarc-checker') {
-    return "Créez ou mettez à jour votre enregistrement DNS TXT sous le sous-domaine '_dmarc.votre-domaine.com' (valeur recommandée: 'v=DMARC1; p=reject; rua=mailto:dmarc-reports@votre-domaine.com').";
+    return "CrÃ©ez ou mettez Ã  jour votre enregistrement DNS TXT sous le sous-domaine '_dmarc.votre-domaine.com' (valeur recommandÃ©e: 'v=DMARC1; p=reject; rua=mailto:dmarc-reports@votre-domaine.com').";
   }
   if (slug === 'spf-checker') {
-    return "Vérifiez la liste de vos serveurs d'envoi légitimes (Google Workspace, Mailgun...) et remplacez le suffixe permissif '~all' par le mode strict '-all' dans votre enregistrement DNS TXT SPF.";
+    return "VÃ©rifiez la liste de vos serveurs d'envoi lÃ©gitimes (Google Workspace, Mailgun...) et remplacez le suffixe permissif '~all' par le mode strict '-all' dans votre enregistrement DNS TXT SPF.";
   }
   return null;
 }
@@ -76,25 +76,25 @@ function getFixTextForTool(slug: string, title: string): string | null {
 function getImpactTextForTool(slug: string, title: string): string | null {
   const tLower = title.toLowerCase();
   if (slug === 'ssl-checker') {
-    return "Les navigateurs modernes bloquent immédiatement l'accès au site, causant une perte totale de trafic et de confiance.";
+    return "Les navigateurs modernes bloquent immÃ©diatement l'accÃ¨s au site, causant une perte totale de trafic et de confiance.";
   }
   if (slug === 'tls-analyzer') {
-    return "Possibilité d'intercepter, d'écouter et de déchiffrer les données sensibles transmises par les utilisateurs sur le réseau local ou public.";
+    return "PossibilitÃ© d'intercepter, d'Ã©couter et de dÃ©chiffrer les donnÃ©es sensibles transmises par les utilisateurs sur le rÃ©seau local ou public.";
   }
   if (slug === 'security-headers') {
     if (tLower.includes('hsts')) {
-      return "Les attaquants locaux peuvent forcer les requêtes de vos utilisateurs à basculer vers HTTP (SSL Stripping) pour voler leurs cookies.";
+      return "Les attaquants locaux peuvent forcer les requÃªtes de vos utilisateurs Ã  basculer vers HTTP (SSL Stripping) pour voler leurs cookies.";
     }
-    return "Vulnérabilité aux attaques par intégration de frame (Clickjacking), injection de MIME type ou vols d'identifiants.";
+    return "VulnÃ©rabilitÃ© aux attaques par intÃ©gration de frame (Clickjacking), injection de MIME type ou vols d'identifiants.";
   }
   if (slug === 'cookie-analyzer') {
-    return "Les scripts malveillants (XSS) ou les connexions non chiffrées peuvent intercepter les identifiants de session et usurper le compte de la victime.";
+    return "Les scripts malveillants (XSS) ou les connexions non chiffrÃ©es peuvent intercepter les identifiants de session et usurper le compte de la victime.";
   }
   if (slug === 'csp-validator') {
-    return "Vulnérabilité critique aux failles Cross-Site Scripting (XSS), permettant à des scripts distants non autorisés de s'exécuter à la place du site légitime.";
+    return "VulnÃ©rabilitÃ© critique aux failles Cross-Site Scripting (XSS), permettant Ã  des scripts distants non autorisÃ©s de s'exÃ©cuter Ã  la place du site lÃ©gitime.";
   }
   if (slug === 'dmarc-checker') {
-    return "N'importe qui peut forger des emails légitimes usurpant votre domaine, ruinant votre réputation d'expéditeur et piégeant vos clients par hameçonnage.";
+    return "N'importe qui peut forger des emails lÃ©gitimes usurpant votre domaine, ruinant votre rÃ©putation d'expÃ©diteur et piÃ©geant vos clients par hameÃ§onnage.";
   }
   return null;
 }
@@ -149,7 +149,7 @@ export function ReportDetailPage() {
                 else if (sev === "medium") severity = "medium";
 
                 const fixText = getFixTextForTool(toolSlug, rec.title) || rec.description;
-                const impactText = getImpactTextForTool(toolSlug, rec.title) || "Risque d'exposition et de compromission des données ou de la disponibilité de la plateforme.";
+                const impactText = getImpactTextForTool(toolSlug, rec.title) || "Risque d'exposition et de compromission des donnÃ©es ou de la disponibilitÃ© de la plateforme.";
 
                 const owasp = getOwaspMapping(result.result);
                 const cve = await fetchCveForFinding(result.result);
@@ -180,8 +180,8 @@ export function ReportDetailPage() {
               else if (sev === "high") severity = "high";
               else if (sev === "medium") severity = "medium";
 
-              const fixText = getFixTextForTool(toolSlug, result.tool.name) || `Vérifiez la configuration du module ${result.tool.name}.`;
-              const impactText = getImpactTextForTool(toolSlug, result.tool.name) || "Risque d'exposition et de compromission des données ou de la disponibilité de la plateforme.";
+              const fixText = getFixTextForTool(toolSlug, result.tool.name) || `VÃ©rifiez la configuration du module ${result.tool.name}.`;
+              const impactText = getImpactTextForTool(toolSlug, result.tool.name) || "Risque d'exposition et de compromission des donnÃ©es ou de la disponibilitÃ© de la plateforme.";
 
               const owasp = getOwaspMapping(result.result);
               const cve = await fetchCveForFinding(result.result);
@@ -191,9 +191,9 @@ export function ReportDetailPage() {
                 category,
                 tool: result.tool.name,
                 toolSlug,
-                title: `Alerte de sécurité : ${result.tool.name}`,
+                title: `Alerte de sÃ©curitÃ© : ${result.tool.name}`,
                 severity,
-                description: `Le module ${result.tool.name} a détecté une anomalie de sécurité (Statut : ${result.status}).`,
+                description: `Le module ${result.tool.name} a dÃ©tectÃ© une anomalie de sÃ©curitÃ© (Statut : ${result.status}).`,
                 impact: impactText,
                 fix: fixText,
                 resolved: false,
@@ -204,10 +204,10 @@ export function ReportDetailPage() {
           }
           setIssues(mapped);
         } else {
-          setError(json.error || "Impossible de charger les détails du scan.");
+          setError(json.error || "Impossible de charger les dÃ©tails du scan.");
         }
       } catch (err) {
-        setError("Erreur lors de la récupération des détails du scan.");
+        setError("Erreur lors de la rÃ©cupÃ©ration des dÃ©tails du scan.");
       } finally {
         setLoading(false);
       }
@@ -226,621 +226,15 @@ export function ReportDetailPage() {
     if (!scan) return;
     setIsExporting(true);
     try {
-      const { jsPDF } = await import("jspdf");
-
-      // ─── CONSTANTS & PALETTE ──────────────────────────────────────────────
-      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const PW = 210, PH = 297;
-      const M = 18; // margin
-      const CW = PW - M * 2;
-      const HEADER_H = 14, FOOTER_H = 10;
-      const CONTENT_TOP = HEADER_H + 6;
-      const CONTENT_BOTTOM = PH - FOOTER_H - 4;
-
-      // Color palette
-      const C = {
-        navy:    [10, 25, 60]   as [number,number,number],
-        navyLight:[20, 48, 100] as [number,number,number],
-        accent:  [37, 99, 235]  as [number,number,number],
-        accentLight:[219,234,254] as [number,number,number],
-        white:   [255,255,255]  as [number,number,number],
-        ink:     [15, 23, 42]   as [number,number,number],
-        body:    [51, 65, 85]   as [number,number,number],
-        muted:   [100,116,139]  as [number,number,number],
-        border:  [203,213,225]  as [number,number,number],
-        bg:      [248,250,252]  as [number,number,number],
-        critical:[185, 28, 28]  as [number,number,number],
-        criticalBg:[254,226,226] as [number,number,number],
-        high:    [194, 65, 12]  as [number,number,number],
-        highBg:  [255,237,213]  as [number,number,number],
-        medium:  [161, 98, 7]   as [number,number,number],
-        mediumBg:[254,243,199]  as [number,number,number],
-        low:     [3, 105, 161]  as [number,number,number],
-        lowBg:   [224,242,254]  as [number,number,number],
-        green:   [5, 150, 105]  as [number,number,number],
-        greenBg: [209,250,229]  as [number,number,number],
-        red:     [220, 38, 38]  as [number,number,number],
-        amber:   [217,119,6]    as [number,number,number],
-        purple:  [79, 70, 229]  as [number,number,number],
-        purpleBg:[237,233,254]  as [number,number,number],
-      };
-
-      // Scan data
-      const domain = scan.website.domain;
-      const scanDate = new Date(scan.createdAt);
-      const score = scan.securityScore?.score ?? 0;
-      const grade = scan.securityScore?.grade ?? (score >= 90 ? "A" : score >= 70 ? "B" : score >= 50 ? "C" : score >= 30 ? "D" : "F");
-      const criticalCount = issues.filter(i => i.severity === "critical").length;
-      const highCount = issues.filter(i => i.severity === "high").length;
-      const mediumCount = issues.filter(i => i.severity === "medium").length;
-      const lowCount = issues.filter(i => i.severity === "low").length;
-
-      // ─── HELPERS ────────────────────────────────────────────────────────
-      let y = CONTENT_TOP;
-      let currentPage = 1;
-
-      const drawPageHeader = (page: number) => {
-        // Background strip
-        doc.setFillColor(...C.navy);
-        doc.rect(0, 0, PW, HEADER_H, "F");
-        // Accent bar
-        doc.setFillColor(...C.accent);
-        doc.rect(0, HEADER_H - 1.5, PW, 1.5, "F");
-        // Left: brand name
-        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-        doc.text("CYBELIS", M, 9);
-        doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-        doc.text("Cyber Security Assessment", M, 12.5);
-        // Right: domain
-        doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-        doc.text(domain, PW - M, 9, { align: "right" });
-        doc.text(`Audit du ${scanDate.toLocaleDateString("fr-FR")}`, PW - M, 12.5, { align: "right" });
-      };
-
-      const drawPageFooter = (page: number, totalPages: number) => {
-        doc.setDrawColor(...C.border);
-        doc.line(M, PH - FOOTER_H, PW - M, PH - FOOTER_H);
-        doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-        doc.text(`© ${new Date().getFullYear()} Cybelis — Rapport Confidentiel`, M, PH - 5);
-        doc.text(`Généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`, PW / 2, PH - 5, { align: "center" });
-        doc.text(`Page ${page} / ${totalPages}`, PW - M, PH - 5, { align: "right" });
-      };
-
-      const newPage = () => {
-        doc.addPage();
-        currentPage++;
-        y = CONTENT_TOP;
-        drawPageHeader(currentPage);
-      };
-
-      const checkPage = (needed: number) => {
-        if (y + needed > CONTENT_BOTTOM) newPage();
-      };
-
-      const sectionTitle = (title: string, icon: string = "") => {
-        checkPage(16);
-        doc.setFillColor(...C.navy);
-        doc.roundedRect(M, y, CW, 9, 1.5, 1.5, "F");
-        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-        doc.text(`${icon}  ${title}`.trim(), M + 4, y + 6);
-        y += 14;
-      };
-
-      const bodyText = (text: string, size = 9, color: [number,number,number] = C.body, indent = 0) => {
-        doc.setFontSize(size); doc.setFont("helvetica", "normal"); doc.setTextColor(...color);
-        const lines = doc.splitTextToSize(text, CW - indent);
-        lines.forEach((l: string) => { checkPage(6); doc.text(l, M + indent, y); y += 5; });
-      };
-
-      const labelText = (label: string, value: string, labelColor = C.muted, valueColor = C.ink) => {
-        checkPage(7);
-        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...labelColor);
-        doc.text(label, M + 3, y);
-        doc.setFont("helvetica", "normal"); doc.setTextColor(...valueColor);
-        doc.text(value, M + 38, y);
-        y += 5.5;
-      };
-
-      const severityColors = (sev: string): { fg: [number,number,number], bg: [number,number,number], label: string } => {
-        if (sev === "critical") return { fg: C.critical, bg: C.criticalBg, label: "CRITIQUE" };
-        if (sev === "high")     return { fg: C.high,     bg: C.highBg,     label: "ÉLEVÉ" };
-        if (sev === "medium")   return { fg: C.medium,   bg: C.mediumBg,   label: "MOYEN" };
-        return                         { fg: C.low,      bg: C.lowBg,      label: "FAIBLE" };
-      };
-
-      const drawBadge = (label: string, fg: [number,number,number], bg: [number,number,number], x: number, yPos: number, w = 22, h = 5.5) => {
-        doc.setFillColor(...bg);
-        doc.roundedRect(x, yPos - 4, w, h, 1.5, 1.5, "F");
-        doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...fg);
-        doc.text(label, x + w / 2, yPos, { align: "center" });
-      };
-
-      const hRule = (alpha = C.border) => {
-        checkPage(6);
-        doc.setDrawColor(...alpha);
-        doc.line(M, y, PW - M, y);
-        y += 6;
-      };
-
-      // ════════════════════════════════════════════════════════════════════
-      // PAGE 1 : COVER PAGE
-      // ════════════════════════════════════════════════════════════════════
-      doc.setFillColor(...C.navy);
-      doc.rect(0, 0, PW, PH, "F");
-
-      // Accent diagonal stripe
-      doc.setFillColor(...C.navyLight);
-      doc.rect(0, 100, PW, 2, "F");
-
-      // Top brand
-      doc.setFontSize(28); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-      doc.text("CYBELIS", PW / 2, 55, { align: "center" });
-      doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-      doc.text("CYBER SECURITY PLATFORM", PW / 2, 63, { align: "center" });
-
-      // Accent line
-      doc.setFillColor(...C.accent);
-      doc.rect(M + 30, 67, CW - 60, 1, "F");
-
-      // Report title
-      doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-      doc.text("Cyber Security Assessment Report", PW / 2, 82, { align: "center" });
-      doc.setFontSize(9.5); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-      doc.text("Rapport d'Audit de Sécurité — Analyse Externe", PW / 2, 90, { align: "center" });
-
-      // Target info box
-      doc.setFillColor(20, 45, 100);
-      doc.roundedRect(M + 15, 98, CW - 30, 36, 3, 3, "F");
-      doc.setFillColor(...C.accent);
-      doc.roundedRect(M + 15, 98, 3, 36, 1.5, 1.5, "F");
-
-      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(148, 163, 184);
-      doc.text("CIBLE D'ANALYSE", M + 22, 108);
-      doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-      doc.text(domain, M + 22, 116);
-      doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-      doc.text(`Date du scan : ${scanDate.toLocaleDateString("fr-FR")}  |  Heure : ${scanDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`, M + 22, 123);
-      doc.text(`Généré par : Cybelis Security Platform`, M + 22, 129);
-
-      // Score gauge
-      const scoreGaugeX = PW - M - 30;
-      const scoreGaugeY = 145;
-      const scoreColor: [number,number,number] = score >= 80 ? C.green : score >= 60 ? [234, 179, 8] : C.red;
-      doc.setFillColor(20, 45, 100);
-      doc.circle(scoreGaugeX, scoreGaugeY, 20, "F");
-      doc.setFontSize(20); doc.setFont("helvetica", "bold"); doc.setTextColor(...scoreColor);
-      doc.text(`${score}`, scoreGaugeX, scoreGaugeY + 3, { align: "center" });
-      doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-      doc.text("/100", scoreGaugeX, scoreGaugeY + 9, { align: "center" });
-      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-      doc.text(`Grade ${grade}`, scoreGaugeX, scoreGaugeY + 15.5, { align: "center" });
-      doc.text("Security Score", scoreGaugeX, scoreGaugeY + 19, { align: "center" });
-
-      // Vuln summary pills on cover
-      const pills = [
-        { label: "CRITIQUE", count: criticalCount, fg: C.critical, bg: C.criticalBg },
-        { label: "ÉLEVÉ",    count: highCount,     fg: C.high,     bg: C.highBg     },
-        { label: "MOYEN",    count: mediumCount,   fg: C.medium,   bg: C.mediumBg   },
-        { label: "FAIBLE",   count: lowCount,      fg: C.low,      bg: C.lowBg      },
-      ];
-      const pillW = 36, pillH = 22, pillGap = 5;
-      const pillsTotalW = pills.length * pillW + (pills.length - 1) * pillGap;
-      let pillX = (PW - pillsTotalW) / 2;
-      const pillY = 155;
-      pills.forEach(p => {
-        doc.setFillColor(20, 45, 100);
-        doc.roundedRect(pillX, pillY, pillW, pillH, 2, 2, "F");
-        doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...p.fg);
-        doc.text(`${p.count}`, pillX + pillW / 2, pillY + 12, { align: "center" });
-        doc.setFontSize(6); doc.setFont("helvetica", "bold"); doc.setTextColor(148, 163, 184);
-        doc.text(p.label, pillX + pillW / 2, pillY + 18, { align: "center" });
-        pillX += pillW + pillGap;
-      });
-
-      // ISO 27001 on cover
-      if (isoCompliance && isoCompliance.totalControls > 0) {
-        doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-        doc.text(`Conformité ISO/IEC 27001:2022 : ${isoCompliance.compliancePercentage}% — ${isoCompliance.passedCount} / ${isoCompliance.totalControls} contrôles`, PW / 2, 186, { align: "center" });
-      }
-
-      // Cover footer
-      doc.setFillColor(15, 35, 80);
-      doc.rect(0, PH - 22, PW, 22, "F");
-      doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-      doc.text("DOCUMENT CONFIDENTIEL — Réservé à usage interne ou client désigné", PW / 2, PH - 12, { align: "center" });
-      doc.text(`© ${new Date().getFullYear()} Cybelis — Tous droits réservés`, PW / 2, PH - 7, { align: "center" });
-
-      // ════════════════════════════════════════════════════════════════════
-      // PAGE 2 : TABLE OF CONTENTS
-      // ════════════════════════════════════════════════════════════════════
-      doc.addPage();
-      currentPage = 2;
-      drawPageHeader(currentPage);
-      y = CONTENT_TOP + 4;
-
-      doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-      doc.text("Table des Matières", M, y); y += 10;
-      hRule();
-
-      const tocItems = [
-        { num: "01", title: "Résumé Exécutif", page: 3 },
-        { num: "02", title: "Détail des Vulnérabilités & Références OWASP / CVE", page: 4 },
-        { num: "03", title: "Matrice de Conformité ISO/IEC 27001:2022", page: issues.length > 5 ? 6 : 5 },
-        { num: "04", title: "Conclusion & Priorités de Remédiation", page: issues.length > 8 ? 8 : 6 },
-      ];
-
-      tocItems.forEach((item) => {
-        checkPage(12);
-        doc.setFillColor(...C.bg);
-        doc.roundedRect(M, y - 4.5, CW, 8, 1, 1, "F");
-        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accent);
-        doc.text(item.num, M + 3, y);
-        doc.setFont("helvetica", "normal"); doc.setTextColor(...C.ink);
-        doc.text(item.title, M + 12, y);
-        doc.setTextColor(...C.muted);
-        doc.text(`p. ${item.page}`, PW - M - 3, y, { align: "right" });
-        // Dotted leader
-        doc.setDrawColor(...C.border);
-        const titleW = doc.getTextWidth(item.title);
-        const pageW = doc.getTextWidth(`p. ${item.page}`);
-        const leaderStart = M + 12 + titleW + 4;
-        const leaderEnd = PW - M - 3 - pageW - 4;
-        for (let lx = leaderStart; lx < leaderEnd; lx += 3) {
-          doc.circle(lx, y - 1.5, 0.3, "F");
-        }
-        y += 12;
-      });
-
-      // ════════════════════════════════════════════════════════════════════
-      // PAGE 3+ : EXECUTIVE SUMMARY
-      // ════════════════════════════════════════════════════════════════════
-      newPage();
-      sectionTitle("01 — Résumé Exécutif");
-
-      // Score card
-      checkPage(40);
-      doc.setFillColor(...C.bg);
-      doc.roundedRect(M, y, CW, 38, 3, 3, "F");
-      doc.setDrawColor(...C.border);
-      doc.roundedRect(M, y, CW, 38, 3, 3, "S");
-
-      // Score circle inside exec summary
-      const sc = { x: M + 22, y: y + 19 };
-      const scoreColor2: [number,number,number] = score >= 80 ? C.green : score >= 60 ? [234, 179, 8] : C.red;
-      doc.setFillColor(...scoreColor2);
-      doc.circle(sc.x, sc.y, 14, "F");
-      doc.setFillColor(...C.white);
-      doc.circle(sc.x, sc.y, 11.5, "F");
-      doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...scoreColor2);
-      doc.text(`${score}`, sc.x, sc.y + 2, { align: "center" });
-      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-      doc.text("/100", sc.x, sc.y + 7, { align: "center" });
-      doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
-      doc.text(`Grade ${grade}`, sc.x, sc.y + 13, { align: "center" });
-
-      // Stats inside card
-      const statsX = M + 50;
-      doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
-      doc.text("Résultats de l'analyse de sécurité", statsX, y + 8);
-      doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-      doc.text(`Domaine analysé : ${domain}`, statsX, y + 14);
-      doc.text(`Date : ${scanDate.toLocaleDateString("fr-FR")} — ${scanDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`, statsX, y + 20);
-      doc.text(`Total vulnérabilités : ${issues.length}`, statsX, y + 26);
-      if (isoCompliance) {
-        doc.text(`Conformité ISO 27001 : ${isoCompliance.compliancePercentage}% (${isoCompliance.passedCount}/${isoCompliance.totalControls})`, statsX, y + 32);
-      }
-      y += 44;
-
-      // Severity breakdown bar chart
-      checkPage(35);
-      doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
-      doc.text("Répartition des vulnérabilités par sévérité", M, y); y += 7;
-      const total_issues = issues.length || 1;
-      const barGroups = [
-        { label: "Critique", count: criticalCount, fg: C.critical, bg: C.criticalBg },
-        { label: "Élevé",    count: highCount,     fg: C.high,     bg: C.highBg },
-        { label: "Moyen",    count: mediumCount,   fg: C.medium,   bg: C.mediumBg },
-        { label: "Faible",   count: lowCount,      fg: C.low,      bg: C.lowBg },
-      ];
-      const barMaxW = CW - 42;
-      barGroups.forEach(bg_item => {
-        checkPage(9);
-        const barW = Math.max((bg_item.count / total_issues) * barMaxW, bg_item.count > 0 ? 2 : 0);
-        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
-        doc.text(bg_item.label, M, y);
-        doc.setFillColor(...bg_item.bg);
-        doc.roundedRect(M + 20, y - 4.5, barMaxW, 6, 1, 1, "F");
-        doc.setFillColor(...bg_item.fg);
-        if (barW > 0) doc.roundedRect(M + 20, y - 4.5, barW, 6, 1, 1, "F");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-        if (barW > 6) doc.text(`${bg_item.count}`, M + 20 + barW - 3, y - 0.5, { align: "right" });
-        else {
-          doc.setTextColor(...bg_item.fg);
-          doc.text(`${bg_item.count}`, M + 20 + barMaxW + 3, y - 0.5);
-        }
-        y += 9;
-      });
-      y += 4;
-      hRule();
-
-      // ════════════════════════════════════════════════════════════════════
-      // VULNERABILITY DETAIL CARDS
-      // ════════════════════════════════════════════════════════════════════
-      sectionTitle("02 — Détail des Vulnérabilités");
-
-      if (issues.length === 0) {
-        checkPage(16);
-        doc.setFillColor(...C.greenBg);
-        doc.roundedRect(M, y, CW, 12, 2, 2, "F");
-        doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.green);
-        doc.text("✓  Aucune vulnérabilité détectée lors de cette analyse.", M + 5, y + 8);
-        y += 18;
-      } else {
-        issues.forEach((issue, idx) => {
-          // Estimate card height to check page
-          checkPage(50);
-
-          const sev = severityColors(issue.severity);
-
-          // Card background
-          doc.setFillColor(...C.bg);
-          doc.setDrawColor(...C.border);
-          doc.roundedRect(M, y, CW, 7, 1.5, 1.5, "F");
-          // Severity color bar on left
-          doc.setFillColor(...sev.fg);
-          doc.roundedRect(M, y, 3, 7, 1.5, 1.5, "F");
-          doc.rect(M, y + 3, 3, 4, "F");
-
-          // Issue number & title
-          doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
-          doc.text(`#${String(idx + 1).padStart(2, "0")}`, M + 6, y + 5);
-          doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
-          const titleTruncated = issue.title.length > 70 ? issue.title.substring(0, 67) + "..." : issue.title;
-          doc.text(titleTruncated, M + 16, y + 5);
-          // Severity badge
-          drawBadge(sev.label, sev.fg, sev.bg, PW - M - 26, y + 5);
-          y += 9;
-
-          // Metadata row
-          doc.setFillColor(240, 244, 248);
-          doc.rect(M + 3, y, CW - 3, 6, "F");
-          doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-          doc.text(`Outil : ${issue.tool}  |  Catégorie : ${issue.category.toUpperCase()}`, M + 5, y + 4);
-          y += 8;
-
-          // Description
-          checkPage(12);
-          doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-          doc.text("Description", M + 3, y); y += 5;
-          bodyText(issue.description, 7.5, C.body, 3);
-          y += 2;
-
-          // Impact
-          if (issue.impact) {
-            checkPage(10);
-            doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.medium);
-            doc.text("Impact", M + 3, y); y += 5;
-            bodyText(issue.impact, 7.5, C.body, 3);
-            y += 2;
-          }
-
-          // Recommendation / Fix
-          if (issue.fix) {
-            checkPage(12);
-            doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.green);
-            doc.text("Recommandation", M + 3, y); y += 5;
-            // Display as bullet
-            const fixLines = doc.splitTextToSize(issue.fix, CW - 9);
-            doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.body);
-            fixLines.forEach((fl: string, fi: number) => {
-              checkPage(6);
-              if (fi === 0) {
-                doc.text("•", M + 5, y);
-                doc.text(fl, M + 9, y);
-              } else {
-                doc.text(fl, M + 9, y);
-              }
-              y += 5;
-            });
-            y += 2;
-          }
-
-          // OWASP badges
-          if (issue.owasp && issue.owasp.length > 0) {
-            checkPage(18);
-            doc.setFillColor(...C.purpleBg);
-            const owaspBlockH = issue.owasp.length * 13 + 6;
-            checkPage(owaspBlockH + 4);
-            doc.roundedRect(M + 3, y, CW - 3, owaspBlockH, 1.5, 1.5, "F");
-            doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.purple);
-            doc.text("OWASP Top 10 2021", M + 6, y + 5);
-            y += 7;
-            issue.owasp.forEach(o => {
-              doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.purple);
-              doc.text(`[${o.code}]`, M + 6, y);
-              doc.setFont("helvetica", "normal"); doc.setTextColor(...C.ink);
-              doc.text(o.title, M + 24, y);
-              y += 6;
-              const owLines = doc.splitTextToSize(o.description, CW - 12);
-              doc.setFontSize(6.5); doc.setTextColor(...C.body);
-              owLines.slice(0, 2).forEach((l: string) => { doc.text(l, M + 6, y); y += 4.5; });
-            });
-            y += 3;
-          }
-
-          // CVE / CVSS
-          checkPage(12);
-          if (issue.cve) {
-            doc.setFillColor(254, 242, 242);
-            doc.roundedRect(M + 3, y, CW - 3, 16, 1.5, 1.5, "F");
-            doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.red);
-            doc.text("CVE / CVSS", M + 6, y + 5);
-            doc.setFont("helvetica", "normal"); doc.setTextColor(...C.ink);
-            doc.text(`${issue.cve.cveId}`, M + 6, y + 10);
-            drawBadge(`CVSS ${issue.cve.cvssScore}`, C.red, [254,226,226], M + 26, y + 10, 22, 5.5);
-            drawBadge(issue.cve.severity, C.red, [254,226,226], M + 52, y + 10, 22, 5.5);
-            doc.setFontSize(6); doc.setTextColor(...C.accent);
-            doc.text(issue.cve.url, M + 6, y + 15);
-            y += 20;
-          } else {
-            doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-            doc.text("Aucune référence CVE disponible pour cette vulnérabilité de configuration.", M + 3, y + 4);
-            y += 9;
-          }
-
-          // Separator between issues
-          y += 3;
-          doc.setDrawColor(...C.border);
-          doc.setLineDashPattern([1, 2], 0);
-          doc.line(M, y, PW - M, y);
-          doc.setLineDashPattern([], 0);
-          y += 6;
-        });
-      }
-
-      // ════════════════════════════════════════════════════════════════════
-      // ISO 27001 TABLE
-      // ════════════════════════════════════════════════════════════════════
-      if (isoCompliance && isoCompliance.totalControls > 0) {
-        newPage();
-        sectionTitle("03 — Matrice de Conformité ISO/IEC 27001:2022");
-
-        // ISO summary bar
-        checkPage(12);
-        const isoBarW = CW;
-        const isoBarFill = (isoCompliance.passedCount / isoCompliance.totalControls) * isoBarW;
-        doc.setFillColor(...C.border);
-        doc.roundedRect(M, y, isoBarW, 5, 1, 1, "F");
-        doc.setFillColor(...C.green);
-        doc.roundedRect(M, y, isoBarFill, 5, 1, 1, "F");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
-        doc.text(`${isoCompliance.compliancePercentage}% de conformité — ${isoCompliance.passedCount} conformes / ${isoCompliance.totalControls} contrôles analysés`, M, y + 10);
-        y += 14;
-
-        // Table header
-        checkPage(12);
-        doc.setFillColor(...C.navy);
-        doc.rect(M, y, CW, 7, "F");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-        const colCode = M + 2, colStatus = M + 22, colName = M + 42, colRec = M + 100;
-        doc.text("Code", colCode, y + 5);
-        doc.text("Statut", colStatus, y + 5);
-        doc.text("Contrôle", colName, y + 5);
-        doc.text("Recommandation", colRec, y + 5);
-        y += 7;
-
-        // Table rows
-        isoCompliance.controls.forEach((ctrl, ri) => {
-          const rowH = 9;
-          checkPage(rowH + 2);
-
-          // Alternate row background
-          if (ri % 2 === 0) {
-            doc.setFillColor(...C.bg);
-            doc.rect(M, y, CW, rowH, "F");
-          }
-
-          const sColor: [number,number,number] = ctrl.status === "CONFORME" ? C.green : C.red;
-          const sBg: [number,number,number] = ctrl.status === "CONFORME" ? C.greenBg : C.criticalBg;
-
-          doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
-          doc.text(ctrl.code, colCode, y + 6);
-
-          drawBadge(ctrl.status === "CONFORME" ? "CONFORME" : "NON CONF.", sColor, sBg, colStatus, y + 6, 18, 5.5);
-
-          doc.setFont("helvetica", "normal"); doc.setTextColor(...C.ink);
-          const nameStr = ctrl.name.length > 32 ? ctrl.name.substring(0, 29) + "..." : ctrl.name;
-          doc.text(nameStr, colName, y + 6);
-
-          const recStr = (ctrl.status === "NON_CONFORME" && ctrl.recommendation)
-            ? (ctrl.recommendation.length > 38 ? ctrl.recommendation.substring(0, 35) + "..." : ctrl.recommendation)
-            : "—";
-          doc.setTextColor(...C.muted);
-          doc.text(recStr, colRec, y + 6);
-
-          y += rowH;
-        });
-        y += 6;
-        hRule();
-      }
-
-      // ════════════════════════════════════════════════════════════════════
-      // CONCLUSION
-      // ════════════════════════════════════════════════════════════════════
-      checkPage(60);
-      sectionTitle("04 — Conclusion & Priorités de Remédiation");
-
-      // Overall risk level
-      const overallRisk = criticalCount > 0 ? { label: "CRITIQUE", color: C.critical, bg: C.criticalBg }
-        : highCount > 0 ? { label: "ÉLEVÉ", color: C.high, bg: C.highBg }
-        : mediumCount > 0 ? { label: "MOYEN", color: C.medium, bg: C.mediumBg }
-        : { label: "FAIBLE", color: C.low, bg: C.lowBg };
-
-      checkPage(20);
-      doc.setFillColor(...overallRisk.bg);
-      doc.roundedRect(M, y, CW, 14, 2, 2, "F");
-      doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...overallRisk.color);
-      doc.text(`Niveau de Risque Global : ${overallRisk.label}`, M + 5, y + 6);
-      doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.body);
-      doc.text(`Score de sécurité : ${score}/100 (Grade ${grade})  |  ${issues.length} vulnérabilité(s) détectée(s)`, M + 5, y + 11);
-      y += 19;
-
-      // Priority actions
-      const priorities = [
-        criticalCount > 0 ? `Traiter immédiatement les ${criticalCount} vulnérabilité(s) CRITIQUE(S) — elles représentent un risque de compromission immédiate.` : null,
-        highCount > 0 ? `Planifier la correction des ${highCount} vulnérabilité(s) ÉLEVÉE(S) dans les 30 prochains jours.` : null,
-        mediumCount > 0 ? `Corriger les ${mediumCount} vulnérabilité(s) MOYENNE(S) dans les 90 prochains jours.` : null,
-        isoCompliance && isoCompliance.totalControls > isoCompliance.passedCount ? `Améliorer la conformité ISO 27001:2022 : ${isoCompliance.totalControls - isoCompliance.passedCount} contrôle(s) non conformes.` : null,
-        "Effectuer un nouveau scan de sécurité après chaque correction pour valider l'amélioration.",
-      ].filter(Boolean) as string[];
-
-      checkPage(12);
-      doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-      doc.text("Actions Prioritaires de Remédiation", M, y); y += 7;
-
-      priorities.forEach((p, i) => {
-        checkPage(12);
-        const pColor: [number,number,number] = i === 0 && criticalCount > 0 ? C.critical
-          : i === 1 && highCount > 0 ? C.high
-          : C.body;
-        doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...pColor);
-        const bLines = doc.splitTextToSize(`${i + 1}. ${p}`, CW - 5);
-        bLines.forEach((l: string, li: number) => {
-          checkPage(6);
-          doc.text(l, M + (li === 0 ? 0 : 5), y);
-          y += 5.5;
-        });
-        y += 1;
-      });
-
-      y += 4;
-      hRule();
-
-      checkPage(12);
-      doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-      doc.text("Ce rapport a été généré automatiquement par la plateforme Cybelis à partir de données réelles d'analyse externe passive.", M, y);
-      y += 5;
-      doc.text("Il ne reflète que les données disponibles publiquement au moment du scan et ne constitue pas un audit de sécurité exhaustif.", M, y);
-
-      // ════════════════════════════════════════════════════════════════════
-      // ADD HEADER & FOOTER TO ALL PAGES
-      // ════════════════════════════════════════════════════════════════════
-      const totalPages = doc.getNumberOfPages();
-      for (let p = 2; p <= totalPages; p++) {
-        doc.setPage(p);
-        drawPageHeader(p);
-        drawPageFooter(p, totalPages);
-      }
-
-      doc.save(`Cybelis_Security_Report_${domain}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      const { generateCybelisPDF } = await import("@/lib/pdf/generateReport");
+      await generateCybelisPDF(scan, issues, isoCompliance);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
-      alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
+      alert("Erreur lors de la gÃ©nÃ©ration du PDF. Veuillez rÃ©essayer.");
     } finally {
       setIsExporting(false);
     }
   };
-
   if (loading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center gap-3">
@@ -849,6 +243,7 @@ export function ReportDetailPage() {
       </div>
     );
   }
+
 
   if (error || !scan) {
     return (
@@ -969,8 +364,8 @@ export function ReportDetailPage() {
             
             <div className="grid grid-cols-2 gap-4 text-xs font-mono text-slate-500">
               <div className="space-y-1">
-                <span className="block text-[10px] text-slate-400 uppercase font-semibold">IP Résolue</span>
-                <span className="text-slate-900">Résolution IP Auto</span>
+                <span className="block text-[10px] text-slate-400 uppercase font-semibold">IP RÃ©solue</span>
+                <span className="text-slate-900">RÃ©solution IP Auto</span>
               </div>
               <div className="space-y-1">
                 <span className="block text-[10px] text-slate-400 uppercase font-semibold">Date d'analyse</span>
@@ -983,7 +378,7 @@ export function ReportDetailPage() {
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3">
               <Info className="w-4 h-4 text-slate-400 shrink-0" />
               <p className="text-[10px] text-slate-500 leading-normal">
-                Analyse externe passive. Ce document intègre la cartographie OWASP Top 10, le référentiel CVE / CVSS et la conformité ISO/IEC 27001.
+                Analyse externe passive. Ce document intÃ¨gre la cartographie OWASP Top 10, le rÃ©fÃ©rentiel CVE / CVSS et la conformitÃ© ISO/IEC 27001.
               </p>
             </div>
           </div>
@@ -1003,17 +398,17 @@ export function ReportDetailPage() {
               <span className="block text-xl font-bold text-orange-600 font-mono">
                 {issues.filter(i => i.severity === "high" && !i.resolved).length}
               </span>
-              <span className="text-[9px] text-orange-500 uppercase font-mono">Élevées</span>
+              <span className="text-[9px] text-orange-500 uppercase font-mono">Ã‰levÃ©es</span>
             </div>
           </div>
 
           <div className="lg:col-span-3 flex flex-col items-center justify-center p-4 rounded-2xl bg-blue-50 border border-blue-200 text-center gap-2">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Score de Sécurité</span>
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Score de SÃ©curitÃ©</span>
             <div className="text-5xl font-extrabold text-blue-600 font-mono">
               {calculatedScore}<span className="text-xs text-slate-400">/100</span>
             </div>
             <div className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold ${currentGrade.color} border bg-white`}>
-              Grade {currentGrade.grade} • {currentGrade.desc}
+              Grade {currentGrade.grade} â€¢ {currentGrade.desc}
             </div>
           </div>
 
@@ -1028,8 +423,8 @@ export function ReportDetailPage() {
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Conformité ISO/IEC 27001:2022</h3>
-                  <p className="text-xs text-slate-500">Évaluation calculée uniquement sur les contrôles réellement analysés ({isoCompliance.totalControls} contrôles).</p>
+                  <h3 className="text-sm font-bold text-slate-900">ConformitÃ© ISO/IEC 27001:2022</h3>
+                  <p className="text-xs text-slate-500">Ã‰valuation calculÃ©e uniquement sur les contrÃ´les rÃ©ellement analysÃ©s ({isoCompliance.totalControls} contrÃ´les).</p>
                 </div>
               </div>
 
@@ -1038,7 +433,7 @@ export function ReportDetailPage() {
                   <div className="text-2xl font-black font-mono text-emerald-600">
                     {isoCompliance.compliancePercentage}%
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium">Taux de conformité</div>
+                  <div className="text-[10px] text-slate-400 font-medium">Taux de conformitÃ©</div>
                 </div>
                 <div className="w-16 h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200 hidden sm:block">
                   <div 
@@ -1087,14 +482,14 @@ export function ReportDetailPage() {
               className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === "website" ? "bg-white text-blue-600 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"}`}
             >
               <Globe className="w-3.5 h-3.5" />
-              <span>Sécurité du Site Web</span>
+              <span>SÃ©curitÃ© du Site Web</span>
             </button>
             <button
               onClick={() => setActiveTab("email")}
               className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === "email" ? "bg-white text-blue-600 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"}`}
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>Sécurité Email</span>
+              <span>SÃ©curitÃ© Email</span>
             </button>
             <button
               onClick={() => setActiveTab("dns")}
@@ -1108,14 +503,14 @@ export function ReportDetailPage() {
               className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === "iso27001" ? "bg-white text-emerald-600 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"}`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Conformité ISO 27001</span>
+              <span>ConformitÃ© ISO 27001</span>
             </button>
           </div>
 
           {/* Severity selector */}
           {activeTab !== "iso27001" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Filtrer par gravité :</span>
+              <span className="text-xs text-slate-500 font-medium">Filtrer par gravitÃ© :</span>
               <select
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value as any)}
@@ -1123,7 +518,7 @@ export function ReportDetailPage() {
               >
                 <option value="all">Toutes ({activeIssues.length})</option>
                 <option value="critical">Critique</option>
-                <option value="high">Élevé</option>
+                <option value="high">Ã‰levÃ©</option>
                 <option value="medium">Moyen</option>
                 <option value="low">Faible</option>
               </select>
@@ -1140,8 +535,8 @@ export function ReportDetailPage() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Matrice de Conformité ISO/IEC 27001:2022</h3>
-                <p className="text-xs text-slate-500">Synthèse calculée à partir des {isoCompliance.totalControls} contrôles effectivement analysés dans ce scan.</p>
+                <h3 className="text-sm font-bold text-slate-900">Matrice de ConformitÃ© ISO/IEC 27001:2022</h3>
+                <p className="text-xs text-slate-500">SynthÃ¨se calculÃ©e Ã  partir des {isoCompliance.totalControls} contrÃ´les effectivement analysÃ©s dans ce scan.</p>
               </div>
             </div>
 
@@ -1164,7 +559,7 @@ export function ReportDetailPage() {
                   <p className="text-xs text-slate-600 leading-relaxed">{ctrl.details}</p>
                   {ctrl.status === "NON_CONFORME" && ctrl.recommendation && (
                     <div className="pt-2 border-t border-slate-200 text-xs text-amber-800 bg-amber-50/80 p-2.5 rounded-lg border border-amber-200">
-                      <span className="font-bold">Recommandation d'amélioration ISO 27001 :</span> {ctrl.recommendation}
+                      <span className="font-bold">Recommandation d'amÃ©lioration ISO 27001 :</span> {ctrl.recommendation}
                     </div>
                   )}
                 </div>
@@ -1215,11 +610,11 @@ export function ReportDetailPage() {
                             <span className={`px-2 py-0.5 rounded font-bold uppercase ${getSeverityBadge(issue.severity)}`}>
                               {issue.severity}
                             </span>
-                            <span>•</span>
+                            <span>â€¢</span>
                             <span>Outil : {issue.tool}</span>
                             {issue.owasp && issue.owasp.length > 0 && issue.owasp.map((o, idx) => (
                               <React.Fragment key={idx}>
-                                <span>•</span>
+                                <span>â€¢</span>
                                 <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold">
                                   OWASP {o.code}
                                 </span>
@@ -1241,7 +636,7 @@ export function ReportDetailPage() {
                               : "border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-600"
                           }`}
                         >
-                          {issue.resolved ? "Marquer non résolu" : "Simuler résolution"}
+                          {issue.resolved ? "Marquer non rÃ©solu" : "Simuler rÃ©solution"}
                         </button>
                         
                         <div className="p-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-400">
@@ -1282,7 +677,7 @@ export function ReportDetailPage() {
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
                               <Lock className="w-4 h-4 text-slate-600" />
-                              <span>Référence CVE / CVSS</span>
+                              <span>RÃ©fÃ©rence CVE / CVSS</span>
                             </div>
                             {issue.cve ? (
                               <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200 font-mono font-bold text-[10px]">
@@ -1290,7 +685,7 @@ export function ReportDetailPage() {
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[10px] font-semibold">
-                                Aucune référence CVE disponible
+                                Aucune rÃ©fÃ©rence CVE disponible
                               </span>
                             )}
                           </div>
@@ -1304,13 +699,13 @@ export function ReportDetailPage() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                               >
-                                Consulter la référence officielle NVD (CVE.org)
+                                Consulter la rÃ©fÃ©rence officielle NVD (CVE.org)
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
                           ) : (
                             <p className="text-[11px] text-slate-500 italic">
-                              Aucune vulnérabilité CVE répertoriée pour ce motif de configuration spécifique.
+                              Aucune vulnÃ©rabilitÃ© CVE rÃ©pertoriÃ©e pour ce motif de configuration spÃ©cifique.
                             </p>
                           )}
                         </div>
@@ -1321,7 +716,7 @@ export function ReportDetailPage() {
                             <p className="text-slate-700">{issue.impact}</p>
                           </div>
                           <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                            <span className="block text-[10px] text-emerald-600 uppercase font-mono font-semibold mb-1">Procédure de correction</span>
+                            <span className="block text-[10px] text-emerald-600 uppercase font-mono font-semibold mb-1">ProcÃ©dure de correction</span>
                             <p className="text-slate-700 font-mono text-[11px] whitespace-pre-wrap">{issue.fix}</p>
                           </div>
                         </div>
@@ -1334,7 +729,7 @@ export function ReportDetailPage() {
               })
             ) : (
               <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
-                Aucune anomalie détectée pour cette configuration de filtres.
+                Aucune anomalie dÃ©tectÃ©e pour cette configuration de filtres.
               </div>
             )}
           </div>
