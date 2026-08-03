@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db/prisma";
 import { AuthService } from "@/lib/db/services/auth.service";
+import { getOwaspMapping } from "@/lib/enrichment/owasp";
+import { fetchCveForFinding } from "@/lib/enrichment/cve";
+import { calculateIso27001Compliance } from "@/lib/enrichment/iso27001";
 
 export async function GET(
   request: Request,
@@ -50,21 +53,34 @@ export async function GET(
       return NextResponse.json({ error: "Scan not found" }, { status: 404 });
     }
 
-    const vulnerabilities = scan.results
-      .filter((r: any) => r.status === 'FAIL' || r.status === 'WARNING')
-      .map((r: any) => {
-        const firstRec = r.recommendations[0];
-        const resultData = r.result as any;
-        return {
-          id: r.id,
-          title: firstRec?.title || resultData?.title || r.tool.name,
-          description: firstRec?.description || resultData?.description || `Vulnérabilité détectée par ${r.tool.name}.`,
-          severity: r.severity.toLowerCase(),
-          remediation: firstRec?.remediation || firstRec?.description || "Aucune remédiation spécifiée.",
-        };
-      });
+    const vulnerabilities = await Promise.all(
+      scan.results
+        .filter((r: any) => r.status === 'FAIL' || r.status === 'WARNING')
+        .map(async (r: any) => {
+          const firstRec = r.recommendations[0];
+          const resultData = r.result as any;
+          const title = firstRec?.title || resultData?.title || r.tool.name;
+          const description = firstRec?.description || resultData?.description || `Vulnérabilité détectée par ${r.tool.name}.`;
+          
+          const owasp = getOwaspMapping(r.result);
+          const cve = await fetchCveForFinding(r.result);
+
+          return {
+            id: r.id,
+            tool: r.tool.name,
+            toolSlug: r.tool.slug,
+            title,
+            description,
+            severity: r.severity.toLowerCase(),
+            remediation: firstRec?.remediation || firstRec?.description || "Aucune remédiation spécifiée.",
+            owasp,
+            cve
+          };
+        })
+    );
 
     const modules = [...new Set(scan.results.map((r: any) => r.tool.name as string))];
+    const iso27001 = calculateIso27001Compliance(scan.results);
 
     return NextResponse.json({
       id: scan.id,
@@ -73,6 +89,7 @@ export async function GET(
       createdAt: scan.createdAt.toISOString(),
       vulnerabilities,
       modules,
+      iso27001
     });
   } catch (error) {
     console.error("[REPORT_ID_GET]", error);
