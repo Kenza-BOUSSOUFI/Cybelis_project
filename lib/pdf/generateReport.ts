@@ -1,6 +1,7 @@
 import type { OwaspInfo } from "@/lib/enrichment/owasp";
 import type { CveInfo } from "@/lib/enrichment/cve";
 import type { Iso27001Report } from "@/lib/enrichment/iso27001";
+import { getSecurityImpact, getCiaCategoryInfo } from "@/lib/enrichment/securityImpact";
 
 export interface PdfIssue {
   id: string;
@@ -349,6 +350,7 @@ export async function generateCybelisPDF(
     issues.forEach((issue, idx) => {
       checkPage(50);
       const sev = severityColors(issue.severity);
+      const impactInfo = getSecurityImpact(issue.toolSlug);
 
       doc.setFillColor(...C.bg);
       doc.setDrawColor(...C.border);
@@ -371,35 +373,83 @@ export async function generateCybelisPDF(
       doc.text(`Outil : ${issue.tool}  |  Catégorie : ${issue.category.toUpperCase()}`, M + 5, y + 4);
       y += 8;
 
+      // 1. Description
       checkPage(12);
       doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
       doc.text("Description", M + 3, y); y += 5;
-      bodyText(issue.description, 7.5, C.body, 3);
+      bodyText(impactInfo.description || issue.description, 7.5, C.body, 3);
       y += 2;
 
-      if (issue.impact) {
-        checkPage(10);
-        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.medium);
-        doc.text("Impact", M + 3, y); y += 5;
-        bodyText(issue.impact, 7.5, C.body, 3);
-        y += 2;
-      }
-
-      if (issue.fix) {
-        checkPage(12);
-        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.green);
-        doc.text("Recommandation", M + 3, y); y += 5;
-        const fixLines = doc.splitTextToSize(issue.fix, CW - 9);
-        doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.body);
-        fixLines.forEach((fl: string, fi: number) => {
-          checkPage(6);
-          if (fi === 0) { doc.text("•", M + 5, y); doc.text(fl, M + 9, y); }
-          else { doc.text(fl, M + 9, y); }
-          y += 5;
+      // 2. Business Impact (Impact Métier)
+      if (impactInfo.businessImpact.length > 0) {
+        checkPage(18);
+        doc.setFillColor(255, 247, 237);
+        const bizH = impactInfo.businessImpact.length * 5.5 + 7;
+        checkPage(bizH + 4);
+        doc.roundedRect(M + 3, y, CW - 3, bizH, 1.5, 1.5, "F");
+        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.high);
+        doc.text("Impact Métier", M + 6, y + 5);
+        y += 8;
+        impactInfo.businessImpact.forEach((item) => {
+          doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(154, 52, 18);
+          const bLines = doc.splitTextToSize(`• ${item}`, CW - 12);
+          bLines.forEach((bl: string) => {
+            doc.text(bl, M + 6, y);
+            y += 4.5;
+          });
         });
-        y += 2;
+        y += 3;
       }
 
+      // 3. Technical Impact (Modèle CIA)
+      checkPage(30);
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(M + 3, y, CW - 3, 26, 1.5, 1.5, "F");
+      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+      doc.text("Impact Technique — Modèle CIA", M + 6, y + 5);
+      y += 8;
+
+      const ciaItems = [
+        { name: "Confidentialité", score: impactInfo.technicalImpact.confidentiality },
+        { name: "Intégrité",       score: impactInfo.technicalImpact.integrity },
+        { name: "Disponibilité",   score: impactInfo.technicalImpact.availability },
+      ];
+
+      ciaItems.forEach((cia) => {
+        const info = getCiaCategoryInfo(cia.score);
+        doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
+        doc.text(cia.name, M + 6, y + 2.5);
+
+        const badgeFg: [number, number, number] =
+          info.level === "Faible" ? C.green :
+          info.level === "Modéré" ? C.medium :
+          info.level === "Élevé" ? C.high : C.red;
+        const badgeBg: [number, number, number] =
+          info.level === "Faible" ? C.greenBg :
+          info.level === "Modéré" ? C.mediumBg :
+          info.level === "Élevé" ? C.highBg : C.criticalBg;
+
+        drawBadge(`Impact : ${info.level}`, badgeFg, badgeBg, M + 35, y + 2.5, 20, 4);
+
+        const barX = M + 60;
+        const barW = 75;
+        doc.setFillColor(226, 232, 240);
+        doc.roundedRect(barX, y, barW, 3, 1, 1, "F");
+
+        const fillW = (info.percentage / 100) * barW;
+        doc.setFillColor(...badgeFg);
+        if (fillW > 0) {
+          doc.roundedRect(barX, y, fillW, 3, 1, 1, "F");
+        }
+
+        doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.ink);
+        doc.text(`${info.percentage}%`, barX + barW + 3, y + 2.5);
+
+        y += 5;
+      });
+      y += 4;
+
+      // 4. OWASP Top 10
       if (issue.owasp && issue.owasp.length > 0) {
         checkPage(18);
         doc.setFillColor(...C.purpleBg);
@@ -422,16 +472,17 @@ export async function generateCybelisPDF(
         y += 3;
       }
 
+      // 5. CVE / CVSS Reference
       checkPage(12);
       if (issue.cve) {
         doc.setFillColor(254, 242, 242);
         doc.roundedRect(M + 3, y, CW - 3, 16, 1.5, 1.5, "F");
         doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.red);
-        doc.text("CVE / CVSS", M + 6, y + 5);
+        doc.text("Référence CVE / CVSS", M + 6, y + 5);
         doc.setFont("helvetica", "normal"); doc.setTextColor(...C.ink);
         doc.text(`${issue.cve.cveId}`, M + 6, y + 10);
-        drawBadge(`CVSS ${issue.cve.cvssScore}`, C.red, [254,226,226], M + 26, y + 10, 22, 5.5);
-        drawBadge(issue.cve.severity, C.red, [254,226,226], M + 52, y + 10, 22, 5.5);
+        drawBadge(`CVSS ${issue.cve.cvssScore}`, C.red, [254,226,226], M + 36, y + 10, 22, 5.5);
+        drawBadge(issue.cve.severity, C.red, [254,226,226], M + 62, y + 10, 22, 5.5);
         doc.setFontSize(6); doc.setTextColor(...C.accent);
         doc.text(issue.cve.url, M + 6, y + 15);
         y += 20;
@@ -439,6 +490,26 @@ export async function generateCybelisPDF(
         doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
         doc.text("Aucune référence CVE disponible pour cette vulnérabilité de configuration.", M + 3, y + 4);
         y += 9;
+      }
+
+      // 6. Recommandation Générale
+      const recText = impactInfo.recommendation || issue.fix;
+      if (recText) {
+        checkPage(14);
+        doc.setFillColor(239, 246, 255);
+        const recLines = doc.splitTextToSize(recText, CW - 12);
+        const recH = recLines.length * 4.5 + 8;
+        checkPage(recH + 4);
+        doc.roundedRect(M + 3, y, CW - 3, recH, 1.5, 1.5, "F");
+        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accent);
+        doc.text("Recommandation Générale", M + 6, y + 5);
+        y += 8;
+        doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(30, 64, 175);
+        recLines.forEach((fl: string) => {
+          doc.text(fl, M + 6, y);
+          y += 4.5;
+        });
+        y += 3;
       }
 
       y += 3;

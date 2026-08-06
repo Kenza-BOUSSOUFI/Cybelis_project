@@ -20,11 +20,14 @@ import {
   ShieldCheck,
   ExternalLink,
   FileCode,
-  Lock
+  Lock,
+  Briefcase,
+  Activity
 } from "lucide-react";
 import { getOwaspMapping, OwaspInfo } from "@/lib/enrichment/owasp";
 import { fetchCveForFinding, CveInfo } from "@/lib/enrichment/cve";
 import { calculateIso27001Compliance, Iso27001Report } from "@/lib/enrichment/iso27001";
+import { getSecurityImpact, getCiaCategoryInfo } from "@/lib/enrichment/securityImpact";
 
 interface Issue {
   id: string;
@@ -41,63 +44,34 @@ interface Issue {
   cve: CveInfo | null;
 }
 
-function getFixTextForTool(slug: string, title: string): string | null {
-  const tLower = title.toLowerCase();
-  if (slug === 'ssl-checker') {
-    return "Configurez le renouvellement automatique via votre hÃ©bergeur ou Let's Encrypt (Certbot), ou installez un certificat SSL valide auprÃ¨s de votre autoritÃ© de certification.";
-  }
-  if (slug === 'tls-analyzer') {
-    return "DÃ©sactivez les protocoles obsolÃ¨tes (TLS 1.0, TLS 1.1) dans les rÃ©glages systÃ¨me ou de votre serveur web (Nginx/Apache). Configurez le serveur pour n'autoriser que TLS 1.2 et TLS 1.3.";
-  }
-  if (slug === 'security-headers') {
-    if (tLower.includes('hsts') || tLower.includes('strict-transport')) {
-      return "Ajoutez l'en-tÃªte suivant dans la configuration de votre serveur web (Nginx: 'add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;', Apache: 'Header always set Strict-Transport-Security \"max-age=31536000; includeSubDomains\"').";
-    }
-    if (tLower.includes('frame') || tLower.includes('clickjacking')) {
-      return "Ajoutez l'en-tÃªte 'X-Frame-Options: DENY' ou 'X-Frame-Options: SAMEORIGIN' sur toutes les rÃ©ponses HTTP.";
-    }
-    return "Ajoutez l'en-tÃªte de sÃ©curitÃ© manquant dans les configurations de rÃ©ponse HTTP de votre serveur web.";
-  }
-  if (slug === 'cookie-analyzer') {
-    return "Ajoutez les attributs 'Secure' (force le HTTPS), 'HttpOnly' (interdit la lecture par JavaScript) et 'SameSite=Lax/Strict' sur tous les cookies de session ou d'authentification.";
-  }
-  if (slug === 'csp-validator') {
-    return "Mettez en place une politique d'en-tÃªte Content-Security-Policy (CSP) stricte (ex: default-src 'self'). Testez-la d'abord via l'en-tÃªte Content-Security-Policy-Report-Only.";
-  }
-  if (slug === 'dmarc-checker') {
-    return "CrÃ©ez ou mettez Ã  jour votre enregistrement DNS TXT sous le sous-domaine '_dmarc.votre-domaine.com' (valeur recommandÃ©e: 'v=DMARC1; p=reject; rua=mailto:dmarc-reports@votre-domaine.com').";
-  }
-  if (slug === 'spf-checker') {
-    return "VÃ©rifiez la liste de vos serveurs d'envoi lÃ©gitimes (Google Workspace, Mailgun...) et remplacez le suffixe permissif '~all' par le mode strict '-all' dans votre enregistrement DNS TXT SPF.";
-  }
-  return null;
+// ── CIA Impact Row with Progress Bar ──────────────────────────────────────────
+
+function CiaItemRow({ title, score }: { title: string; score: number }) {
+  const info = getCiaCategoryInfo(score);
+  return (
+    <div className="space-y-1.5 py-1.5 border-b border-slate-200/60 last:border-0">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-semibold text-slate-800">{title}</span>
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${info.badgeBg} ${info.badgeBorder}`}>
+            Impact : {info.level}
+          </span>
+          <span className="font-mono text-xs font-bold text-slate-700 w-10 text-right">
+            {info.percentage}%
+          </span>
+        </div>
+      </div>
+      <div className="w-full h-2.5 bg-slate-200/80 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${info.barColor}`}
+          style={{ width: `${info.percentage}%` }}
+        />
+      </div>
+    </div>
+  );
 }
 
-function getImpactTextForTool(slug: string, title: string): string | null {
-  const tLower = title.toLowerCase();
-  if (slug === 'ssl-checker') {
-    return "Les navigateurs modernes bloquent immÃ©diatement l'accÃ¨s au site, causant une perte totale de trafic et de confiance.";
-  }
-  if (slug === 'tls-analyzer') {
-    return "PossibilitÃ© d'intercepter, d'Ã©couter et de dÃ©chiffrer les donnÃ©es sensibles transmises par les utilisateurs sur le rÃ©seau local ou public.";
-  }
-  if (slug === 'security-headers') {
-    if (tLower.includes('hsts')) {
-      return "Les attaquants locaux peuvent forcer les requÃªtes de vos utilisateurs Ã  basculer vers HTTP (SSL Stripping) pour voler leurs cookies.";
-    }
-    return "VulnÃ©rabilitÃ© aux attaques par intÃ©gration de frame (Clickjacking), injection de MIME type ou vols d'identifiants.";
-  }
-  if (slug === 'cookie-analyzer') {
-    return "Les scripts malveillants (XSS) ou les connexions non chiffrÃ©es peuvent intercepter les identifiants de session et usurper le compte de la victime.";
-  }
-  if (slug === 'csp-validator') {
-    return "VulnÃ©rabilitÃ© critique aux failles Cross-Site Scripting (XSS), permettant Ã  des scripts distants non autorisÃ©s de s'exÃ©cuter Ã  la place du site lÃ©gitime.";
-  }
-  if (slug === 'dmarc-checker') {
-    return "N'importe qui peut forger des emails lÃ©gitimes usurpant votre domaine, ruinant votre rÃ©putation d'expÃ©diteur et piÃ©geant vos clients par hameÃ§onnage.";
-  }
-  return null;
-}
+
 
 export function ReportDetailPage() {
   const params = useParams();
@@ -148,8 +122,9 @@ export function ReportDetailPage() {
                 else if (sev === "high") severity = "high";
                 else if (sev === "medium") severity = "medium";
 
-                const fixText = getFixTextForTool(toolSlug, rec.title) || rec.description;
-                const impactText = getImpactTextForTool(toolSlug, rec.title) || "Risque d'exposition et de compromission des donnÃ©es ou de la disponibilitÃ© de la plateforme.";
+                const impactInfo = getSecurityImpact(toolSlug);
+                const fixText = impactInfo.recommendation || rec.description;
+                const impactText = impactInfo.description || "Risque d'exposition et de compromission des données ou de la disponibilité de la plateforme.";
 
                 const owasp = getOwaspMapping(result.result);
                 const cve = await fetchCveForFinding(result.result);
@@ -180,8 +155,9 @@ export function ReportDetailPage() {
               else if (sev === "high") severity = "high";
               else if (sev === "medium") severity = "medium";
 
-              const fixText = getFixTextForTool(toolSlug, result.tool.name) || `VÃ©rifiez la configuration du module ${result.tool.name}.`;
-              const impactText = getImpactTextForTool(toolSlug, result.tool.name) || "Risque d'exposition et de compromission des donnÃ©es ou de la disponibilitÃ© de la plateforme.";
+              const impactInfo = getSecurityImpact(toolSlug);
+              const fixText = impactInfo.recommendation || `Vérifiez la configuration du module ${result.tool.name}.`;
+              const impactText = impactInfo.description || "Risque d'exposition et de compromission des données ou de la disponibilité de la plateforme.";
 
               const owasp = getOwaspMapping(result.result);
               const cve = await fetchCveForFinding(result.result);
@@ -191,9 +167,9 @@ export function ReportDetailPage() {
                 category,
                 tool: result.tool.name,
                 toolSlug,
-                title: `Alerte de sÃ©curitÃ© : ${result.tool.name}`,
+                title: `Alerte de sécurité : ${result.tool.name}`,
                 severity,
-                description: `Le module ${result.tool.name} a dÃ©tectÃ© une anomalie de sÃ©curitÃ© (Statut : ${result.status}).`,
+                description: `Le module ${result.tool.name} a détecté une anomalie de sécurité (Statut : ${result.status}).`,
                 impact: impactText,
                 fix: fixText,
                 resolved: false,
@@ -574,6 +550,7 @@ export function ReportDetailPage() {
             {activeIssues.length > 0 ? (
               activeIssues.map((issue) => {
                 const isExpanded = expandedIssue === issue.id;
+                const impact = getSecurityImpact(issue.toolSlug);
                 return (
                   <div 
                     key={issue.id} 
@@ -610,11 +587,11 @@ export function ReportDetailPage() {
                             <span className={`px-2 py-0.5 rounded font-bold uppercase ${getSeverityBadge(issue.severity)}`}>
                               {issue.severity}
                             </span>
-                            <span>â€¢</span>
+                            <span>•</span>
                             <span>Outil : {issue.tool}</span>
                             {issue.owasp && issue.owasp.length > 0 && issue.owasp.map((o, idx) => (
                               <React.Fragment key={idx}>
-                                <span>â€¢</span>
+                                <span>•</span>
                                 <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold">
                                   OWASP {o.code}
                                 </span>
@@ -636,7 +613,7 @@ export function ReportDetailPage() {
                               : "border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-600"
                           }`}
                         >
-                          {issue.resolved ? "Marquer non rÃ©solu" : "Simuler rÃ©solution"}
+                          {issue.resolved ? "Marquer non résolu" : "Simuler résolution"}
                         </button>
                         
                         <div className="p-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-400">
@@ -648,36 +625,68 @@ export function ReportDetailPage() {
                     {/* Issue Expanding Detail Panel */}
                     {isExpanded && (
                       <div className="px-5 pb-5 pt-2 border-t border-slate-100 bg-slate-50/50 text-xs space-y-4 leading-relaxed text-slate-600">
-                        
-                        <div>
-                          <span className="block text-[10px] text-slate-400 uppercase font-mono font-semibold mb-1">Description</span>
-                          <p>{issue.description}</p>
+
+                        {/* 1. DESCRIPTION */}
+                        <div className="space-y-1.5">
+                          <span className="block text-[10px] text-slate-400 uppercase font-mono font-semibold">Description</span>
+                          <p className="text-slate-700">{impact.description}</p>
+                          {issue.description && issue.description !== impact.description && (
+                            <p className="text-[11px] text-slate-500 italic border-t border-slate-200 pt-1.5 mt-1.5">
+                              Détail de l'alerte : {issue.description}
+                            </p>
+                          )}
                         </div>
 
-                        {/* OWASP TOP 10 CARDS */}
+                        {/* 2. BUSINESS IMPACT */}
+                        {impact.businessImpact.length > 0 && (
+                          <div className="p-4 rounded-xl bg-orange-50/70 border border-orange-200 space-y-2">
+                            <div className="flex items-center gap-2 text-orange-900 font-bold text-xs">
+                              <Briefcase className="w-4 h-4 text-orange-600" />
+                              <span>Impact Métier</span>
+                            </div>
+                            <ul className="list-disc list-inside space-y-1 pt-1">
+                              {impact.businessImpact.map((item, i) => (
+                                <li key={i} className="text-[11px] text-orange-800 leading-relaxed">{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* 3. TECHNICAL IMPACT — CIA MODEL */}
+                        <div className="p-4 rounded-xl bg-slate-100/70 border border-slate-200 space-y-3">
+                          <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
+                            <Activity className="w-4 h-4 text-slate-600" />
+                            <span>Impact Technique — Modèle CIA</span>
+                          </div>
+                          <div className="space-y-2 pt-1">
+                            <CiaItemRow title="Confidentialité" score={impact.technicalImpact.confidentiality} />
+                            <CiaItemRow title="Intégrité"       score={impact.technicalImpact.integrity} />
+                            <CiaItemRow title="Disponibilité"   score={impact.technicalImpact.availability} />
+                          </div>
+                        </div>
+
+                        {/* 4. OWASP TOP 10 (existing — unchanged) */}
                         {issue.owasp && issue.owasp.length > 0 && issue.owasp.map((o, idx) => (
                           <div key={idx} className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
                             <div className="flex items-center gap-2 text-indigo-900 font-bold text-xs">
                               <FileCode className="w-4 h-4 text-indigo-600" />
-                              <span>OWASP Top 10 : {o.code} - {o.title}</span>
+                              <span>OWASP Top 10 : {o.code} — {o.title}</span>
                             </div>
                             <p className="text-[11px] text-indigo-800 leading-relaxed">{o.description}</p>
                             {o.recommendations.length > 0 && (
                               <ul className="list-disc list-inside text-[11px] text-indigo-900 space-y-0.5 pt-1 font-medium">
-                                {o.recommendations.map((rec, i) => (
-                                  <li key={i}>{rec}</li>
-                                ))}
+                                {o.recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
                               </ul>
                             )}
                           </div>
                         ))}
 
-                        {/* CVE / CVSS CARD */}
+                        {/* 5. CVE / CVSS REFERENCE (existing — unchanged) */}
                         <div className="p-4 rounded-xl bg-slate-100/70 border border-slate-200 space-y-2">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
                               <Lock className="w-4 h-4 text-slate-600" />
-                              <span>RÃ©fÃ©rence CVE / CVSS</span>
+                              <span>Référence CVE / CVSS</span>
                             </div>
                             {issue.cve ? (
                               <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200 font-mono font-bold text-[10px]">
@@ -685,40 +694,37 @@ export function ReportDetailPage() {
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[10px] font-semibold">
-                                Aucune rÃ©fÃ©rence CVE disponible
+                                Aucune référence CVE disponible
                               </span>
                             )}
                           </div>
-
                           {issue.cve ? (
                             <div className="space-y-2 pt-1">
                               <p className="text-[11px] text-slate-700 leading-relaxed">{issue.cve.description}</p>
-                              <a 
-                                href={issue.cve.url} 
-                                target="_blank" 
+                              <a
+                                href={issue.cve.url}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                               >
-                                Consulter la rÃ©fÃ©rence officielle NVD (CVE.org)
+                                Consulter la référence officielle NVD (CVE.org)
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
                           ) : (
                             <p className="text-[11px] text-slate-500 italic">
-                              Aucune vulnÃ©rabilitÃ© CVE rÃ©pertoriÃ©e pour ce motif de configuration spÃ©cifique.
+                              Aucune vulnérabilité CVE répertoriée pour ce motif de configuration spécifique.
                             </p>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200">
-                            <span className="block text-[10px] text-red-600 uppercase font-mono font-semibold mb-1">Impact potentiel</span>
-                            <p className="text-slate-700">{issue.impact}</p>
+                        {/* 6. GENERAL RECOMMENDATION */}
+                        <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2">
+                          <div className="flex items-center gap-2 text-blue-900 font-bold text-xs">
+                            <ShieldCheck className="w-4 h-4 text-blue-600" />
+                            <span>Recommandation Générale</span>
                           </div>
-                          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                            <span className="block text-[10px] text-emerald-600 uppercase font-mono font-semibold mb-1">ProcÃ©dure de correction</span>
-                            <p className="text-slate-700 font-mono text-[11px] whitespace-pre-wrap">{issue.fix}</p>
-                          </div>
+                          <p className="text-[11px] text-blue-800 leading-relaxed">{impact.recommendation}</p>
                         </div>
 
                       </div>
