@@ -8,7 +8,7 @@ function ScanEngineContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawDomain = searchParams.get("domain") || "cybelis.ma";
-  
+
   // Sanitize domain
   const domain = rawDomain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0] || "cybelis.ma";
 
@@ -39,7 +39,7 @@ function ScanEngineContent() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    
+
     const runNextStep = (stepIdx: number) => {
       if (stepIdx >= steps.length) {
         // Redirection to reports page
@@ -72,7 +72,7 @@ function ScanEngineContent() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-8">
-      
+
       {/* HEADER CARD */}
       <div className="p-6 rounded-2xl bg-neutral-900/40 border border-neutral-900 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
@@ -88,7 +88,7 @@ function ScanEngineContent() {
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs font-mono text-indigo-400 font-bold">{progress}%</span>
           <div className="w-36 h-2 rounded-full bg-neutral-950 overflow-hidden border border-neutral-900">
-            <div 
+            <div
               className="bg-indigo-600 h-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
@@ -98,7 +98,7 @@ function ScanEngineContent() {
 
       {/* CORE TERMINAL SIMULATOR */}
       <div className="rounded-3xl border border-neutral-900 bg-neutral-950 shadow-2xl overflow-hidden">
-        
+
         {/* Terminal Header Bar */}
         <div className="px-4 py-3 bg-neutral-900 flex items-center justify-between border-b border-neutral-900/40">
           <div className="flex items-center gap-1.5">
@@ -115,7 +115,7 @@ function ScanEngineContent() {
         </div>
 
         {/* Terminal Console Output */}
-        <div 
+        <div
           ref={logContainerRef}
           className="p-6 h-[400px] overflow-y-auto font-mono text-xs text-neutral-300 space-y-2 scroll-smooth bg-neutral-950"
         >
@@ -134,7 +134,7 @@ function ScanEngineContent() {
               </div>
             );
           })}
-          
+
           {progress < 100 && (
             <div className="flex items-center gap-2 text-indigo-400 animate-pulse">
               <span className="w-1.5 h-3 bg-indigo-500 inline-block animate-ping" />
@@ -156,7 +156,7 @@ function ScanEngineContent() {
             </p>
           </div>
         </div>
-        
+
         <div className="p-4 rounded-xl bg-neutral-900/30 border border-neutral-900 flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
           <div>

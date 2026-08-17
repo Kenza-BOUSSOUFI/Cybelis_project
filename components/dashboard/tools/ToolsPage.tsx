@@ -1,20 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Shield, 
-  Lock, 
-  Globe, 
-  Database, 
-  Terminal, 
-  Cpu, 
-  Key, 
-  RefreshCw, 
-  Sliders, 
-  FileText, 
-  Mail, 
-  Search, 
-  Server, 
+import {
+  Shield,
+  Lock,
+  Globe,
+  Database,
+  Terminal,
+  Cpu,
+  Key,
+  RefreshCw,
+  Sliders,
+  FileText,
+  Mail,
+  Search,
+  Server,
   Activity,
   ArrowRight,
   CheckCircle,
@@ -123,7 +123,7 @@ export function ToolsHubPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      
+
       {/* HEADER SECTION */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Outils d'Audit Individuels</h1>
@@ -132,7 +132,7 @@ export function ToolsHubPage() {
 
       {/* CORE DISPLAY (GRID AND RUNNER PANEL) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Left Side: Tool grid selector */}
         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           {tools.map((tool) => {
@@ -145,15 +145,13 @@ export function ToolsHubPage() {
                   setSelectedTool(tool.id);
                   setTestResult(null);
                 }}
-                className={`p-5 rounded-2xl border text-left flex items-start gap-4 transition-all ${
-                  isSelected 
-                    ? "bg-indigo-600/10 border-indigo-500 shadow-lg shadow-indigo-500/5" 
+                className={`p-5 rounded-2xl border text-left flex items-start gap-4 transition-all ${isSelected
+                    ? "bg-indigo-600/10 border-indigo-500 shadow-lg shadow-indigo-500/5"
                     : "bg-neutral-900/40 border-neutral-900 hover:border-neutral-800"
-                }`}
+                  }`}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  isSelected ? "bg-indigo-600 text-white" : "bg-neutral-950 border border-neutral-800 text-indigo-400"
-                }`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? "bg-indigo-600 text-white" : "bg-neutral-950 border border-neutral-800 text-indigo-400"
+                  }`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
@@ -168,7 +166,7 @@ export function ToolsHubPage() {
         {/* Right Side: Tool running inspector panel */}
         <div className="lg:col-span-4 space-y-6">
           <div className="p-6 rounded-3xl bg-neutral-900/40 border border-neutral-900 flex flex-col gap-6 sticky top-28">
-            
+
             <div>
               <h3 className="text-sm font-bold text-white">Inspecteur d'Outil</h3>
               <p className="text-[10px] text-neutral-500">Sélectionnez un outil à gauche pour exécuter le test.</p>
@@ -188,12 +186,12 @@ export function ToolsHubPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono text-neutral-400 uppercase">Domaine cible</label>
-                  <input 
+                  <input
                     type="text"
                     value={targetDomain}
                     onChange={(e) => setTargetDomain(e.target.value)}
                     placeholder="cybelis.ma"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500" 
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -226,15 +224,14 @@ export function ToolsHubPage() {
                       )}
                       <span className="font-bold text-white text-[11px]">{testResult.summary}</span>
                     </div>
-                    
+
                     <div className="space-y-2">
                       {testResult.details.map((det: any, idx: number) => (
                         <div key={idx} className="flex flex-col gap-0.5 animate-fade-in">
                           <span className="text-[10px] text-neutral-500 font-sans uppercase font-semibold">{det.label}</span>
-                          <span className={`text-[11px] font-mono leading-normal break-all ${
-                            det.value === "NON DÉTECTÉ" || det.value === "ABSENT (_dmarc.domain manquant)" ? "text-red-400 font-bold" : 
-                            det.value.includes("obsolètes") ? "text-yellow-400" : "text-neutral-300"
-                          }`}>
+                          <span className={`text-[11px] font-mono leading-normal break-all ${det.value === "NON DÉTECTÉ" || det.value === "ABSENT (_dmarc.domain manquant)" ? "text-red-400 font-bold" :
+                              det.value.includes("obsolètes") ? "text-yellow-400" : "text-neutral-300"
+                            }`}>
                             {det.value}
                           </span>
                         </div>

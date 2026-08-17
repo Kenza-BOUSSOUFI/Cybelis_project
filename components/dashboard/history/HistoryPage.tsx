@@ -24,13 +24,13 @@ export function ScanHistoryPage() {
     return "bg-red-500/10 text-red-400 border border-red-500/20";
   };
 
-  const filteredScans = scans.filter(scan => 
+  const filteredScans = scans.filter(scan =>
     scan.domain.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      
+
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -41,8 +41,8 @@ export function ScanHistoryPage() {
         {/* Search bar */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 w-full md:max-w-xs">
           <Search className="w-4 h-4 text-neutral-500 shrink-0" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Rechercher un domaine..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -53,7 +53,7 @@ export function ScanHistoryPage() {
 
       {/* HISTORY TABLE */}
       <div className="p-6 rounded-3xl bg-neutral-900/40 border border-neutral-900">
-        
+
         <div className="overflow-x-auto">
           {filteredScans.length > 0 ? (
             <table className="w-full text-left text-xs">
@@ -108,21 +108,21 @@ export function ScanHistoryPage() {
                     </td>
                     <td className="py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link 
+                        <Link
                           href={`/dashboard/reports/${scan.domain}`}
                           className="p-1.5 rounded-lg bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-850 transition-colors"
                           title="Voir le rapport"
                         >
                           <Eye className="w-4 h-4" />
                         </Link>
-                        <Link 
+                        <Link
                           href={`/dashboard/scan?domain=${scan.domain}`}
                           className="p-1.5 rounded-lg bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-850 transition-colors"
                           title="Re-scanner"
                         >
                           <RefreshCw className="w-4 h-4" />
                         </Link>
-                        <button 
+                        <button
                           onClick={() => deleteScan(scan.id)}
                           className="p-1.5 rounded-lg bg-neutral-950 hover:bg-red-500/10 text-neutral-400 hover:text-red-500 border border-neutral-850 transition-colors"
                           title="Supprimer"

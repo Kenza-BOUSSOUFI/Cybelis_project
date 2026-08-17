@@ -15,6 +15,7 @@ import {
   authInputCx,
 } from "@/components/auth/AuthPageShell";
 import { createClient } from "@/lib/supabase/client";
+import { LegalModal } from "@/components/legal/LegalModal";
 
 interface FieldProps {
   label: string;
@@ -49,6 +50,16 @@ export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<"terms" | "privacy">("terms");
+
+  const openLegalModal = (tab: "terms" | "privacy", e: React.MouseEvent) => {
+    if (!e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setLegalModalTab(tab);
+      setLegalModalOpen(true);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,13 +211,25 @@ export function RegisterPage() {
                   onChange={(e) => setAgree(e.target.checked)}
                   className="mt-0.5 h-4 w-4 cursor-pointer rounded border-sky-200 bg-white text-sky-500 focus:ring-sky-300"
                 />
-                <label htmlFor="agree" className="cursor-pointer select-none text-[11px] leading-normal text-slate-500">
-                  J'accepte les{" "}
-                  <a href="#" className="text-sky-600 transition-colors hover:text-sky-500">
-                    Conditions d'utilisation
+                <label htmlFor="agree" className="cursor-pointer select-none text-[11px] leading-normal text-slate-400">
+                  J&apos;accepte les{" "}
+                  <a
+                    href="/legal/conditions-utilisation"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => openLegalModal("terms", e)}
+                    className="font-medium text-sky-400 underline underline-offset-2 transition-colors hover:text-sky-300"
+                  >
+                    Conditions d&apos;utilisation
                   </a>{" "}
                   et la{" "}
-                  <a href="#" className="text-sky-600 transition-colors hover:text-sky-500">
+                  <a
+                    href="/legal/politique-confidentialite"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => openLegalModal("privacy", e)}
+                    className="font-medium text-sky-400 underline underline-offset-2 transition-colors hover:text-sky-300"
+                  >
                     Politique de confidentialité
                   </a>
                   .
@@ -242,6 +265,12 @@ export function RegisterPage() {
               </Link>
             </p>
           </motion.div>
+
+          <LegalModal
+            isOpen={legalModalOpen}
+            onClose={() => setLegalModalOpen(false)}
+            initialTab={legalModalTab}
+          />
         </>
       )}
     </AuthPageShell>

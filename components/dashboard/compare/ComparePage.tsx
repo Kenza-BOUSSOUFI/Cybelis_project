@@ -12,7 +12,7 @@ export function CompareDomainsPage() {
   const triggerCompare = (e: React.FormEvent) => {
     e.preventDefault();
     if (!domain1 || !domain2) return;
-    
+
     setIsComparing(true);
     setCompareData(null);
 
@@ -60,7 +60,7 @@ export function CompareDomainsPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      
+
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Comparateur de Domaines</h1>
@@ -73,8 +73,8 @@ export function CompareDomainsPage() {
           <label className="text-[10px] font-mono text-neutral-400 uppercase">Domaine Référence</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500 text-xs">A</span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               placeholder="votre-site.ma"
               value={domain1}
@@ -92,8 +92,8 @@ export function CompareDomainsPage() {
           <label className="text-[10px] font-mono text-neutral-400 uppercase">Domaine Comparé</label>
           <div className="relative">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500 text-xs">B</span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               placeholder="concurrent-site.ma"
               value={domain2}
@@ -127,7 +127,7 @@ export function CompareDomainsPage() {
       {/* COMPARATIVE DATAGRID */}
       {compareData ? (
         <div className="p-6 rounded-3xl bg-neutral-900/40 border border-neutral-900 space-y-6">
-          
+
           <div className="grid grid-cols-3 gap-4 border-b border-neutral-800 pb-4 text-center">
             <div className="text-xs text-neutral-500 font-mono uppercase tracking-wider text-left self-center">Critère</div>
             <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-850 font-bold text-xs text-white truncate">
@@ -139,7 +139,7 @@ export function CompareDomainsPage() {
           </div>
 
           <div className="divide-y divide-neutral-800/60 space-y-4">
-            
+
             {/* ROW 1: SCORE */}
             <div className="grid grid-cols-3 gap-4 pt-4 text-xs">
               <span className="font-semibold text-white self-center">Score Global</span>

@@ -150,11 +150,10 @@ export function ToolSelector({ selectedSlugs, onChange }: ToolSelectorProps) {
                     key={tool.slug}
                     type="button"
                     onClick={() => toggle(tool.slug)}
-                    className={`flex items-start gap-3.5 p-4 rounded-xl border text-left transition-all ${
-                      active
+                    className={`flex items-start gap-3.5 p-4 rounded-xl border text-left transition-all ${active
                         ? meta.activeItem
                         : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                    }`}
+                      }`}
                   >
                     <div className="shrink-0 mt-0.5">
                       {active ? (

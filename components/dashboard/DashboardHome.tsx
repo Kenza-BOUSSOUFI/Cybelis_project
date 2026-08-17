@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { 
-  Shield, 
-  Activity, 
-  AlertTriangle, 
-  TrendingUp, 
-  CheckCircle, 
-  Globe, 
-  Eye, 
-  Trash2, 
+import {
+  Shield,
+  Activity,
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle,
+  Globe,
+  Eye,
+  Trash2,
   Plus
 } from "lucide-react";
 import { LoadingState } from "@/components/dashboard/ui/LoadingState";
@@ -58,7 +58,7 @@ export function DashboardHome() {
         setLoading(false);
       }
     };
-    
+
     fetchDashboard();
   }, []);
 
@@ -97,10 +97,10 @@ export function DashboardHome() {
 
   if (!data) {
     return (
-      <EmptyState 
-        icon={Activity} 
-        title="Erreur de chargement" 
-        description="Veuillez rafraîchir la page." 
+      <EmptyState
+        icon={Activity}
+        title="Erreur de chargement"
+        description="Veuillez rafraîchir la page."
       />
     );
   }
@@ -110,19 +110,19 @@ export function DashboardHome() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      
+
       {/* 1. WELCOME HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Tableau de Bord</h1>
           <p className="text-xs text-slate-500">Suivez la posture de sécurité de vos sites web et gérez vos audits.</p>
         </div>
-        
+
         {/* Quick Launch scan bar */}
         <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white border border-slate-200 shadow-sm w-full md:max-w-md">
           <Globe className="w-4 h-4 text-slate-400 ml-2.5 shrink-0" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Nouveau domaine (ex: mycompany.ma)"
             value={scanDomain}
             onChange={(e) => setScanDomain(e.target.value)}
@@ -140,7 +140,7 @@ export function DashboardHome() {
 
       {/* 2. STATS OVERVIEW CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+
         <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Scans</span>
@@ -202,11 +202,11 @@ export function DashboardHome() {
 
       {/* 3. SCORE GAUGE & DETAILED CATEGORY GRAPH GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Circular Gauge */}
         <div className="lg:col-span-1 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center gap-6">
           <h3 className="text-sm font-bold text-slate-900 self-start">Santé Globale</h3>
-          
+
           <div className="relative w-36 h-36 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90">
               <circle
@@ -249,7 +249,7 @@ export function DashboardHome() {
           </div>
 
           <div className="space-y-4">
-            
+
             {/* Critical */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
@@ -259,9 +259,9 @@ export function DashboardHome() {
                 <span className="text-slate-500 font-mono">{totalCritical} failles</span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div 
-                  className="bg-red-500 h-full rounded-full transition-all" 
-                  style={{ width: `${totalVulnerabilities > 0 ? (totalCritical / totalVulnerabilities) * 100 : 0}%` }} 
+                <div
+                  className="bg-red-500 h-full rounded-full transition-all"
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalCritical / totalVulnerabilities) * 100 : 0}%` }}
                 />
               </div>
             </div>
@@ -275,9 +275,9 @@ export function DashboardHome() {
                 <span className="text-slate-500 font-mono">{totalHigh} failles</span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div 
-                  className="bg-orange-500 h-full rounded-full transition-all" 
-                  style={{ width: `${totalVulnerabilities > 0 ? (totalHigh / totalVulnerabilities) * 100 : 0}%` }} 
+                <div
+                  className="bg-orange-500 h-full rounded-full transition-all"
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalHigh / totalVulnerabilities) * 100 : 0}%` }}
                 />
               </div>
             </div>
@@ -291,9 +291,9 @@ export function DashboardHome() {
                 <span className="text-slate-500 font-mono">{totalMedium} failles</span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div 
-                  className="bg-amber-500 h-full rounded-full transition-all" 
-                  style={{ width: `${totalVulnerabilities > 0 ? (totalMedium / totalVulnerabilities) * 100 : 0}%` }} 
+                <div
+                  className="bg-amber-500 h-full rounded-full transition-all"
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalMedium / totalVulnerabilities) * 100 : 0}%` }}
                 />
               </div>
             </div>
@@ -307,9 +307,9 @@ export function DashboardHome() {
                 <span className="text-slate-500 font-mono">{totalLow} failles</span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div 
-                  className="bg-sky-400 h-full rounded-full transition-all" 
-                  style={{ width: `${totalVulnerabilities > 0 ? (totalLow / totalVulnerabilities) * 100 : 0}%` }} 
+                <div
+                  className="bg-sky-400 h-full rounded-full transition-all"
+                  style={{ width: `${totalVulnerabilities > 0 ? (totalLow / totalVulnerabilities) * 100 : 0}%` }}
                 />
               </div>
             </div>
@@ -326,7 +326,7 @@ export function DashboardHome() {
 
       {/* 4. RECENT SCANS TABLE */}
       <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-6">
-        
+
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-900">Analyses Récentes</h3>
@@ -402,7 +402,7 @@ export function DashboardHome() {
                     <td className="py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {scan.status === "COMPLETED" && (
-                          <Link 
+                          <Link
                             href={`/dashboard/reports/${scan.id}`}
                             className="p-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-500 hover:text-blue-600 border border-slate-200 transition-colors shadow-sm"
                             title="Consulter le rapport"
@@ -410,7 +410,7 @@ export function DashboardHome() {
                             <Eye className="w-4 h-4" />
                           </Link>
                         )}
-                        <button 
+                        <button
                           onClick={() => deleteScan(scan.id)}
                           className="p-1.5 rounded-lg bg-white hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 transition-colors shadow-sm"
                           title="Supprimer"

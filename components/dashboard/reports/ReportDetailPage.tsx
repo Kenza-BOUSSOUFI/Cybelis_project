@@ -3,15 +3,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  ArrowLeft, 
-  Download, 
-  Calendar, 
-  Globe, 
-  Info, 
-  AlertTriangle, 
-  CheckCircle, 
-  ChevronDown, 
+import {
+  ArrowLeft,
+  Download,
+  Calendar,
+  Globe,
+  Info,
+  AlertTriangle,
+  CheckCircle,
+  ChevronDown,
   ChevronUp,
   RefreshCw,
   Mail,
@@ -79,7 +79,7 @@ export function ReportDetailPage() {
   const scanId = params?.scanId as string;
 
   const reportRef = useRef<HTMLDivElement>(null);
-  
+
   const [scan, setScan] = useState<any>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isoCompliance, setIsoCompliance] = useState<Iso27001Report | null>(null);
@@ -98,10 +98,10 @@ export function ReportDetailPage() {
       try {
         const response = await fetch(`/api/scans/${scanId}`);
         const json = await response.json();
-        
+
         if (json.success && json.data) {
           setScan(json.data);
-          
+
           // Calculate ISO 27001 Compliance dynamically using only tools executed in scan
           const iso = calculateIso27001Compliance(json.data.results || []);
           setIsoCompliance(iso);
@@ -180,10 +180,10 @@ export function ReportDetailPage() {
           }
           setIssues(mapped);
         } else {
-          setError(json.error || "Impossible de charger les dÃ©tails du scan.");
+          setError(json.error || "Impossible de charger les détails du scan.");
         }
       } catch (err) {
-        setError("Erreur lors de la rÃ©cupÃ©ration des dÃ©tails du scan.");
+        setError("Erreur lors de la récupération des détails du scan.");
       } finally {
         setLoading(false);
       }
@@ -193,7 +193,7 @@ export function ReportDetailPage() {
   }, [scanId]);
 
   const toggleResolve = (id: string) => {
-    setIssues(prev => prev.map(issue => 
+    setIssues(prev => prev.map(issue =>
       issue.id === id ? { ...issue, resolved: !issue.resolved } : issue
     ));
   };
@@ -206,7 +206,7 @@ export function ReportDetailPage() {
       await generateCybelisPDF(scan, issues, isoCompliance);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
-      alert("Erreur lors de la gÃ©nÃ©ration du PDF. Veuillez rÃ©essayer.");
+      alert("Erreur lors de la génération du PDF. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
     }
@@ -256,8 +256,8 @@ export function ReportDetailPage() {
   const baseScore = scan.securityScore?.score ?? 0;
   const dbGrade = scan.securityScore?.grade;
   const resolvedCount = issues.filter(i => i.resolved).length;
-  
-  const calculatedScore = resolvedCount > 0 
+
+  const calculatedScore = resolvedCount > 0
     ? Math.min(100, baseScore + Math.round((resolvedCount / (issues.length || 1)) * (100 - baseScore)))
     : baseScore;
 
@@ -286,11 +286,11 @@ export function ReportDetailPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      
+
       {/* 1. BACK HEADER ACTION BAR */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Link 
-          href="/dashboard/reports" 
+        <Link
+          href="/dashboard/reports"
           className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -305,7 +305,7 @@ export function ReportDetailPage() {
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Re-scanner</span>
           </button>
-          
+
           <button
             onClick={exportPDF}
             disabled={isExporting}
@@ -328,20 +328,20 @@ export function ReportDetailPage() {
 
       {/* 2. THE REPORT CONTENT */}
       <div ref={reportRef} className="space-y-6">
-        
+
         {/* REPORT SUMMARY CARD */}
         <div className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          
+
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-blue-600" />
               <h2 className="text-xl font-bold text-slate-900 tracking-tight">{domain}</h2>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4 text-xs font-mono text-slate-500">
               <div className="space-y-1">
-                <span className="block text-[10px] text-slate-400 uppercase font-semibold">IP RÃ©solue</span>
-                <span className="text-slate-900">RÃ©solution IP Auto</span>
+                <span className="block text-[10px] text-slate-400 uppercase font-semibold">IP Résolue</span>
+                <span className="text-slate-900">Résolution IP Auto</span>
               </div>
               <div className="space-y-1">
                 <span className="block text-[10px] text-slate-400 uppercase font-semibold">Date d'analyse</span>
@@ -354,7 +354,7 @@ export function ReportDetailPage() {
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3">
               <Info className="w-4 h-4 text-slate-400 shrink-0" />
               <p className="text-[10px] text-slate-500 leading-normal">
-                Analyse externe passive. Ce document intÃ¨gre la cartographie OWASP Top 10, le rÃ©fÃ©rentiel CVE / CVSS et la conformitÃ© ISO/IEC 27001.
+                Analyse externe passive. Ce document intègre la cartographie OWASP Top 10, le référentiel CVE / CVSS et la conformité ISO/IEC 27001.
               </p>
             </div>
           </div>
@@ -374,17 +374,17 @@ export function ReportDetailPage() {
               <span className="block text-xl font-bold text-orange-600 font-mono">
                 {issues.filter(i => i.severity === "high" && !i.resolved).length}
               </span>
-              <span className="text-[9px] text-orange-500 uppercase font-mono">Ã‰levÃ©es</span>
+              <span className="text-[9px] text-orange-500 uppercase font-mono">Élevées</span>
             </div>
           </div>
 
           <div className="lg:col-span-3 flex flex-col items-center justify-center p-4 rounded-2xl bg-blue-50 border border-blue-200 text-center gap-2">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Score de SÃ©curitÃ©</span>
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Score de Sécurité</span>
             <div className="text-5xl font-extrabold text-blue-600 font-mono">
               {calculatedScore}<span className="text-xs text-slate-400">/100</span>
             </div>
             <div className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold ${currentGrade.color} border bg-white`}>
-              Grade {currentGrade.grade} â€¢ {currentGrade.desc}
+              Grade {currentGrade.grade} • {currentGrade.desc}
             </div>
           </div>
 
@@ -399,8 +399,8 @@ export function ReportDetailPage() {
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">ConformitÃ© ISO/IEC 27001:2022</h3>
-                  <p className="text-xs text-slate-500">Ã‰valuation calculÃ©e uniquement sur les contrÃ´les rÃ©ellement analysÃ©s ({isoCompliance.totalControls} contrÃ´les).</p>
+                  <h3 className="text-sm font-bold text-slate-900">Conformité ISO/IEC 27001:2022</h3>
+                  <p className="text-xs text-slate-500">Évaluation calculée uniquement sur les contrôles réellement analysés ({isoCompliance.totalControls} contrôles).</p>
                 </div>
               </div>
 
@@ -409,11 +409,11 @@ export function ReportDetailPage() {
                   <div className="text-2xl font-black font-mono text-emerald-600">
                     {isoCompliance.compliancePercentage}%
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium">Taux de conformitÃ©</div>
+                  <div className="text-[10px] text-slate-400 font-medium">Taux de conformité</div>
                 </div>
                 <div className="w-16 h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200 hidden sm:block">
-                  <div 
-                    className="h-full bg-emerald-500 rounded-full" 
+                  <div
+                    className="h-full bg-emerald-500 rounded-full"
                     style={{ width: `${isoCompliance.compliancePercentage}%` }}
                   />
                 </div>
@@ -422,21 +422,19 @@ export function ReportDetailPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {isoCompliance.controls.map((control) => (
-                <div 
-                  key={control.code} 
-                  className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${
-                    control.status === "CONFORME"
-                      ? "bg-emerald-50/50 border-emerald-200 text-slate-800"
-                      : "bg-amber-50/50 border-amber-200 text-slate-800"
-                  }`}
+                <div
+                  key={control.code}
+                  className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${control.status === "CONFORME"
+                    ? "bg-emerald-50/50 border-emerald-200 text-slate-800"
+                    : "bg-amber-50/50 border-amber-200 text-slate-800"
+                    }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-mono text-[10px] font-bold text-slate-500">{control.code}</span>
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                      control.status === "CONFORME"
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                        : "bg-amber-100 text-amber-800 border border-amber-200"
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${control.status === "CONFORME"
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                      }`}>
                       {control.status === "CONFORME" ? "CONFORME" : "NON CONFORME"}
                     </span>
                   </div>
@@ -450,7 +448,7 @@ export function ReportDetailPage() {
 
         {/* CONTROLS BAR: CATEGORY TABS & FILTER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-          
+
           {/* Tabs for categories */}
           <div className="flex gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs self-start">
             <button
@@ -458,14 +456,14 @@ export function ReportDetailPage() {
               className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === "website" ? "bg-white text-blue-600 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"}`}
             >
               <Globe className="w-3.5 h-3.5" />
-              <span>SÃ©curitÃ© du Site Web</span>
+              <span>Sécurité du Site Web</span>
             </button>
             <button
               onClick={() => setActiveTab("email")}
               className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === "email" ? "bg-white text-blue-600 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"}`}
             >
               <Mail className="w-3.5 h-3.5" />
-              <span>SÃ©curitÃ© Email</span>
+              <span>Sécurité Email</span>
             </button>
             <button
               onClick={() => setActiveTab("dns")}
@@ -479,14 +477,14 @@ export function ReportDetailPage() {
               className={`px-4 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${activeTab === "iso27001" ? "bg-white text-emerald-600 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-900"}`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>ConformitÃ© ISO 27001</span>
+              <span>Conformité ISO 27001</span>
             </button>
           </div>
 
           {/* Severity selector */}
           {activeTab !== "iso27001" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Filtrer par gravitÃ© :</span>
+              <span className="text-xs text-slate-500 font-medium">Filtrer par gravité :</span>
               <select
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value as any)}
@@ -494,7 +492,7 @@ export function ReportDetailPage() {
               >
                 <option value="all">Toutes ({activeIssues.length})</option>
                 <option value="critical">Critique</option>
-                <option value="high">Ã‰levÃ©</option>
+                <option value="high">Élevé</option>
                 <option value="medium">Moyen</option>
                 <option value="low">Faible</option>
               </select>
@@ -511,8 +509,8 @@ export function ReportDetailPage() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Matrice de ConformitÃ© ISO/IEC 27001:2022</h3>
-                <p className="text-xs text-slate-500">SynthÃ¨se calculÃ©e Ã  partir des {isoCompliance.totalControls} contrÃ´les effectivement analysÃ©s dans ce scan.</p>
+                <h3 className="text-sm font-bold text-slate-900">Matrice de Conformité ISO/IEC 27001:2022</h3>
+                <p className="text-xs text-slate-500">Synthèse calculée à partir des {isoCompliance.totalControls} contrôles effectivement analysés dans ce scan.</p>
               </div>
             </div>
 
@@ -524,18 +522,17 @@ export function ReportDetailPage() {
                       <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-bold">{ctrl.code}</span>
                       <span className="text-xs font-bold text-slate-900">{ctrl.name}</span>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                      ctrl.status === "CONFORME"
-                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                        : "bg-red-100 text-red-700 border border-red-200"
-                    }`}>
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${ctrl.status === "CONFORME"
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      : "bg-red-100 text-red-700 border border-red-200"
+                      }`}>
                       {ctrl.status}
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">{ctrl.details}</p>
                   {ctrl.status === "NON_CONFORME" && ctrl.recommendation && (
                     <div className="pt-2 border-t border-slate-200 text-xs text-amber-800 bg-amber-50/80 p-2.5 rounded-lg border border-amber-200">
-                      <span className="font-bold">Recommandation d'amÃ©lioration ISO 27001 :</span> {ctrl.recommendation}
+                      <span className="font-bold">Recommandation d'amélioration ISO 27001 :</span> {ctrl.recommendation}
                     </div>
                   )}
                 </div>
@@ -552,31 +549,29 @@ export function ReportDetailPage() {
                 const isExpanded = expandedIssue === issue.id;
                 const impact = getSecurityImpact(issue.toolSlug);
                 return (
-                  <div 
-                    key={issue.id} 
-                    className={`rounded-2xl border transition-all overflow-hidden ${
-                      issue.resolved 
-                        ? "bg-slate-50 border-slate-200 opacity-60" 
-                        : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
-                    }`}
+                  <div
+                    key={issue.id}
+                    className={`rounded-2xl border transition-all overflow-hidden ${issue.resolved
+                      ? "bg-slate-50 border-slate-200 opacity-60"
+                      : "bg-white border-slate-200 hover:border-slate-300 shadow-sm"
+                      }`}
                   >
-                    
+
                     {/* Issue Main Summary Panel */}
-                    <div 
+                    <div
                       onClick={() => setExpandedIssue(isExpanded ? null : issue.id)}
                       className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none"
                     >
                       <div className="flex items-start gap-4">
-                        
+
                         {/* Alert Icon depending on status */}
                         {issue.resolved ? (
                           <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                         ) : (
-                          <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${
-                            issue.severity === "critical" ? "text-red-500 animate-pulse" :
+                          <AlertTriangle className={`w-5 h-5 shrink-0 mt-0.5 ${issue.severity === "critical" ? "text-red-500 animate-pulse" :
                             issue.severity === "high" ? "text-orange-500" :
-                            issue.severity === "medium" ? "text-amber-500" : "text-sky-500"
-                          }`} />
+                              issue.severity === "medium" ? "text-amber-500" : "text-sky-500"
+                            }`} />
                         )}
 
                         <div>
@@ -607,15 +602,14 @@ export function ReportDetailPage() {
                             e.stopPropagation();
                             toggleResolve(issue.id);
                           }}
-                          className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-colors ${
-                            issue.resolved
-                              ? "border-slate-200 hover:bg-slate-100 text-slate-500"
-                              : "border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-600"
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-colors ${issue.resolved
+                            ? "border-slate-200 hover:bg-slate-100 text-slate-500"
+                            : "border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-600"
+                            }`}
                         >
                           {issue.resolved ? "Marquer non résolu" : "Simuler résolution"}
                         </button>
-                        
+
                         <div className="p-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-400">
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </div>
@@ -660,8 +654,8 @@ export function ReportDetailPage() {
                           </div>
                           <div className="space-y-2 pt-1">
                             <CiaItemRow title="Confidentialité" score={impact.technicalImpact.confidentiality} />
-                            <CiaItemRow title="Intégrité"       score={impact.technicalImpact.integrity} />
-                            <CiaItemRow title="Disponibilité"   score={impact.technicalImpact.availability} />
+                            <CiaItemRow title="Intégrité" score={impact.technicalImpact.integrity} />
+                            <CiaItemRow title="Disponibilité" score={impact.technicalImpact.availability} />
                           </div>
                         </div>
 
@@ -735,7 +729,7 @@ export function ReportDetailPage() {
               })
             ) : (
               <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
-                Aucune anomalie dÃ©tectÃ©e pour cette configuration de filtres.
+                Aucune anomalie détectée pour cette configuration de filtres.
               </div>
             )}
           </div>

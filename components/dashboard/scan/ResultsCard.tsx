@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 
 type SeverityLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-type ResultStatus  = "PASS" | "WARNING" | "FAIL";
-type Priority      = "LOW" | "MEDIUM" | "HIGH";
-type ToolCategory  = "WEBSITE_SECURITY" | "EMAIL_SECURITY" | "DNS_DOMAIN_SECURITY";
+type ResultStatus = "PASS" | "WARNING" | "FAIL";
+type Priority = "LOW" | "MEDIUM" | "HIGH";
+type ToolCategory = "WEBSITE_SECURITY" | "EMAIL_SECURITY" | "DNS_DOMAIN_SECURITY";
 
 interface Recommendation {
   id: string;
@@ -58,22 +58,22 @@ interface ResultsCardProps {
 }
 
 const RESULT_STATUS: Record<ResultStatus, { label: string; dot: string; text: string; bg: string; border: string }> = {
-  PASS:    { label: "Réussi",    dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50",  border: "border-emerald-200" },
-  WARNING: { label: "Attention", dot: "bg-amber-500",   text: "text-amber-700",   bg: "bg-amber-50",    border: "border-amber-200"   },
-  FAIL:    { label: "Échoué",    dot: "bg-red-500",     text: "text-red-700",     bg: "bg-red-50",      border: "border-red-200"     },
+  PASS: { label: "Réussi", dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" },
+  WARNING: { label: "Attention", dot: "bg-amber-500", text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200" },
+  FAIL: { label: "Échoué", dot: "bg-red-500", text: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
 };
 
 const PRIORITY: Record<Priority, { label: string; text: string }> = {
-  LOW:    { label: "Faible",  text: "text-slate-500" },
-  MEDIUM: { label: "Moyen",   text: "text-amber-600" },
-  HIGH:   { label: "Élevé",   text: "text-red-600"   },
+  LOW: { label: "Faible", text: "text-slate-500" },
+  MEDIUM: { label: "Moyen", text: "text-amber-600" },
+  HIGH: { label: "Élevé", text: "text-red-600" },
 };
 
 const RISK_GRADE: Record<SeverityLevel, { label: string; text: string; bg: string; border: string }> = {
-  LOW:      { label: "Faible",   text: "text-emerald-700", bg: "bg-emerald-50",  border: "border-emerald-200" },
-  MEDIUM:   { label: "Modéré",   text: "text-amber-700",   bg: "bg-amber-50",    border: "border-amber-200"   },
-  HIGH:     { label: "Élevé",    text: "text-orange-700",  bg: "bg-orange-50",   border: "border-orange-200"  },
-  CRITICAL: { label: "Critique", text: "text-red-700",     bg: "bg-red-50",       border: "border-red-200"     },
+  LOW: { label: "Faible", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" },
+  MEDIUM: { label: "Modéré", text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200" },
+  HIGH: { label: "Élevé", text: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200" },
+  CRITICAL: { label: "Critique", text: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
 };
 
 const GRADE_COLOR: Record<string, string> = {
@@ -85,17 +85,17 @@ const GRADE_COLOR: Record<string, string> = {
 };
 
 const CATEGORY: Record<ToolCategory, { label: string; Icon: React.ElementType }> = {
-  WEBSITE_SECURITY:    { label: "Sécurité Web", Icon: Globe  },
-  EMAIL_SECURITY:      { label: "Email",        Icon: Mail   },
-  DNS_DOMAIN_SECURITY: { label: "DNS & Domaine",Icon: Server },
+  WEBSITE_SECURITY: { label: "Sécurité Web", Icon: Globe },
+  EMAIL_SECURITY: { label: "Email", Icon: Mail },
+  DNS_DOMAIN_SECURITY: { label: "DNS & Domaine", Icon: Server },
 };
 
 function ScoreBar({ score }: { score: number }) {
   const pct = Math.max(0, Math.min(100, score));
   const color =
     pct >= 80 ? "bg-emerald-500"
-    : pct >= 60 ? "bg-amber-500"
-    : "bg-red-500";
+      : pct >= 60 ? "bg-amber-500"
+        : "bg-red-500";
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
@@ -108,8 +108,8 @@ function ScoreBar({ score }: { score: number }) {
 
 function ToolRow({ result }: { result: ScanResult }) {
   const [open, setOpen] = useState(false);
-  const st   = RESULT_STATUS[result.status] ?? RESULT_STATUS.FAIL;
-  const cat  = CATEGORY[result.tool.category] ?? CATEGORY.WEBSITE_SECURITY;
+  const st = RESULT_STATUS[result.status] ?? RESULT_STATUS.FAIL;
+  const cat = CATEGORY[result.tool.category] ?? CATEGORY.WEBSITE_SECURITY;
   const CatIcon = cat.Icon;
   const hasRecs = result.recommendations.length > 0;
 
@@ -118,9 +118,8 @@ function ToolRow({ result }: { result: ScanResult }) {
       <button
         type="button"
         onClick={() => hasRecs && setOpen(v => !v)}
-        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${
-          hasRecs ? "hover:bg-slate-50 cursor-pointer" : "cursor-default"
-        }`}
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${hasRecs ? "hover:bg-slate-50 cursor-pointer" : "cursor-default"
+          }`}
       >
         <div className={`shrink-0 w-2.5 h-2.5 rounded-full ${st.dot}`} />
 
@@ -179,7 +178,7 @@ export function ResultsCard({ scanId, onReset }: ResultsCardProps) {
   useEffect(() => {
     async function fetchReport() {
       try {
-        const res  = await fetch(`/api/scans/${scanId}`);
+        const res = await fetch(`/api/scans/${scanId}`);
         const json = await res.json();
         if (json.success && json.data) setData(json.data);
         else setError(json.error || "Impossible de charger le rapport.");
@@ -217,14 +216,14 @@ export function ResultsCard({ scanId, onReset }: ResultsCardProps) {
   }
 
   const { securityScore, results, website } = data;
-  const grade      = securityScore?.grade ?? "F";
+  const grade = securityScore?.grade ?? "F";
   const gradeClass = GRADE_COLOR[grade] ?? GRADE_COLOR.F;
-  const risk       = RISK_GRADE[securityScore?.riskLevel ?? "CRITICAL"];
-  const score      = securityScore?.score ?? 0;
-  const passed     = securityScore?.passedChecks ?? 0;
-  const warned     = securityScore?.warningChecks ?? 0;
-  const failed     = securityScore?.failedChecks ?? 0;
-  const total      = passed + warned + failed;
+  const risk = RISK_GRADE[securityScore?.riskLevel ?? "CRITICAL"];
+  const score = securityScore?.score ?? 0;
+  const passed = securityScore?.passedChecks ?? 0;
+  const warned = securityScore?.warningChecks ?? 0;
+  const failed = securityScore?.failedChecks ?? 0;
+  const total = passed + warned + failed;
 
   const categories = Array.from(new Set(results.map(r => r.tool.category))) as ToolCategory[];
 
@@ -263,9 +262,8 @@ export function ResultsCard({ scanId, onReset }: ResultsCardProps) {
 
             <div className="h-2.5 rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ${
-                  score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-red-500"
-                }`}
+                className={`h-full rounded-full transition-all duration-1000 ${score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-red-500"
+                  }`}
                 style={{ width: `${score}%` }}
               />
             </div>
@@ -318,16 +316,14 @@ export function ResultsCard({ scanId, onReset }: ResultsCardProps) {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeCategory === cat
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeCategory === cat
                       ? "bg-blue-50 text-blue-600 border border-blue-200 font-bold"
                       : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                  }`}
+                    }`}
                 >
                   {label}
-                  <span className={`px-1.5 py-px rounded text-[10px] font-bold ${
-                    activeCategory === cat ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"
-                  }`}>{count}</span>
+                  <span className={`px-1.5 py-px rounded text-[10px] font-bold ${activeCategory === cat ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"
+                    }`}>{count}</span>
                 </button>
               );
             })}

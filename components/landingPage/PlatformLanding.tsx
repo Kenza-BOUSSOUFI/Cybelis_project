@@ -329,9 +329,9 @@ export function PlatformLanding() {
             ["Contact", "#contact"],
           ]],
           ["Légal", [
-            ["Politique de confidentialité", "#"],
-            ["Conditions d'utilisation", "#"],
-            ["Pratiques de sécurité", "#"],
+            ["Politique de confidentialité", "/legal/politique-confidentialite"],
+            ["Conditions d'utilisation", "/legal/conditions-utilisation"],
+            ["Pratiques de sécurité", "/legal/politique-confidentialite#securite"],
             ["Support", "mailto:contact@cybelis.ma"],
           ]],
         ].map(([title, links]) => (

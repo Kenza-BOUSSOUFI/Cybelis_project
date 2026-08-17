@@ -64,11 +64,10 @@ export function ScanForm({ onScanStarted }: ScanFormProps) {
           </span>
         </label>
 
-        <div className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-colors ${
-          isDomainInvalid
-            ? "border-red-300 bg-red-50/50"
-            : "border-slate-200 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 shadow-sm"
-        }`}>
+        <div className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-colors ${isDomainInvalid
+          ? "border-red-300 bg-red-50/50"
+          : "border-slate-200 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 shadow-sm"
+          }`}>
           <Lock className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
@@ -106,15 +105,13 @@ export function ScanForm({ onScanStarted }: ScanFormProps) {
             type="button"
             onClick={() => setScanType("FULL")}
             disabled={isLoading}
-            className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${
-              scanType === "FULL"
-                ? "bg-blue-50/60 border-blue-500 ring-1 ring-blue-500/20"
-                : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-            }`}
+            className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${scanType === "FULL"
+              ? "bg-blue-50/60 border-blue-500 ring-1 ring-blue-500/20"
+              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+              }`}
           >
-            <div className={`shrink-0 p-2.5 rounded-lg border flex items-center justify-center ${
-              scanType === "FULL" ? "bg-blue-600 border-blue-600 text-white" : "bg-slate-100 border-slate-200 text-slate-500"
-            }`}>
+            <div className={`shrink-0 p-2.5 rounded-lg border flex items-center justify-center ${scanType === "FULL" ? "bg-blue-600 border-blue-600 text-white" : "bg-slate-100 border-slate-200 text-slate-500"
+              }`}>
               <Zap className="w-5 h-5" />
             </div>
             <div className="space-y-1">
@@ -133,15 +130,13 @@ export function ScanForm({ onScanStarted }: ScanFormProps) {
             type="button"
             onClick={() => setScanType("CUSTOM")}
             disabled={isLoading}
-            className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${
-              scanType === "CUSTOM"
-                ? "bg-blue-50/60 border-blue-500 ring-1 ring-blue-500/20"
-                : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-            }`}
+            className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all ${scanType === "CUSTOM"
+              ? "bg-blue-50/60 border-blue-500 ring-1 ring-blue-500/20"
+              : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+              }`}
           >
-            <div className={`shrink-0 p-2.5 rounded-lg border flex items-center justify-center ${
-              scanType === "CUSTOM" ? "bg-blue-600 border-blue-600 text-white" : "bg-slate-100 border-slate-200 text-slate-500"
-            }`}>
+            <div className={`shrink-0 p-2.5 rounded-lg border flex items-center justify-center ${scanType === "CUSTOM" ? "bg-blue-600 border-blue-600 text-white" : "bg-slate-100 border-slate-200 text-slate-500"
+              }`}>
               <SlidersHorizontal className="w-5 h-5" />
             </div>
             <div className="space-y-1">

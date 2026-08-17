@@ -52,7 +52,7 @@ export function SettingsPage() {
 
     const randomHex = Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
     const keyString = `cy_live_${randomHex}`;
-    
+
     const newKey = {
       id: Date.now().toString(),
       name: newKeyName,
@@ -71,14 +71,14 @@ export function SettingsPage() {
   };
 
   const copyToClipboardSimulated = (id: string, text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {});
+    navigator.clipboard.writeText(text).catch(() => { });
     setCopiedKeyId(id);
     setTimeout(() => setCopiedKeyId(null), 2000);
   };
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      
+
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Paramètres du Compte</h1>
@@ -112,7 +112,7 @@ export function SettingsPage() {
 
       {/* TAB CONTENT PANEL */}
       <div className="p-6 rounded-3xl bg-neutral-900/40 border border-neutral-900 min-h-[400px]">
-        
+
         {/* PROFILE CONFIG */}
         {activeTab === "profile" && (
           <form onSubmit={saveProfile} className="space-y-6 max-w-xl">
@@ -124,20 +124,20 @@ export function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono text-neutral-400 uppercase">Nom Complet</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono text-neutral-400 uppercase">Adresse Email</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={profileEmail}
                   onChange={(e) => setProfileEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -145,27 +145,27 @@ export function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono text-neutral-400 uppercase">Entreprise</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={profileCompany}
                   onChange={(e) => setProfileCompany(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono text-neutral-400 uppercase">Rôle / Fonction</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={profileRole}
                   onChange={(e) => setProfileRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
 
             <div className="pt-2 flex items-center gap-4">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors"
               >
                 Enregistrer les modifications
@@ -190,37 +190,37 @@ export function SettingsPage() {
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono text-neutral-400 uppercase">Mot de passe actuel</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   required
                   placeholder="••••••••••••"
                   value={currPassword}
                   onChange={(e) => setCurrPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono text-neutral-400 uppercase">Nouveau mot de passe</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     required
                     placeholder="Min. 8 caractères"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono text-neutral-400 uppercase">Confirmer le mot de passe</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     required
                     placeholder="••••••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500" 
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
@@ -234,17 +234,16 @@ export function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setTfaEnabled(!tfaEnabled)}
-                className={`w-11 h-6 rounded-full p-1 flex items-center transition-colors focus:outline-none ${
-                  tfaEnabled ? "bg-indigo-600" : "bg-neutral-800"
-                }`}
+                className={`w-11 h-6 rounded-full p-1 flex items-center transition-colors focus:outline-none ${tfaEnabled ? "bg-indigo-600" : "bg-neutral-800"
+                  }`}
               >
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${tfaEnabled ? "translate-x-5" : ""}`} />
               </button>
             </div>
 
             <div className="pt-2 flex items-center gap-4">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors"
               >
                 Mettre à jour la sécurité
@@ -261,7 +260,7 @@ export function SettingsPage() {
         {/* DEVELOPER API KEYS CONSOLE */}
         {activeTab === "api" && (
           <div className="space-y-8">
-            
+
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-neutral-850">
               <div>
                 <h3 className="text-sm font-bold text-white mb-1">Clés d'API Développeur</h3>
@@ -270,13 +269,13 @@ export function SettingsPage() {
 
               {/* Generate Key Input form */}
               <form onSubmit={generateApiKey} className="flex gap-2 w-full md:max-w-md">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   placeholder="Nom de la clé (ex: Jenkins API)"
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500" 
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                 />
                 <button
                   type="submit"
@@ -300,7 +299,7 @@ export function SettingsPage() {
                 </p>
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-neutral-950 border border-neutral-800 font-mono text-xs text-white justify-between select-all">
                   <span className="break-all">{generatedKeyText}</span>
-                  <button 
+                  <button
                     onClick={() => copyToClipboardSimulated("gen", generatedKeyText)}
                     className="p-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
                   >
@@ -313,7 +312,7 @@ export function SettingsPage() {
             {/* API Keys Table */}
             <div className="space-y-4">
               <h4 className="text-xs font-semibold text-neutral-400">Vos clés actives :</h4>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="text-[10px] font-mono text-neutral-500 uppercase border-b border-neutral-850">

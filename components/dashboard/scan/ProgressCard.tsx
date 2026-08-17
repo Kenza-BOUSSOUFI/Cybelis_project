@@ -73,9 +73,9 @@ export function ProgressCard({ scanId, onScanFinished, onScanFailed }: ProgressC
 
   const statusLabel =
     status === "PENDING" ? "En attente"
-    : status === "RUNNING" ? "Analyse en cours"
-    : status === "COMPLETED" ? "Terminé"
-    : "Échoué";
+      : status === "RUNNING" ? "Analyse en cours"
+        : status === "COMPLETED" ? "Terminé"
+          : "Échoué";
 
   return (
     <div className="space-y-4">
@@ -128,11 +128,10 @@ export function ProgressCard({ scanId, onScanFinished, onScanFailed }: ProgressC
             { label: "Analyse réseau", done: completedTools > 0 },
             { label: "Rapport généré", done: status === "COMPLETED" },
           ].map(({ label, done }) => (
-            <div key={label} className={`flex items-center gap-2 p-3 rounded-xl border text-xs font-semibold transition-all ${
-              done
+            <div key={label} className={`flex items-center gap-2 p-3 rounded-xl border text-xs font-semibold transition-all ${done
                 ? "border-blue-200 bg-blue-50 text-blue-700"
                 : "border-slate-200 bg-slate-50 text-slate-400"
-            }`}>
+              }`}>
               <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${done ? "bg-blue-600" : "bg-slate-300"}`} />
               {label}
             </div>

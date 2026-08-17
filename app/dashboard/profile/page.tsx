@@ -70,14 +70,14 @@ export default function ProfilePage() {
         setProfile((prev) =>
           prev
             ? {
-                ...prev,
-                fullName: json.data.fullName,
-                companyName: json.data.companyName,
-                phone: json.data.phone || "",
-                initials: json.data.fullName
-                  ? json.data.fullName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()
-                  : "U",
-              }
+              ...prev,
+              fullName: json.data.fullName,
+              companyName: json.data.companyName,
+              phone: json.data.phone || "",
+              initials: json.data.fullName
+                ? json.data.fullName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()
+                : "U",
+            }
             : null
         );
         setIsEditing(false);
@@ -135,7 +135,7 @@ export default function ProfilePage() {
 
       {/* Main Profile Card */}
       <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
-        
+
         {/* Top Banner & Avatar Header */}
         <div className="p-6 bg-slate-50/50 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-lg shadow-blue-500/20 shrink-0">

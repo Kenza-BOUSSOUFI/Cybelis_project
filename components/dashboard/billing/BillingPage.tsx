@@ -8,7 +8,7 @@ export function BillingPage() {
   const [activePlan, setActivePlan] = useState("Free");
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<any>(null);
-  
+
   // Checkout form state
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
@@ -79,7 +79,7 @@ export function BillingPage() {
       setIsPaying(false);
       setPaySuccess(true);
       setActivePlan("Pro");
-      
+
       // Add invoice
       const newInvoice = {
         id: `INV-2026-00${invoices.length + 1}`,
@@ -104,7 +104,7 @@ export function BillingPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      
+
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Facturation & Abonnements</h1>
@@ -120,7 +120,7 @@ export function BillingPage() {
           <div>
             <span className="text-[10px] text-neutral-500 uppercase font-mono font-semibold">Abonnement actif</span>
             <h3 className="text-base font-bold text-white flex items-center gap-2">
-              Plan {activePlan} 
+              Plan {activePlan}
               <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-[9px] font-mono font-semibold">
                 ACTIF
               </span>
@@ -155,13 +155,12 @@ export function BillingPage() {
         {pricingTiers.map((tier) => {
           const isCurrentPlan = activePlan === tier.name;
           return (
-            <div 
+            <div
               key={tier.name}
-              className={`p-6 rounded-3xl bg-neutral-900/40 border flex flex-col justify-between gap-6 relative transition-all ${
-                isCurrentPlan 
-                  ? "border-indigo-500 shadow-xl shadow-indigo-500/5 bg-gradient-to-b from-indigo-950/20 to-neutral-900/40" 
+              className={`p-6 rounded-3xl bg-neutral-900/40 border flex flex-col justify-between gap-6 relative transition-all ${isCurrentPlan
+                  ? "border-indigo-500 shadow-xl shadow-indigo-500/5 bg-gradient-to-b from-indigo-950/20 to-neutral-900/40"
                   : "border-neutral-900 hover:border-neutral-800"
-              }`}
+                }`}
             >
               <div className="space-y-6">
                 <div>
@@ -191,11 +190,10 @@ export function BillingPage() {
               ) : (
                 <button
                   onClick={() => handleCheckout(tier)}
-                  className={`w-full py-3 rounded-xl text-xs font-semibold text-center transition-colors ${
-                    tier.name === "Business"
+                  className={`w-full py-3 rounded-xl text-xs font-semibold text-center transition-colors ${tier.name === "Business"
                       ? "bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 text-white"
                       : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                  }`}
+                    }`}
                 >
                   {tier.cta}
                 </button>
@@ -253,9 +251,9 @@ export function BillingPage() {
       {showCheckoutModal && checkoutPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-sm p-4">
           <div className="w-full max-w-md p-6 rounded-3xl bg-neutral-900 border border-neutral-800 shadow-2xl relative space-y-6">
-            
+
             {/* Close button */}
-            <button 
+            <button
               onClick={() => setShowCheckoutModal(false)}
               className="absolute top-4 right-4 p-1.5 rounded bg-neutral-950 border border-neutral-850 text-neutral-400"
             >
@@ -279,7 +277,7 @@ export function BillingPage() {
               </div>
             ) : (
               <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                
+
                 {/* Total due badge */}
                 <div className="flex justify-between items-center p-3 rounded-xl bg-neutral-950 border border-neutral-850 font-mono text-xs">
                   <span className="text-neutral-500">Montant dû :</span>
@@ -288,52 +286,52 @@ export function BillingPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono text-neutral-400 uppercase">Titulaire de la carte</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
                     placeholder="Jean Dupont"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500" 
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono text-neutral-400 uppercase">Numéro de carte</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value)}
                     placeholder="4000 1234 5678 9010"
                     maxLength={19}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500" 
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-mono text-neutral-400 uppercase">Expiration</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={cardExpiry}
                       onChange={(e) => setCardExpiry(e.target.value)}
                       placeholder="MM/AA"
                       maxLength={5}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500" 
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-mono text-neutral-400 uppercase">Cryptogramme (CVV)</label>
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       required
                       value={cardCvv}
                       onChange={(e) => setCardCvv(e.target.value)}
                       placeholder="123"
                       maxLength={3}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500" 
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
