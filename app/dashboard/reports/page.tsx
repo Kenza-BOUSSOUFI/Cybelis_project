@@ -28,21 +28,12 @@ interface Vulnerability {
   remediation: string;
 }
 
-interface ScanDetails {
-  id: string;
-  domain: string;
-  score: number;
-  createdAt: string;
-  vulnerabilities: Vulnerability[];
-  modules: string[];
-}
-
-// ── Design helpers (identical to original) ────────────────────────────────────
+// ── Design helpers ────────────────────────────────────────────────────────────
 
 const scoreBadge = (score: number) => {
-  if (score >= 90) return "bg-emerald-50 text-emerald-600 border border-emerald-200";
-  if (score >= 70) return "bg-amber-50 text-amber-600 border border-amber-200";
-  return "bg-red-50 text-red-600 border border-red-200";
+  if (score >= 90) return "text-emerald-600";
+  if (score >= 70) return "text-amber-600";
+  return "text-red-600";
 };
 
 const severityLabel: Record<string, string> = {
@@ -197,17 +188,17 @@ export default function ReportsPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-        <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-          <FileText className="w-5 h-5" />
-        </div>
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Rapports</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Consultez et téléchargez vos rapports d'audit.</p>
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-slate-400 shrink-0" />
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Rapports</h1>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">Consultez et téléchargez vos rapports d'audit.</p>
         </div>
         <Link
           href="/dashboard/scan"
-          className="ml-auto px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-md shadow-blue-600/15"
+          className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shrink-0"
         >
           + Nouveau scan
         </Link>
@@ -244,7 +235,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold ${scoreBadge(report.score)}`}>
+                    <span className={`text-xs font-mono font-bold ${scoreBadge(report.score)}`}>
                       {report.score}%
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -254,11 +245,10 @@ export default function ReportsPage() {
                 <p className="text-[11px] text-slate-500 mt-3 leading-relaxed">{report.summary}</p>
 
                 <div className="flex items-center gap-2 mt-3">
-                  {report.critical > 0 && <span className="text-[10px] px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 font-mono font-bold">{report.critical} Critique{report.critical > 1 ? "s" : ""}</span>}
-                  {report.high > 0 && <span className="text-[10px] px-2 py-0.5 rounded bg-orange-50 text-orange-600 border border-orange-100 font-mono font-bold">{report.high} Élevé{report.high > 1 ? "s" : ""}</span>}
-                  {report.medium > 0 && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 font-mono font-bold">{report.medium} Moyen{report.medium > 1 ? "s" : ""}</span>}
-                  {report.critical === 0 && report.high === 0 && (
-                    <span className="text-[10px] text-emerald-500 font-semibold font-mono">✓ Aucune faille critique</span>
+                  {report.critical > 0 && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 font-mono font-bold">
+                      {report.critical} Critique{report.critical > 1 ? "s" : ""}
+                    </span>
                   )}
                   <button
                     onClick={(e) => handlePDF(e, report.id)}

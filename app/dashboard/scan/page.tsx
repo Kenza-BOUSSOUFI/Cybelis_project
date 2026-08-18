@@ -22,20 +22,15 @@ export default function ScanPage() {
     <div className="max-w-4xl mx-auto space-y-6 py-6 px-4">
       {/* Header */}
       {step !== "running" && (
-        <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-          <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-            <Shield className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              {step === "done" ? "Résultats de l'audit" : "Nouveau Scan de Sécurité"}
-            </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {step === "done"
-                ? "Résultats détaillés par outil et recommandations de sécurité."
-                : "Exécutez un audit complet sur les faiblesses SSL/TLS, DNS, en-têtes de sécurité et cookies."}
-            </p>
-          </div>
+        <div className="border-b border-slate-200 pb-4 text-center">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {step === "done" ? "Résultats de l'audit" : "Nouveau Scan de Sécurité"}
+          </h1>
+          <p className="text-xs text-slate-500 mt-1 max-w-lg mx-auto">
+            {step === "done"
+              ? "Résultats détaillés par outil et recommandations de sécurité."
+              : "Exécutez un audit complet sur les faiblesses SSL/TLS, DNS, en-têtes de sécurité et cookies."}
+          </p>
         </div>
       )}
 

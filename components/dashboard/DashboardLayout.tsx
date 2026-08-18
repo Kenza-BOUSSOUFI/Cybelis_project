@@ -129,12 +129,12 @@ export function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 ${isActive
-                  ? "bg-blue-50 text-blue-700 shadow-sm border-r-2 border-blue-600 ring-1 ring-sky-100"
-                  : "text-slate-500 hover:text-blue-700 hover:bg-slate-50"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isActive
+                  ? "bg-slate-100 text-slate-900 font-semibold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "text-blue-700" : "text-slate-400"}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
                 <span>{item.name}</span>
               </Link>
             );

@@ -86,7 +86,6 @@ export function ScanForm({ onScanStarted }: ScanFormProps) {
 
         {isDomainInvalid && (
           <p className="flex items-center gap-1.5 text-xs text-red-600 font-medium">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
             Format invalide — exemples : example.com, sub.domaine.io
           </p>
         )}
@@ -98,8 +97,7 @@ export function ScanForm({ onScanStarted }: ScanFormProps) {
           <Search className="w-4 h-4 text-blue-600" />
           Mode d'analyse de sécurité
         </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Full scan */}
           <button
             type="button"
@@ -166,23 +164,24 @@ export function ScanForm({ onScanStarted }: ScanFormProps) {
       {/* Error */}
       {error && (
         <div className="flex items-start gap-3 p-4 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-600">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           {error}
         </div>
       )}
 
       {/* Submit */}
-      <button
-        type="submit"
-        disabled={isSubmitDisabled}
-        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-xs font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-md shadow-blue-600/15 flex items-center justify-center gap-2"
-      >
-        {isLoading ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Initialisation de l'audit…</>
-        ) : (
-          <><Play className="w-4 h-4 fill-white" /> Lancer le scan de sécurité</>
-        )}
-      </button>
+      <div className="flex justify-end pt-2">
+        <button
+          type="submit"
+          disabled={isSubmitDisabled}
+          className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Initialisation de l'audit…</>
+          ) : (
+            <span>Lancer le scan de sécurité</span>
+          )}
+        </button>
+      </div>
     </form>
   );
 }
