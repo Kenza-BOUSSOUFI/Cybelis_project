@@ -93,7 +93,7 @@ export function HeroSection({ scanInput, setScanInput }: HeroSectionProps) {
               />
             </div>
             <Link
-              href={`/dashboard/scan?domain=${encodeURIComponent(scanInput || "cybelis.ma")}`}
+              href={`/dashboard/scan?domain=${encodeURIComponent(scanInput || "clarveon.ma")}`}
               className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-blue-600/25 shrink-0"
             >
               Lancer un scan gratuit

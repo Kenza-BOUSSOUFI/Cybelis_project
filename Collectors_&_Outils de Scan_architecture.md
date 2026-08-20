@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Le dossier [lib/](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib) est le **cœur du moteur de scan de sécurité** du projet Cybelis. Il suit une architecture en **pipeline à 3 couches** stricte et modulaire, basée sur le pattern **Collect → Analyze → Report** :
+Le dossier [lib/](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib) est le **cœur du moteur de scan de sécurité** du projet Clarveon. Il suit une architecture en **pipeline à 3 couches** stricte et modulaire, basée sur le pattern **Collect → Analyze → Report** :
 
 ```mermaid
 graph TD
@@ -56,7 +56,7 @@ graph TD
 
 ## 1. Le ScanEngine — Le chef d'orchestre
 
-📄 [scanEngine.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/scanEngine.ts)
+📄 [scanEngine.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/scanEngine.ts)
 
 Le `ScanEngine` **n'effectue aucune analyse lui-même**. Son rôle est strictement d'orchestrer le workflow de scan :
 
@@ -81,7 +81,7 @@ Le `ScanEngine` **n'effectue aucune analyse lui-même**. Son rôle est stricteme
 
 ## 2. Les Collectors — Récupération des données brutes (`lib/collectors/`)
 
-### 📄 [HttpCollector](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/collectors/http.ts)
+### 📄 [HttpCollector](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/collectors/http.ts)
 
 Classe statique qui effectue les **requêtes HTTP/HTTPS pures** et retourne les données brutes sans interprétation.
 
@@ -92,13 +92,13 @@ Classe statique qui effectue les **requêtes HTTP/HTTPS pures** et retourne les 
 
 **Points techniques importants :**
 - **Redirections manuelles** (`redirect: 'manual'`) : Chaque saut (301, 302…) est conservé dans `redirectChain[]` pour valider le comportement HTTP→HTTPS et la persistance des cookies.
-- **User-Agent personnalisé** : `Cybelis-Security-Analyzer/1.0`
+- **User-Agent personnalisé** : `Clarveon-Security-Analyzer/1.0`
 - **Timeout avec AbortController** pour éviter les connexions pendantes.
 - **Headers normalisés en minuscules** via `parseHeaders()`.
 
 ---
 
-### 📄 [TlsCollector](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/collectors/tls.ts)
+### 📄 [TlsCollector](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/collectors/tls.ts)
 
 Classe statique qui ouvre une **connexion TLS socket bas-niveau** (module Node.js `tls`) pour extraire les informations du certificat et du protocole négocié.
 
@@ -113,7 +113,7 @@ Classe statique qui ouvre une **connexion TLS socket bas-niveau** (module Node.j
 
 ---
 
-### 📄 [DnsCollector](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/collectors/dns.ts)
+### 📄 [DnsCollector](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/collectors/dns.ts)
 
 Classe statique qui interroge les serveurs DNS de façon asynchrone (`dns/promises`).
 
@@ -127,7 +127,7 @@ Classe statique qui interroge les serveurs DNS de façon asynchrone (`dns/promis
 
 ---
 
-### 📄 [WhoisCollector](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/collectors/whois.ts)
+### 📄 [WhoisCollector](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/collectors/whois.ts)
 
 Classe statique qui effectue une requête WHOIS (`whois-json`) pour extraire les informations administratives du domaine.
 
@@ -150,60 +150,60 @@ Les 16 outils de scan sont classés dans **3 sous-dossiers thématiques** dans `
 
 ### A. Sécurité Web — `lib/tools/website-security/`
 
-#### 📄 [sslChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/sslChecker.ts)
+#### 📄 [sslChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/sslChecker.ts)
 - Vérifie l'expiration, l'auto-signature, l'autorité de certification (CA) et la correspondance du nom de domaine (SANs et Wildcards `*.example.com`).
 
-#### 📄 [tlsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/tlsAnalyzer.ts)
+#### 📄 [tlsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/tlsAnalyzer.ts)
 - Évalue la version du protocole TLS (recommande TLS 1.3, pénalise TLS 1.0/1.1) et détecte les algorithmes de chiffrement faibles (RC4, 3DES, MD5).
 
-#### 📄 [securityHeadersChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/securityHeadersChecker.ts)
+#### 📄 [securityHeadersChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/securityHeadersChecker.ts)
 - Vérifie la présence et la valeur des en-têtes de sécurité essentiels : HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
 
-#### 📄 [cookieAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/cookieAnalyzer.ts)
+#### 📄 [cookieAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/cookieAnalyzer.ts)
 - Inspecte les flags de sécurité sur l'ensemble de la chaîne de cookies (`HttpOnly`, `Secure`, `SameSite`).
 
-#### 📄 [httpMethodsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/httpMethodsAnalyzer.ts)
+#### 📄 [httpMethodsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/httpMethodsAnalyzer.ts)
 - Analyse les méthodes HTTP autorisées (en-têtes `Allow` et `Access-Control-Allow-Methods`) et signale les méthodes à haut risque (`TRACE`, `TRACK`, `CONNECT`).
 
-#### 📄 [corsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/corsAnalyzer.ts)
+#### 📄 [corsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/corsAnalyzer.ts)
 - Évalue les règles CORS et alerte sur les configurations dangereuses (`Origin: *` avec `Credentials: true`, ou `Origin: null`).
 
-#### 📄 [cspValidator.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/cspValidator.ts)
+#### 📄 [cspValidator.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/cspValidator.ts)
 - Parse et valide les directives de la politique CSP (détection de `'unsafe-inline'`, `'unsafe-eval'`, jokers `*`, absence de `default-src`).
 
-#### 📄 [redirectAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/redirectAnalyzer.ts)
+#### 📄 [redirectAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/redirectAnalyzer.ts)
 - Analysera la chaîne de redirection HTTP : détection de la redirection obligatoire vers HTTPS, des rétrogradations HTTPS→HTTP et des boucles de redirection.
 
-#### 📄 [robotsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/robotsAnalyzer.ts)
+#### 📄 [robotsAnalyzer.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/robotsAnalyzer.ts)
 - Inspecte le fichier `robots.txt` et alerte sur la présence de répertoires sensibles exposés dans les directives `Disallow:` (`/admin`, `/.env`, `/config`…).
 
-#### 📄 [sitemapChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/website-security/sitemapChecker.ts)
+#### 📄 [sitemapChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/website-security/sitemapChecker.ts)
 - Analyse le fichier `sitemap.xml` (validité XML, présence d'URLs non sécurisées en `http://`, volume total).
 
 ---
 
 ### B. Sécurité Email — `lib/tools/email-security/`
 
-#### 📄 [spfChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/email-security/spfChecker.ts)
+#### 📄 [spfChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/email-security/spfChecker.ts)
 - Analyse l'enregistrement SPF (`v=spf1`), contrôle la conformité RFC 7208 (unicité de l'enregistrement) et évalue les qualificatifs de fin (`-all`, `~all`, `+all`, `?all`).
 
-#### 📄 [dkimChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/email-security/dkimChecker.ts)
+#### 📄 [dkimChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/email-security/dkimChecker.ts)
 - Recherche les clés publiques DKIM sur les sélecteurs courants (`._domainkey`) et détecte les clés révoquées (`p=`).
 
-#### 📄 [dmarcChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/email-security/dmarcChecker.ts)
+#### 📄 [dmarcChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/email-security/dmarcChecker.ts)
 - Vérifie la présence de l'enregistrement DMARC sous `_dmarc`, la politique appliquée (`p=reject`, `quarantine`, `none`), les adresses de rapport (`rua`/`ruf`) et le pourcentage (`pct`).
 
 ---
 
 ### C. Sécurité DNS & Domaine — `lib/tools/dns-domain-security/`
 
-#### 📄 [dnsLookup.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/dns-domain-security/dnsLookup.ts)
+#### 📄 [dnsLookup.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/dns-domain-security/dnsLookup.ts)
 - Analyse la résilience DNS : présence d'enregistrements IPv4 (A), IPv6 (AAAA), redondance des serveurs de noms (NS >= 2) et présence d'enregistrements CAA.
 
-#### 📄 [whoisLookup.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/whoisLookup.ts)
+#### 📄 [whoisLookup.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/whoisLookup.ts)
 - Contrôle la présence d'un registrar valide, alerte en cas d'expiration imminente du domaine (< 30/60 jours) et vérifie la présence des verrous de protection (`clientTransferProhibited`).
 
-#### 📄 [domainAgeChecker.ts](file:///c:/Users/user/Desktop/Stage/cybelis-export/lib/tools/dns-domain-security/domainAgeChecker.ts)
+#### 📄 [domainAgeChecker.ts](file:///c:/Users/user/Desktop/Stage/clarveon-export/lib/tools/dns-domain-security/domainAgeChecker.ts)
 - Calcule l'âge du domaine à partir de la date de création WHOIS et évalue le risque associé aux domaines récents (< 30-90 jours).
 
 ---

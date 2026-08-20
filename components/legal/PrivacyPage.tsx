@@ -27,7 +27,7 @@ export function PrivacyPage() {
             Retour à l&apos;inscription
           </Link>
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Cybelis · Protection des données RGPD
+            Clarveon · Protection des données RGPD
           </span>
         </div>
       </header>
@@ -46,7 +46,7 @@ export function PrivacyPage() {
 
         {/* Introduction */}
         <div className="text-slate-700 text-sm leading-relaxed mb-8">
-          La protection de vos données personnelles est primordiale pour Cybelis. Cette politique détaille de manière transparente les données que nous collectons, les finalités de traitement, la durée de conservation et l&apos;exercice de vos droits RGPD.
+          La protection de vos données personnelles est primordiale pour Clarveon. Cette politique détaille de manière transparente les données que nous collectons, les finalités de traitement, la durée de conservation et l&apos;exercice de vos droits RGPD.
         </div>
 
         {/* Search Bar */}
@@ -85,8 +85,8 @@ export function PrivacyPage() {
         <div className="mt-14 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>
             Contact DPO :{" "}
-            <a href="mailto:dpo@cybelis.io" className="text-slate-900 font-semibold underline">
-              dpo@cybelis.io
+            <a href="mailto:dpo@clarveon.io" className="text-slate-900 font-semibold underline">
+              dpo@clarveon.io
             </a>
           </p>
 
@@ -108,7 +108,7 @@ export function PrivacyPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-slate-50 py-6 text-center text-xs text-slate-500">
-        &copy; 2026 Cybelis &bull; Conformité RGPD &bull; CNIL (cnil.fr)
+        &copy; 2026 Clarveon &bull; Conformité RGPD &bull; CNIL (cnil.fr)
       </footer>
     </div>
   );

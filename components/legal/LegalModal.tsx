@@ -77,7 +77,7 @@ export function LegalModal({ isOpen, onClose, initialTab = "terms" }: LegalModal
                       : "Politique de confidentialité"}
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Cybelis &bull; Plateforme SaaS d&apos;audit de sécurité
+                    Clarveon &bull; Plateforme SaaS d&apos;audit de sécurité
                   </p>
                 </div>
 

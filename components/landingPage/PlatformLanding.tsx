@@ -58,8 +58,8 @@ const tools = [
 ] as const;
 
 const faqs = [
-  ["Que peut analyser Cybelis ?", "Cybelis évalue la posture de sécurité visible de l'extérieur d'un site web, y compris le TLS, les en-têtes, le DNS, les cookies et les signaux clés de configuration de l'application."],
-  ["Cybelis est-il uniquement destiné aux équipes techniques ?", "Non. Les résultats sont expliqués en langage clair et hiérarchisés afin que les dirigeants de PME, les développeurs et les équipes de sécurité puissent agir ensemble."],
+  ["Que peut analyser Clarveon ?", "Clarveon évalue la posture de sécurité visible de l'extérieur d'un site web, y compris le TLS, les en-têtes, le DNS, les cookies et les signaux clés de configuration de l'application."],
+  ["Clarveon est-il uniquement destiné aux équipes techniques ?", "Non. Les résultats sont expliqués en langage clair et hiérarchisés afin que les dirigeants de PME, les développeurs et les équipes de sécurité puissent agir ensemble."],
   ["À quelle fréquence dois-je lancer un scan ?", "Commencez à chaque déploiement en production ou changement d'infrastructure majeur. La surveillance Pro automatise cette routine en surveillant continuellement vos sites."],
 ];
 
@@ -140,7 +140,7 @@ export function PlatformLanding() {
           <motion.div variants={staggerContainer}>
           <motion.p variants={fadeUp} className="mb-4 text-xs font-bold uppercase tracking-[.18em] text-blue-600">Conçu pour les équipes confiantes</motion.p>
           <motion.h2 variants={fadeUp} className="max-w-xl text-4xl font-semibold tracking-[-.055em] text-slate-950 md:text-6xl md:leading-[1.02]">Une sécurité claire pour toute entreprise en croissance.</motion.h2>
-          <motion.p variants={fadeUp} className="mt-6 max-w-lg text-lg leading-8 text-slate-600">Cybelis est l'espace de travail de cybersécurité tout-en-un pour les PME : évaluez en continu l'exposition, découvrez les vulnérabilités, surveillez l'infrastructure et transformez les résultats en actions.</motion.p>
+          <motion.p variants={fadeUp} className="mt-6 max-w-lg text-lg leading-8 text-slate-600">Clarveon est l'espace de travail de cybersécurité tout-en-un pour les PME : évaluez en continu l'exposition, découvrez les vulnérabilités, surveillez l'infrastructure et transformez les résultats en actions.</motion.p>
           <motion.div variants={staggerSlow} className="mt-8 grid gap-3 sm:grid-cols-2">
             {[[Radar,"Analyse de sécurité automatisée"],[BarChart3,"Évaluation des risques"],[ShieldCheck,"Surveillance de la conformité"],[Server,"Visibilité de l'infrastructure"],[Sparkles,"Recommandations actionnables"]].map(([Icon, label], i) => (
               <motion.div key={label as string} variants={fadeUp} className={i === 4 ? "sm:col-span-2" : ""}>
@@ -160,7 +160,7 @@ export function PlatformLanding() {
         </motion.div>
         <motion.div aria-hidden="true" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .7 }} className="relative mx-auto hidden w-full max-w-2xl">
           <div className="absolute -right-8 -top-10 size-48 rounded-full bg-blue-300/30 blur-3xl" /><div className="relative rounded-[2rem] border border-slate-200 bg-slate-950 p-3 shadow-[0_30px_80px_-28px_rgba(15,23,42,.55)]">
-            <div className="overflow-hidden rounded-[1.45rem] bg-[#101b37] p-5 text-white md:p-7"><div className="flex items-center justify-between border-b border-white/10 pb-5"><div className="flex items-center gap-3"><span className="size-2.5 rounded-full bg-emerald-400" /><div><p className="text-sm font-medium">Aperçu de la sécurité</p><p className="text-xs text-slate-400">cybelis.ma · Mis à jour à l'instant</p></div></div><span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">Protégé</span></div><div className="mt-7 grid gap-4 sm:grid-cols-[1.1fr_.9fr]"><div className="rounded-2xl border border-white/10 bg-white/[.05] p-5"><p className="text-xs text-slate-400">Score de sécurité</p><div className="mt-3 flex items-end gap-3"><span className="text-5xl font-semibold tracking-tight">92</span><span className="mb-2 text-sm text-emerald-300">+8 ce mois</span></div><div className="mt-5 h-2 rounded-full bg-white/10"><div className="h-full w-[92%] rounded-full bg-gradient-to-r from-blue-500 to-cyan-300" /></div></div><div className="space-y-3">{[["Configuration TLS","Sain"],["En-têtes de sécurité","2 actions"],["Protection DNS","Sain"]].map(([n,s]) => <div key={n} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.04] px-4 py-3 text-xs"><span className="text-slate-300">{n}</span><span className={s === "2 actions" ? "text-amber-300" : "text-emerald-300"}>{s}</span></div>)}</div></div><div className="mt-4 grid grid-cols-7 items-end gap-2 rounded-2xl border border-white/10 bg-white/[.04] p-5">{[34,48,40,72,58,85,70].map((v,i) => <div key={i} className="rounded-t bg-gradient-to-t from-blue-600 to-cyan-300" style={{ height: `${v}px` }} />)}</div></div>
+            <div className="overflow-hidden rounded-[1.45rem] bg-[#101b37] p-5 text-white md:p-7"><div className="flex items-center justify-between border-b border-white/10 pb-5"><div className="flex items-center gap-3"><span className="size-2.5 rounded-full bg-emerald-400" /><div><p className="text-sm font-medium">Aperçu de la sécurité</p><p className="text-xs text-slate-400">clarveon.ma · Mis à jour à l'instant</p></div></div><span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">Protégé</span></div><div className="mt-7 grid gap-4 sm:grid-cols-[1.1fr_.9fr]"><div className="rounded-2xl border border-white/10 bg-white/[.05] p-5"><p className="text-xs text-slate-400">Score de sécurité</p><div className="mt-3 flex items-end gap-3"><span className="text-5xl font-semibold tracking-tight">92</span><span className="mb-2 text-sm text-emerald-300">+8 ce mois</span></div><div className="mt-5 h-2 rounded-full bg-white/10"><div className="h-full w-[92%] rounded-full bg-gradient-to-r from-blue-500 to-cyan-300" /></div></div><div className="space-y-3">{[["Configuration TLS","Sain"],["En-têtes de sécurité","2 actions"],["Protection DNS","Sain"]].map(([n,s]) => <div key={n} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.04] px-4 py-3 text-xs"><span className="text-slate-300">{n}</span><span className={s === "2 actions" ? "text-amber-300" : "text-emerald-300"}>{s}</span></div>)}</div></div><div className="mt-4 grid grid-cols-7 items-end gap-2 rounded-2xl border border-white/10 bg-white/[.04] p-5">{[34,48,40,72,58,85,70].map((v,i) => <div key={i} className="rounded-t bg-gradient-to-t from-blue-600 to-cyan-300" style={{ height: `${v}px` }} />)}</div></div>
           </div><motion.div animate={{ y: [0,-7,0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }} className="absolute -bottom-7 -left-7 hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl md:block"><div className="flex gap-3"><span className="grid size-9 place-items-center rounded-xl bg-blue-50 text-blue-600"><CircleAlert className="size-4" /></span><div><p className="text-xs font-semibold text-slate-900">2 éléments à vérifier</p><p className="mt-1 text-xs text-slate-500">Priorisé par impact</p></div></div></motion.div>
         </motion.div>
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={slideFromRight} transition={{ duration: 0.7 }} className="relative mx-auto w-full max-w-xl">
@@ -168,7 +168,7 @@ export function PlatformLanding() {
           <motion.div whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 200, damping: 22 }} className="relative rounded-[2rem] border border-blue-100 bg-white p-8 shadow-[0_30px_80px_-28px_rgba(15,23,42,.24)] md:p-10">
             <motion.span initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2, type: "spring" }} className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 text-white shadow-lg shadow-blue-500/20"><ShieldCheck className="size-6" /></motion.span>
             <p className="mt-7 text-xs font-bold uppercase tracking-[.18em] text-blue-600">Une plateforme, des actions claires</p>
-            <p className="mt-4 text-lg leading-8 text-slate-600">Cybelis est une plateforme de cybersécurité SaaS qui aide les petites et moyennes entreprises à évaluer et à améliorer la sécurité de leurs sites web. En combinant plusieurs outils d'analyse de sécurité en une seule plateforme, elle automatise l'analyse de sites web, détecte les vulnérabilités, génère un score de sécurité et fournit des rapports détaillés avec des recommandations concrètes.</p>
+            <p className="mt-4 text-lg leading-8 text-slate-600">Clarveon est une plateforme de cybersécurité SaaS qui aide les petites et moyennes entreprises à évaluer et à améliorer la sécurité de leurs sites web. En combinant plusieurs outils d'analyse de sécurité en une seule plateforme, elle automatise l'analyse de sites web, détecte les vulnérabilités, génère un score de sécurité et fournit des rapports détaillés avec des recommandations concrètes.</p>
           </motion.div>
         </motion.div>
       </div>
@@ -179,7 +179,7 @@ export function PlatformLanding() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={reveal} className="mx-auto max-w-3xl text-center">
           <p className="inline-flex rounded-full border border-sky-100 bg-sky-50/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-700">Fonctionnalités</p>
           <h2 className="mt-6 text-4xl font-semibold tracking-[-0.045em] text-slate-950 md:text-6xl md:leading-[1.02]">Tout ce dont vous avez besoin pour sécuriser votre site web.</h2>
-          <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">Cybelis fournit des outils de cybersécurité puissants qui analysent en continu les sites web, détectent les faiblesses de sécurité, calculent les scores de sécurité et génèrent des rapports professionnels pour les PME.</p>
+          <p className="mt-5 text-base leading-8 text-slate-600 md:text-lg">Clarveon fournit des outils de cybersécurité puissants qui analysent en continu les sites web, détectent les faiblesses de sécurité, calculent les scores de sécurité et génèrent des rapports professionnels pour les PME.</p>
         </motion.div>
 
         <div className="mt-16 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -207,10 +207,10 @@ export function PlatformLanding() {
       </div>
     </LightSection>
 
-    <section id="tools" className="relative overflow-hidden bg-[#f8fbff] px-6 py-24 md:py-32"><div className="absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(37,99,235,.055)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,.055)_1px,transparent_1px)] [background-size:42px_42px]" /><div className="relative"><SectionHeading eyebrow="Suite d'outils de sécurité" title="Vérifications spécialisées, un seul espace de travail cohérent." body="Allez au-delà de l'analyse superficielle. Cybelis réunit les contrôles de sécurité web essentiels dans une boîte à outils ciblée." /><div className="mx-auto mt-14 grid max-w-7xl gap-3 sm:grid-cols-2 lg:grid-cols-4">{tools.map(([Icon,name,description,tag]) => <motion.div key={name} whileHover={{ y: -4 }} className="group rounded-2xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur"><div className="flex items-start justify-between"><span className="grid size-10 place-items-center rounded-xl bg-slate-100 text-slate-700 transition group-hover:bg-blue-600 group-hover:text-white"><Icon className="size-4" /></span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">{tag}</span></div><h3 className="mt-7 text-sm font-semibold text-slate-900">{name}</h3><p className="mt-1.5 text-xs leading-5 text-slate-500">{description}</p></motion.div>)}</div></div></section>
+    <section id="tools" className="relative overflow-hidden bg-[#f8fbff] px-6 py-24 md:py-32"><div className="absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(37,99,235,.055)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,.055)_1px,transparent_1px)] [background-size:42px_42px]" /><div className="relative"><SectionHeading eyebrow="Suite d'outils de sécurité" title="Vérifications spécialisées, un seul espace de travail cohérent." body="Allez au-delà de l'analyse superficielle. Clarveon réunit les contrôles de sécurité web essentiels dans une boîte à outils ciblée." /><div className="mx-auto mt-14 grid max-w-7xl gap-3 sm:grid-cols-2 lg:grid-cols-4">{tools.map(([Icon,name,description,tag]) => <motion.div key={name} whileHover={{ y: -4 }} className="group rounded-2xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur"><div className="flex items-start justify-between"><span className="grid size-10 place-items-center rounded-xl bg-slate-100 text-slate-700 transition group-hover:bg-blue-600 group-hover:text-white"><Icon className="size-4" /></span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700">{tag}</span></div><h3 className="mt-7 text-sm font-semibold text-slate-900">{name}</h3><p className="mt-1.5 text-xs leading-5 text-slate-500">{description}</p></motion.div>)}</div></div></section>
 
     <LightSection id="team" pattern="mesh">
-      <SectionHeading eyebrow="L'équipe derrière Cybelis" title="Créé par des ingénieurs soucieux d'une sécurité pratique." body="Deux ingénieurs en informatique et cybersécurité apportant une expertise complémentaire en développement, sécurité et infrastructure à chaque étape de la plateforme." />
+      <SectionHeading eyebrow="L'équipe derrière Clarveon" title="Créé par des ingénieurs soucieux d'une sécurité pratique." body="Deux ingénieurs en informatique et cybersécurité apportant une expertise complémentaire en développement, sécurité et infrastructure à chaque étape de la plateforme." />
       <div className="mx-auto mt-14 grid max-w-5xl gap-6 md:grid-cols-2">
         {[["KB","Kenza Boussoufi","Co-fondatrice","Ingénieure en Informatique et Cybersécurité",["Développement Backend","Cybersécurité","Architecture Base de Données"]],["AM","Amina Marzak","Co-fondatrice","Ingénieure en Informatique et Cybersécurité",["Authentification","Développement Frontend","Interface Tableau de bord"]]].map(([initials,name,role,bio,skills]) => (
           <motion.article key={name as string} whileHover={{ y: -5 }} className={`relative overflow-hidden p-7 hover:shadow-[0_24px_50px_-24px_rgba(59,130,246,0.18)] ${lightCardCx}`}>
@@ -255,8 +255,8 @@ export function PlatformLanding() {
     <LightSection id="contact" pattern="grid">
       <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[.8fr_1.2fr]">
         <div>
-          <SectionHeading align="left" eyebrow="Contacter Cybelis" title="Rendons votre prochaine décision de sécurité plus claire." body="Que vous souhaitiez évaluer un site web, explorer un plan d'équipe ou poser des questions sur Cybelis, notre équipe est prête à vous aider." />
-          <div className="mt-9 space-y-5">{[[Mail,"contact@cybelis.ma"],[Globe2,"+212 5 22 45 98 05"],[MapPin,"Marrakech, Maroc"]].map(([Icon,text]) => <div key={text as string} className="flex items-center gap-3 text-sm text-slate-600"><span className="grid size-9 place-items-center rounded-lg bg-gradient-to-br from-sky-50 to-blue-50 text-blue-600 ring-1 ring-sky-100"><Icon className="size-4" /></span>{text}</div>)}</div>
+          <SectionHeading align="left" eyebrow="Contacter Clarveon" title="Rendons votre prochaine décision de sécurité plus claire." body="Que vous souhaitiez évaluer un site web, explorer un plan d'équipe ou poser des questions sur Clarveon, notre équipe est prête à vous aider." />
+          <div className="mt-9 space-y-5">{[[Mail,"contact@clarveon.ma"],[Globe2,"+212 5 22 45 98 05"],[MapPin,"Marrakech, Maroc"]].map(([Icon,text]) => <div key={text as string} className="flex items-center gap-3 text-sm text-slate-600"><span className="grid size-9 place-items-center rounded-lg bg-gradient-to-br from-sky-50 to-blue-50 text-blue-600 ring-1 ring-sky-100"><Icon className="size-4" /></span>{text}</div>)}</div>
         </div>
         <div>
           <form onSubmit={submit} className={`relative overflow-hidden p-6 md:p-8 ${lightCardCx}`}>
@@ -303,13 +303,13 @@ export function PlatformLanding() {
       <div className="relative mx-auto grid max-w-7xl gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" className="inline-flex items-center overflow-visible">
-            <img src="/logo.png" alt="Cybelis" className="block h-10 w-auto origin-left scale-[2.4]" />
+            <img src="/logo.png" alt="Clarveon" className="block h-10 w-auto origin-left scale-[2.4]" />
           </Link>
           <p className="mt-5 max-w-sm text-sm leading-7 text-slate-400">
-            Cybelis aide les PME à évaluer la sécurité de leurs sites web avec des analyses automatisées, une évaluation claire des risques et des rapports concrets, le tout depuis une seule plateforme.
+            Clarveon aide les PME à évaluer la sécurité de leurs sites web avec des analyses automatisées, une évaluation claire des risques et des rapports concrets, le tout depuis une seule plateforme.
           </p>
           <div className="mt-6 flex flex-col gap-2 text-sm text-slate-400">
-            <a href="mailto:contact@cybelis.ma" className="transition-colors hover:text-cyan-300">contact@cybelis.ma</a>
+            <a href="mailto:contact@clarveon.ma" className="transition-colors hover:text-cyan-300">contact@clarveon.ma</a>
             <span>Marrakech, Maroc</span>
           </div>
         
@@ -332,7 +332,7 @@ export function PlatformLanding() {
             ["Politique de confidentialité", "/legal/politique-confidentialite"],
             ["Conditions d'utilisation", "/legal/conditions-utilisation"],
             ["Pratiques de sécurité", "/legal/politique-confidentialite#securite"],
-            ["Support", "mailto:contact@cybelis.ma"],
+            ["Support", "mailto:contact@clarveon.ma"],
           ]],
         ].map(([title, links]) => (
           <div key={title as string}>
@@ -349,7 +349,7 @@ export function PlatformLanding() {
       </div>
 
       <div className="relative mx-auto mt-14 flex max-w-7xl flex-col justify-between gap-4 border-t border-white/10 pt-7 text-xs text-slate-500 md:flex-row md:items-center">
-        <span>© 2026 Cybelis. Tous droits réservés.</span>
+        <span>© 2026 Clarveon. Tous droits réservés.</span>
         <p className="text-slate-500">Conçu pour les équipes qui ont besoin de clarté, pas de complexité.</p>
       </div>
     </footer>

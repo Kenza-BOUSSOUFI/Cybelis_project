@@ -91,7 +91,7 @@ export default function ToolsPage() {
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Catalogue des Outils de Sécurité</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Explorez les {tools.length || 16} modules d'analyse automatisée intégrés au moteur Cybelis.
+              Explorez les {tools.length || 16} modules d'analyse automatisée intégrés au moteur Clarveon.
             </p>
           </div>
         </div>

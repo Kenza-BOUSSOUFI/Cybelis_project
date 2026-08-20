@@ -58,7 +58,7 @@ export function BillingPage() {
         "Tout le plan Pro inclus",
         "Sites web monitorés illimités",
         "Rapports PDF personnalisables (Marque Blanche)",
-        "Accès à l'API publique Cybelis",
+        "Accès à l'API publique Clarveon",
         "Intégrations Slack & Teams",
         "Support téléphonique dédié"
       ],

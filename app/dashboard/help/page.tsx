@@ -15,8 +15,8 @@ interface FAQ {
 const FAQS: FAQ[] = [
   {
     category: "Général",
-    q: "Qu'est-ce que Cybelis ?",
-    a: "Cybelis est une plateforme SaaS d'audit automatisé de sécurité web. Elle effectue une série d'analyses non invasives sur vos sites web afin d'identifier les vulnérabilités de configuration (SSL/TLS, en-têtes HTTP, DNS, cookies, etc.) et de vous fournir des recommandations concrètes.",
+    q: "Qu'est-ce que Clarveon ?",
+    a: "Clarveon est une plateforme SaaS d'audit automatisé de sécurité web. Elle effectue une série d'analyses non invasives sur vos sites web afin d'identifier les vulnérabilités de configuration (SSL/TLS, en-têtes HTTP, DNS, cookies, etc.) et de vous fournir des recommandations concrètes.",
   },
   {
     category: "Général",
@@ -119,7 +119,7 @@ export default function HelpPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Centre d'Aide & Documentation</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Guides, foire aux questions et assistance technique Cybelis.</p>
+          <p className="text-xs text-slate-500 mt-0.5">Guides, foire aux questions et assistance technique Clarveon.</p>
         </div>
       </div>
 

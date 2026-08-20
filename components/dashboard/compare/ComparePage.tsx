@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Globe, Shield, Check, X, ArrowRight } from "lucide-react";
 
 export function CompareDomainsPage() {
-  const [domain1, setDomain1] = useState("cybelis.ma");
+  const [domain1, setDomain1] = useState("clarveon.ma");
   const [domain2, setDomain2] = useState("confrere-concurrent.ma");
   const [isComparing, setIsComparing] = useState(false);
   const [compareData, setCompareData] = useState<any>(null);

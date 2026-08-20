@@ -7,10 +7,10 @@ import { Terminal, Shield, Cpu, RefreshCw, CheckCircle, AlertTriangle } from "lu
 function ScanEngineContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawDomain = searchParams.get("domain") || "cybelis.ma";
+  const rawDomain = searchParams.get("domain") || "clarveon.ma";
 
   // Sanitize domain
-  const domain = rawDomain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0] || "cybelis.ma";
+  const domain = rawDomain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0] || "clarveon.ma";
 
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
@@ -18,7 +18,7 @@ function ScanEngineContent() {
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   const steps = [
-    { log: "[sys] Initialisation du Cybelis Scan Engine (v2.0.4-beta)...", delay: 200, progress: 5 },
+    { log: "[sys] Initialisation du Clarveon Scan Engine (v2.0.4-beta)...", delay: 200, progress: 5 },
     { log: `[sys] Résolution DNS pour ${domain}...`, delay: 400, progress: 15 },
     { log: `[dns] Enregistrement A résolu : 185.190.140.15`, delay: 300, progress: 20 },
     { log: `[dns] Enregistrement MX résolu : mail.${domain} (priorité 10)`, delay: 300, progress: 25 },
@@ -81,7 +81,7 @@ function ScanEngineContent() {
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">Analyse en cours : <span className="font-mono text-indigo-400">{domain}</span></h2>
-            <p className="text-xs text-neutral-400">Le moteur Cybelis inspecte activement la sécurité de votre domaine.</p>
+            <p className="text-xs text-neutral-400">Le moteur Clarveon inspecte activement la sécurité de votre domaine.</p>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ function ScanEngineContent() {
             <span className="w-3 h-3 rounded-full bg-yellow-500/80" />
             <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
             <span className="text-[10px] font-mono text-neutral-500 ml-3 flex items-center gap-1">
-              <Terminal className="w-3 h-3 text-indigo-400" /> cybelis-scan-engine.bin
+              <Terminal className="w-3 h-3 text-indigo-400" /> clarveon-scan-engine.bin
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[9px] font-mono text-neutral-500 uppercase">

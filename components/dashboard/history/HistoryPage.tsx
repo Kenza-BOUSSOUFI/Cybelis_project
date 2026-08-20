@@ -7,7 +7,7 @@ import { Globe, Search, RefreshCw, Eye, Trash2, Calendar, CheckCircle } from "lu
 export function ScanHistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [scans, setScans] = useState([
-    { id: "1", domain: "cybelis.ma", score: 72, date: "08/07/2026 14:22", critical: 1, high: 3, medium: 2, low: 1 },
+    { id: "1", domain: "clarveon.ma", score: 72, date: "08/07/2026 14:22", critical: 1, high: 3, medium: 2, low: 1 },
     { id: "2", domain: "hbsmanagement.com", score: 91, date: "07/07/2026 09:15", critical: 0, high: 0, medium: 1, low: 3 },
     { id: "3", domain: "ecommerce-demo.ma", score: 48, date: "05/07/2026 18:40", critical: 3, high: 2, medium: 4, low: 2 },
     { id: "4", domain: "stage-test.net", score: 85, date: "29/06/2026 11:05", critical: 0, high: 1, medium: 2, low: 0 },

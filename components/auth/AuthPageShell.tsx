@@ -68,7 +68,7 @@ export function AuthPageShell({ children, staggerDelay = 0.09 }: AuthPageShellPr
       </main>
 
       <footer className="relative z-10 border-t border-sky-100/80 py-5 text-center text-[10px] text-slate-400">
-        2026 Cybelis - Audits de sécurité web pour PME
+        2026 Clarveon - Audits de sécurité web pour PME
       </footer>
     </div>
   );
@@ -111,7 +111,7 @@ export function AuthLogoHeader({ title, subtitle }: { title: string; subtitle: s
 
             <img
               src="/logo.png"
-              alt="Cybelis"
+              alt="Clarveon"
               className="relative z-10 mx-auto block h-9 w-auto origin-center scale-[2.15]"
             />
           </div>

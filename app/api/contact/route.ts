@@ -14,8 +14,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Le sujet et le message sont requis.' }, { status: 400 });
     }
 
-    const senderEmail = email || user?.email || 'anonyme@cybelis.ma';
-    const senderName = fullName || user?.user_metadata?.full_name || 'Utilisateur Cybelis';
+    const senderEmail = email || user?.email || 'anonyme@clarveon.ma';
+    const senderName = fullName || user?.user_metadata?.full_name || 'Utilisateur Clarveon';
 
     const contactMsg = await prisma.contactMessage.create({
       data: {

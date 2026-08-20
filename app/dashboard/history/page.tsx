@@ -148,7 +148,7 @@ export default function HistoryPage() {
         { getOwaspMapping },
         { fetchCveForFinding },
         { calculateIso27001Compliance },
-        { generateCybelisPDF },
+        { generateClarveonPDF },
       ] = await Promise.all([
         import("@/lib/enrichment/owasp"),
         import("@/lib/enrichment/cve"),
@@ -195,7 +195,7 @@ export default function HistoryPage() {
         }
       }
 
-      await generateCybelisPDF(
+      await generateClarveonPDF(
         {
           website: { domain: scanData.website.domain },
           createdAt: scanData.createdAt,

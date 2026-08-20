@@ -61,7 +61,7 @@ export class HttpCollector {
             redirect: 'manual', // On gère manuellement pour capturer les headers à chaque saut
             signal: controller.signal,
             headers: {
-              'User-Agent': 'Cybelis-Security-Analyzer/1.0',
+              'User-Agent': 'Clarveon-Security-Analyzer/1.0',
             }
           });
         } finally {
@@ -139,7 +139,7 @@ export class HttpCollector {
         method: 'OPTIONS',
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Cybelis-Security-Analyzer/1.0',
+          'User-Agent': 'Clarveon-Security-Analyzer/1.0',
         }
       });
 

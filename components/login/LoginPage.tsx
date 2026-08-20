@@ -164,7 +164,7 @@ function LoginForm() {
 export function LoginPage() {
   return (
     <AuthPageShell>
-      <AuthLogoHeader title="Bon retour" subtitle="Connectez-vous à votre espace Cybelis" />
+      <AuthLogoHeader title="Bon retour" subtitle="Connectez-vous à votre espace Clarveon" />
       <Suspense fallback={<div className="h-48 bg-slate-900/50 rounded-2xl animate-pulse" />}>
         <LoginForm />
       </Suspense>

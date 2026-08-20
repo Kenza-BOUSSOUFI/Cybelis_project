@@ -1,29 +1,29 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Lock, Key, Check, Plus, Trash2, ShieldAlert, Copy } from "lucide-react";
+import { User, Lock, Key, Plus, Copy, Trash2, Check, ShieldAlert } from "lucide-react";
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "api">("profile");
 
-  // Profile Form States
-  const [profileName, setProfileName] = useState("Amina Marzak");
-  const [profileEmail, setProfileEmail] = useState("amina.marzak@cybelis.ma");
-  const [profileCompany, setProfileCompany] = useState("HBS Management");
-  const [profileRole, setProfileRole] = useState("Administrateur Sécurité");
+  // Profile form state
+  const [profileName, setProfileName] = useState("Kenza Boussoufi");
+  const [profileEmail, setProfileEmail] = useState("kenza@clarveon.ma");
+  const [profileCompany, setProfileCompany] = useState("Clarveon Tech");
+  const [profileRole, setProfileRole] = useState("Lead Security Analyst");
   const [profileSaved, setProfileSaved] = useState(false);
 
-  // Security Form States
+  // Security form state
   const [currPassword, setCurrPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [tfaEnabled, setTfaEnabled] = useState(false);
   const [securitySaved, setSecuritySaved] = useState(false);
 
-  // API Keys Console States
+  // API keys state
   const [apiKeys, setApiKeys] = useState([
-    { id: "1", name: "Production Server", key: "cy_live_9a7d2b8c...4f1e", created: "01/07/2026", active: true },
-    { id: "2", name: "Staging Pipeline", key: "cy_live_1d4e6f9a...8b2c", created: "28/06/2026", active: true }
+    { id: "key_1", name: "Production Pipeline (CI/CD)", key: "cyb_live_8f3a...92b1", created: "12/05/2026" },
+    { id: "key_2", name: "Staging Auto-Scan", key: "cyb_test_1e9c...44a0", created: "01/06/2026" }
   ]);
   const [newKeyName, setNewKeyName] = useState("");
   const [generatedKeyText, setGeneratedKeyText] = useState<string | null>(null);
@@ -37,73 +37,74 @@ export function SettingsPage() {
 
   const saveSecurity = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword && newPassword === confirmPassword) {
-      setSecuritySaved(true);
-      setCurrPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setTimeout(() => setSecuritySaved(false), 3000);
-    }
+    setSecuritySaved(true);
+    setCurrPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setTimeout(() => setSecuritySaved(false), 3000);
   };
 
   const generateApiKey = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newKeyName) return;
+    if (!newKeyName.trim()) return;
 
-    const randomHex = Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-    const keyString = `cy_live_${randomHex}`;
+    const rawToken = `cyb_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+    const maskedKey = `${rawToken.substring(0, 12)}...${rawToken.substring(rawToken.length - 4)}`;
 
-    const newKey = {
-      id: Date.now().toString(),
-      name: newKeyName,
-      key: `${keyString.slice(0, 12)}...${keyString.slice(-4)}`,
-      created: new Date().toLocaleDateString("fr-FR"),
-      active: true
+    const newEntry = {
+      id: `key_${Date.now()}`,
+      name: newKeyName.trim(),
+      key: maskedKey,
+      created: new Date().toLocaleDateString("fr-FR")
     };
 
-    setApiKeys(prev => [newKey, ...prev]);
-    setGeneratedKeyText(keyString);
+    setApiKeys(prev => [newEntry, ...prev]);
+    setGeneratedKeyText(rawToken);
     setNewKeyName("");
   };
 
   const revokeApiKey = (id: string) => {
-    setApiKeys(prev => prev.filter(key => key.id !== id));
+    setApiKeys(prev => prev.filter(k => k.id !== id));
   };
 
   const copyToClipboardSimulated = (id: string, text: string) => {
-    navigator.clipboard.writeText(text).catch(() => { });
+    navigator.clipboard.writeText(text);
     setCopiedKeyId(id);
     setTimeout(() => setCopiedKeyId(null), 2000);
   };
 
+  const inputCls = "w-full px-3 py-2 rounded-md bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900";
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-5 max-w-7xl mx-auto">
 
       {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Paramètres du Compte</h1>
-        <p className="text-xs text-neutral-400">Configurez votre profil d'utilisateur, sécurisez vos accès, ou gérez vos tokens d'API.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight">Paramètres du Compte</h1>
+          <p className="text-xs text-slate-500">Configurez votre profil d'utilisateur, sécurisez vos accès, ou gérez vos tokens d'API.</p>
+        </div>
       </div>
 
       {/* TABS SELECTOR */}
-      <div className="flex gap-2 p-1 rounded-xl bg-neutral-900 border border-neutral-800/80 text-xs self-start max-w-md">
+      <div className="flex gap-1 p-1 rounded-md bg-slate-50 border border-slate-200 text-xs self-start max-w-md">
         <button
           onClick={() => { setActiveTab("profile"); setGeneratedKeyText(null); }}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-colors flex-items-center gap-2 justify-center ${activeTab === "profile" ? "bg-indigo-600 text-white" : "text-neutral-400 hover:text-white"}`}
+          className={`px-3 py-1.5 rounded font-bold transition-colors flex items-center gap-1.5 justify-center ${activeTab === "profile" ? "bg-white text-slate-900 shadow-sm border border-slate-200/60" : "text-slate-600 hover:text-slate-900"}`}
         >
           <User className="w-3.5 h-3.5" />
           <span>Profil</span>
         </button>
         <button
           onClick={() => { setActiveTab("security"); setGeneratedKeyText(null); }}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center ${activeTab === "security" ? "bg-indigo-600 text-white" : "text-neutral-400 hover:text-white"}`}
+          className={`px-3 py-1.5 rounded font-bold transition-colors flex items-center gap-1.5 justify-center ${activeTab === "security" ? "bg-white text-slate-900 shadow-sm border border-slate-200/60" : "text-slate-600 hover:text-slate-900"}`}
         >
           <Lock className="w-3.5 h-3.5" />
           <span>Sécurité</span>
         </button>
         <button
           onClick={() => { setActiveTab("api"); setGeneratedKeyText(null); }}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-colors flex items-center gap-2 justify-center ${activeTab === "api" ? "bg-indigo-600 text-white" : "text-neutral-400 hover:text-white"}`}
+          className={`px-3 py-1.5 rounded font-bold transition-colors flex items-center gap-1.5 justify-center ${activeTab === "api" ? "bg-white text-slate-900 shadow-sm border border-slate-200/60" : "text-slate-600 hover:text-slate-900"}`}
         >
           <Key className="w-3.5 h-3.5" />
           <span>API Keys</span>
@@ -111,54 +112,54 @@ export function SettingsPage() {
       </div>
 
       {/* TAB CONTENT PANEL */}
-      <div className="p-6 rounded-3xl bg-neutral-900/40 border border-neutral-900 min-h-[400px]">
+      <div className="p-5 rounded-lg bg-white border border-slate-200/80 min-h-[400px] shadow-sm">
 
         {/* PROFILE CONFIG */}
         {activeTab === "profile" && (
-          <form onSubmit={saveProfile} className="space-y-6 max-w-xl">
+          <form onSubmit={saveProfile} className="space-y-4 max-w-xl">
             <div>
-              <h3 className="text-sm font-bold text-white mb-1">Informations du Profil</h3>
-              <p className="text-[10px] text-neutral-500">Mettez à jour vos coordonnées professionnelles.</p>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Informations du Profil</h3>
+              <p className="text-[10px] text-slate-450 mt-0.5">Mettez à jour vos coordonnées professionnelles.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-neutral-400 uppercase">Nom Complet</label>
+              <div className="space-y-1">
+                <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Nom Complet</label>
                 <input
                   type="text"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className={inputCls}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-neutral-400 uppercase">Adresse Email</label>
+              <div className="space-y-1">
+                <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Adresse Email</label>
                 <input
                   type="email"
                   value={profileEmail}
                   onChange={(e) => setProfileEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className={inputCls}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-neutral-400 uppercase">Entreprise</label>
+              <div className="space-y-1">
+                <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Entreprise</label>
                 <input
                   type="text"
                   value={profileCompany}
                   onChange={(e) => setProfileCompany(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className={inputCls}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-neutral-400 uppercase">Rôle / Fonction</label>
+              <div className="space-y-1">
+                <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Rôle / Fonction</label>
                 <input
                   type="text"
                   value={profileRole}
                   onChange={(e) => setProfileRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className={inputCls}
                 />
               </div>
             </div>
@@ -166,13 +167,13 @@ export function SettingsPage() {
             <div className="pt-2 flex items-center gap-4">
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors"
+                className="h-9 px-4 rounded-md bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors shadow-sm"
               >
                 Enregistrer les modifications
               </button>
               {profileSaved && (
-                <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5 animate-fade-in">
-                  <Check className="w-4 h-4" /> Modifications enregistrées !
+                <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 animate-fade-in">
+                  <Check className="w-4 h-4 text-emerald-500" /> Modifications enregistrées !
                 </span>
               )}
             </div>
@@ -181,61 +182,59 @@ export function SettingsPage() {
 
         {/* SECURITY CONFIG */}
         {activeTab === "security" && (
-          <form onSubmit={saveSecurity} className="space-y-6 max-w-xl">
+          <form onSubmit={saveSecurity} className="space-y-4 max-w-xl">
             <div>
-              <h3 className="text-sm font-bold text-white mb-1">Mot de passe & Authentification</h3>
-              <p className="text-[10px] text-neutral-500">Sécurisez l'accès à votre espace d'administration.</p>
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Mot de passe & Authentification</h3>
+              <p className="text-[10px] text-slate-450 mt-0.5">Sécurisez l'accès à votre espace d'administration.</p>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-neutral-400 uppercase">Mot de passe actuel</label>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Mot de passe actuel</label>
                 <input
                   type="password"
                   required
-                  placeholder="••••••••••••"
                   value={currPassword}
                   onChange={(e) => setCurrPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className={inputCls}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-neutral-400 uppercase">Nouveau mot de passe</label>
+                <div className="space-y-1">
+                  <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Nouveau mot de passe</label>
                   <input
                     type="password"
                     required
-                    placeholder="Min. 8 caractères"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className={inputCls}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-neutral-400 uppercase">Confirmer le mot de passe</label>
+                <div className="space-y-1">
+                  <label className="text-[9.5px] font-bold text-slate-400 uppercase font-mono">Confirmer le mot de passe</label>
                   <input
                     type="password"
                     required
-                    placeholder="••••••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className={inputCls}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between gap-6">
+            <div className="p-4 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-between gap-6">
               <div className="space-y-0.5 max-w-sm">
-                <span className="block text-xs font-bold text-white">Double Authentification (2FA)</span>
-                <p className="text-[10px] text-neutral-500">Ajoute un jeton OTP requis lors de vos connexions.</p>
+                <span className="block text-xs font-bold text-slate-900">Double Authentification (2FA)</span>
+                <p className="text-[10.5px] text-slate-500 leading-normal">Ajoute un jeton OTP requis lors de vos connexions.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setTfaEnabled(!tfaEnabled)}
-                className={`w-11 h-6 rounded-full p-1 flex items-center transition-colors focus:outline-none ${tfaEnabled ? "bg-indigo-600" : "bg-neutral-800"
-                  }`}
+                className={`w-10 h-5 rounded-full p-0.5 flex items-center transition-colors focus:outline-none ${
+                  tfaEnabled ? "bg-slate-900" : "bg-slate-200"
+                }`}
               >
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${tfaEnabled ? "translate-x-5" : ""}`} />
               </button>
@@ -244,13 +243,13 @@ export function SettingsPage() {
             <div className="pt-2 flex items-center gap-4">
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors"
+                className="h-9 px-4 rounded-md bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors shadow-sm"
               >
                 Mettre à jour la sécurité
               </button>
               {securitySaved && (
-                <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5 animate-fade-in">
-                  <Check className="w-4 h-4" /> Sécurité mise à jour !
+                <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 animate-fade-in">
+                  <Check className="w-4 h-4 text-emerald-500" /> Sécurité mise à jour !
                 </span>
               )}
             </div>
@@ -259,29 +258,28 @@ export function SettingsPage() {
 
         {/* DEVELOPER API KEYS CONSOLE */}
         {activeTab === "api" && (
-          <div className="space-y-8">
+          <div className="space-y-5">
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-neutral-850">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-slate-100">
               <div>
-                <h3 className="text-sm font-bold text-white mb-1">Clés d'API Développeur</h3>
-                <p className="text-[10px] text-neutral-500">Générez des tokens d'API pour interroger le Cybelis Scan Engine depuis vos scripts.</p>
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Clés d'API Développeur</h3>
+                <p className="text-[10px] text-slate-450 mt-0.5">Générez des tokens d'API pour interroger le Clarveon Scan Engine depuis vos scripts.</p>
               </div>
 
               {/* Generate Key Input form */}
-              <form onSubmit={generateApiKey} className="flex gap-2 w-full md:max-w-md">
+              <form onSubmit={generateApiKey} className="flex items-center gap-2 max-w-md w-full">
                 <input
                   type="text"
-                  required
                   placeholder="Nom de la clé (ex: Jenkins API)"
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
+                  className={inputCls}
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-1.5 shrink-0 transition-colors"
+                  className="h-9 px-4 rounded-md bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>Générer</span>
                 </button>
               </form>
@@ -289,19 +287,19 @@ export function SettingsPage() {
 
             {/* Generated display banner */}
             {generatedKeyText && (
-              <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-2 animate-slide-in">
-                <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold">
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-lg bg-blue-50 border border-blue-100 space-y-2 animate-slide-in">
+                <div className="flex items-center gap-2 text-blue-900 text-xs font-bold">
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-blue-600" />
                   <span>Note Importante : Clé générée avec succès !</span>
                 </div>
-                <p className="text-[10px] text-neutral-400">
+                <p className="text-[10px] text-slate-600">
                   Copiez cette clé maintenant. Pour des raisons de sécurité, nous ne l'afficherons plus par la suite.
                 </p>
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-neutral-950 border border-neutral-800 font-mono text-xs text-white justify-between select-all">
+                <div className="flex items-center gap-2 p-2 rounded bg-slate-900 border border-slate-800 font-mono text-xs text-white justify-between select-all">
                   <span className="break-all">{generatedKeyText}</span>
                   <button
                     onClick={() => copyToClipboardSimulated("gen", generatedKeyText)}
-                    className="p-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
+                    className="p-1 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
                   >
                     {copiedKeyId === "gen" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
@@ -310,44 +308,46 @@ export function SettingsPage() {
             )}
 
             {/* API Keys Table */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-semibold text-neutral-400">Vos clés actives :</h4>
+            <div className="space-y-3">
+              <h4 className="text-[11px] font-bold text-slate-400 uppercase font-mono">Vos clés actives :</h4>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="text-[10px] font-mono text-neutral-500 uppercase border-b border-neutral-850">
-                    <tr>
-                      <th className="pb-3.5 font-semibold">Nom</th>
-                      <th className="pb-3.5 font-semibold">Clé d'API</th>
-                      <th className="pb-3.5 font-semibold">Date de création</th>
-                      <th className="pb-3.5 font-semibold">Statut</th>
-                      <th className="pb-3.5 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-900 text-neutral-300">
-                    {apiKeys.map((k) => (
-                      <tr key={k.id}>
-                        <td className="py-4 font-semibold text-white">{k.name}</td>
-                        <td className="py-4 font-mono font-semibold text-neutral-400">{k.key}</td>
-                        <td className="py-4 font-mono text-neutral-400">{k.created}</td>
-                        <td className="py-4">
-                          <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-[9px] font-mono border border-indigo-500/20 font-bold">
-                            ACTIF
-                          </span>
-                        </td>
-                        <td className="py-4 text-right">
-                          <button
-                            onClick={() => revokeApiKey(k.id)}
-                            className="p-1.5 rounded bg-neutral-950 border border-neutral-850 hover:bg-red-500/10 text-neutral-400 hover:text-red-500 transition-colors"
-                            title="Révoquer le jeton"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
+              <div className="rounded-lg border border-slate-200/80 bg-white overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="text-[10px] font-bold text-slate-400 uppercase bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 font-bold">Nom</th>
+                        <th className="px-4 py-3 font-bold">Clé d'API</th>
+                        <th className="px-4 py-3 font-bold">Date de création</th>
+                        <th className="px-4 py-3 font-bold">Statut</th>
+                        <th className="px-4 py-3 font-bold text-right">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {apiKeys.map((k) => (
+                        <tr key={k.id} className="hover:bg-slate-50/30 transition-colors">
+                          <td className="px-4 py-3 font-semibold text-slate-900">{k.name}</td>
+                          <td className="px-4 py-3 font-mono text-slate-500">{k.key}</td>
+                          <td className="px-4 py-3 font-mono text-slate-500">{k.created}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[9px] font-mono font-bold">
+                              ACTIF
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => revokeApiKey(k.id)}
+                              className="p-1.5 rounded border border-slate-200/80 bg-white hover:bg-red-50 hover:text-red-600 text-slate-500 transition-colors shadow-sm"
+                              title="Révoquer le jeton"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 

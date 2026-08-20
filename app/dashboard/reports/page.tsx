@@ -65,7 +65,7 @@ async function generateAndDownloadPDF(reportId: string) {
     { getOwaspMapping },
     { fetchCveForFinding },
     { calculateIso27001Compliance },
-    { generateCybelisPDF },
+    { generateClarveonPDF },
   ] = await Promise.all([
     import("@/lib/enrichment/owasp"),
     import("@/lib/enrichment/cve"),
@@ -134,7 +134,7 @@ async function generateAndDownloadPDF(reportId: string) {
   }
 
   // 5. Generate the professional PDF using the shared utility
-  await generateCybelisPDF(
+  await generateClarveonPDF(
     {
       website: { domain: scanData.website.domain },
       createdAt: scanData.createdAt,

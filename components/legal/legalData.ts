@@ -13,14 +13,14 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     id: "acceptation",
     title: "1. Acceptation des conditions",
-    content: `En créant un compte ou en utilisant les services de Cybelis, vous reconnaissez avoir lu, compris et accepté l'intégralité des présentes Conditions Générales d'Utilisation (CGU). Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser nos services.
+    content: `En créant un compte ou en utilisant les services de Clarveon, vous reconnaissez avoir lu, compris et accepté l'intégralité des présentes Conditions Générales d'Utilisation (CGU). Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser nos services.
 
-Ces CGU constituent un accord juridiquement contraignant entre vous (l'utilisateur) et Cybelis. Nous nous réservons le droit de modifier ces conditions à tout moment, avec notification préalable par e-mail ou via l'interface de la plateforme. Votre usage continu après modification vaut acceptation.`,
+Ces CGU constituent un accord juridiquement contraignant entre vous (l'utilisateur) et Clarveon. Nous nous réservons le droit de modifier ces conditions à tout moment, avec notification préalable par e-mail ou via l'interface de la plateforme. Votre usage continu après modification vaut acceptation.`,
   },
   {
     id: "description",
     title: "2. Description des services",
-    content: `Cybelis est une plateforme SaaS d'audit et de surveillance de sécurité web qui fournit :
+    content: `Clarveon est une plateforme SaaS d'audit et de surveillance de sécurité web qui fournit :
 
 • Analyse automatisée et passive de la posture de sécurité de vos sites (SSL/TLS, en-têtes HTTP, DNS, sécurité e-mail)
 • Génération de rapports de conformité ISO/IEC 27001:2022 et OWASP Top 10
@@ -28,18 +28,18 @@ Ces CGU constituent un accord juridiquement contraignant entre vous (l'utilisate
 • Tableaux de bord de suivi et historique des synthèses d'audit
 • Exportation de rapports exécutifs au format PDF
 
-Les analyses sont réalisées de manière externe et passive à partir de données publiques. Cybelis ne réalise aucun test intrusif ou destructeur sur vos serveurs.`,
+Les analyses sont réalisées de manière externe et passive à partir de données publiques. Clarveon ne réalise aucun test intrusif ou destructeur sur vos serveurs.`,
   },
   {
     id: "eligibilite",
     title: "3. Éligibilité et création de compte",
-    content: `Pour créer un compte Cybelis, vous devez :
+    content: `Pour créer un compte Clarveon, vous devez :
 
 • Être une personne physique majeure (18 ans ou plus) ou une entité juridique légalement constituée
 • Fournir des informations exactes et à jour (nom, e-mail professionnel, entreprise)
 • Disposer de l'autorité nécessaire pour engager votre entreprise
 
-Vous êtes responsable du maintien de la confidentialité de vos identifiants de connexion. Toute action effectuée depuis votre compte est réputée avoir été réalisée par vous-même. En cas de suspicion de compromission, prévenez immédiatement support@cybelis.io.`,
+Vous êtes responsable du maintien de la confidentialité de vos identifiants de connexion. Toute action effectuée depuis votre compte est réputée avoir été réalisée par vous-même. En cas de suspicion de compromission, prévenez immédiatement support@clarveon.io.`,
   },
   {
     id: "utilisation-autorisee",
@@ -47,7 +47,7 @@ Vous êtes responsable du maintien de la confidentialité de vos identifiants de
     content: `Vous vous engagez expressément à :
 
 • N'analyser que des noms de domaine et sous-domaines dont vous êtes propriétaire ou pour lesquels vous disposez d'un mandat d'audit écrit et explicite
-• Ne pas utiliser les outils Cybelis à des fins de malveillance, d'attaque ou de repérage non autorisé sur des cibles tiers
+• Ne pas utiliser les outils Clarveon à des fins de malveillance, d'attaque ou de repérage non autorisé sur des cibles tiers
 • Respecter les limites de requêtes et de volumétrie associées à votre offre
 • Ne pas tenter de contourner, décompiler ou rétro-concevoir les mécanismes de sécurité ou le code de la plateforme
 
@@ -56,43 +56,43 @@ Toute violation de cette règle entraînera la suspension immédiate et irrévoc
   {
     id: "propriete-intellectuelle",
     title: "5. Propriété intellectuelle",
-    content: `L'ensemble de la plateforme Cybelis (marque, logos, algorithmes d'analyse, interfaces, code source, documentation et modèles de rapports) est la propriété exclusive de Cybelis et protégé par les lois sur la propriété intellectuelle.
+    content: `L'ensemble de la plateforme Clarveon (marque, logos, algorithmes d'analyse, interfaces, code source, documentation et modèles de rapports) est la propriété exclusive de Clarveon et protégé par les lois sur la propriété intellectuelle.
 
-Vous conservez la propriété exclusive des données d'audit propres à vos systèmes. Cybelis dispose d'un droit restreint d'exploiter ces données anonymisées pour améliorer ses modèles de détection.`,
+Vous conservez la propriété exclusive des données d'audit propres à vos systèmes. Clarveon dispose d'un droit restreint d'exploiter ces données anonymisées pour améliorer ses modèles de détection.`,
   },
   {
     id: "disponibilite",
     title: "6. Disponibilité et maintenance",
-    content: `Cybelis s'efforce de garantir un taux de disponibilité élevé de ses services. Des fenêtres de maintenance programmées peuvent toutefois survenir et feront l'objet d'une information préalable.
+    content: `Clarveon s'efforce de garantir un taux de disponibilité élevé de ses services. Des fenêtres de maintenance programmées peuvent toutefois survenir et feront l'objet d'une information préalable.
 
-Le service est fourni « en l'état ». Cybelis ne garantit pas l'absence totale d'interruption ou d'erreur temporaire de service.`,
+Le service est fourni « en l'état ». Clarveon ne garantit pas l'absence totale d'interruption ou d'erreur temporaire de service.`,
   },
   {
     id: "limitation-responsabilite",
     title: "7. Limitation de responsabilité",
-    content: `Les rapports et diagnostics produits par Cybelis sont des outils d'aide à la décision et ne constituent en aucun cas une garantie absolue de sécurité ni un audit de pénétration intrusif exhaustif.
+    content: `Les rapports et diagnostics produits par Clarveon sont des outils d'aide à la décision et ne constituent en aucun cas une garantie absolue de sécurité ni un audit de pénétration intrusif exhaustif.
 
-Dans les limites permises par la loi, Cybelis ne pourra être tenu responsable des dommages directs ou indirects (perte de données, manque à gagner, faille non détectée) résultant de l'utilisation de la plateforme. La responsabilité globale de Cybelis est plafonnée au montant payé par l'utilisateur au cours des 12 derniers mois.`,
+Dans les limites permises par la loi, Clarveon ne pourra être tenu responsable des dommages directs ou indirects (perte de données, manque à gagner, faille non détectée) résultant de l'utilisation de la plateforme. La responsabilité globale de Clarveon est plafonnée au montant payé par l'utilisateur au cours des 12 derniers mois.`,
   },
   {
     id: "resiliation",
     title: "8. Résiliation",
-    content: `Vous pouvez clôturer votre compte à tout moment depuis les paramètres utilisateur. Cybelis se réserve le droit de résilier ou suspendre un compte en cas de manquement aux présentes CGU.
+    content: `Vous pouvez clôturer votre compte à tout moment depuis les paramètres utilisateur. Clarveon se réserve le droit de résilier ou suspendre un compte en cas de manquement aux présentes CGU.
 
 À la fermeture du compte, vos données d'analyse personnelles seront supprimées définitivement dans un délai maximal de 30 jours, sous réserve des obligations légales de conservation.`,
   },
   {
     id: "droit-applicable",
     title: "9. Droit applicable et juridiction",
-    content: `Les présentes conditions sont régies par le droit français. Tout litige relatif à leur interprétation ou leur exécution relève de la compétence exclusive des tribunaux compétents du siège social de Cybelis, après tentative préalable de résolution amiable.`,
+    content: `Les présentes conditions sont régies par le droit français. Tout litige relatif à leur interprétation ou leur exécution relève de la compétence exclusive des tribunaux compétents du siège social de Clarveon, après tentative préalable de résolution amiable.`,
   },
   {
     id: "contact",
     title: "10. Contact juridique",
-    content: `Pour toute question relative aux CGU ou aux aspects juridiques de Cybelis :
+    content: `Pour toute question relative aux CGU ou aux aspects juridiques de Clarveon :
 
-• E-mail : legal@cybelis.io
-• Support client : support@cybelis.io
+• E-mail : legal@clarveon.io
+• Support client : support@clarveon.io
 • Délais d'assistance : 24 à 48 heures ouvrées`,
   },
 ];
@@ -103,12 +103,12 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     icon: Shield,
     color: "sky",
     title: "1. Responsable du traitement",
-    content: `Cybelis agit en qualité de responsable du traitement de vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679).
+    content: `Clarveon agit en qualité de responsable du traitement de vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679).
 
 Coordonnées officielles :
-• Organisme : Cybelis
-• Délégué à la Protection des Données (DPO) : dpo@cybelis.io
-• Demande d'exercice des droits : dpo@cybelis.io ou via votre espace client`,
+• Organisme : Clarveon
+• Délégué à la Protection des Données (DPO) : dpo@clarveon.io
+• Demande d'exercice des droits : dpo@clarveon.io ou via votre espace client`,
   },
   {
     id: "collecte",
@@ -139,7 +139,7 @@ Coordonnées officielles :
     icon: Server,
     color: "emerald",
     title: "4. Hébergement et localisation (100% UE)",
-    content: `Toutes les données Cybelis sont strictement stockées et traitées au sein de l'Union Européenne :
+    content: `Toutes les données Clarveon sont strictement stockées et traitées au sein de l'Union Européenne :
 
 • Infrastructure cloud & base de données : Supabase (serveurs basés à Francfort, Allemagne — UE)
 • Chiffrement : Données chiffrées en transit (TLS 1.3) et au repos (AES-256)
@@ -168,14 +168,14 @@ Coordonnées officielles :
 • Droit à la limitation du traitement (Art. 18) et d'opposition (Art. 21).
 • Droit à la portabilité (Art. 20) : Exporter vos données dans un format structuré (JSON/CSV).
 
-Pour exercer un droit, envoyez un message à dpo@cybelis.io. Réponse garantie sous 30 jours. Vous conservez également le droit d'introduire une réclamation auprès de la CNIL (cnil.fr).`,
+Pour exercer un droit, envoyez un message à dpo@clarveon.io. Réponse garantie sous 30 jours. Vous conservez également le droit d'introduire une réclamation auprès de la CNIL (cnil.fr).`,
   },
   {
     id: "cookies",
     icon: Globe,
     color: "cyan",
     title: "7. Cookies et cookies de session",
-    content: `Cybelis applique une politique d'utilisation minimale de cookies :
+    content: `Clarveon applique une politique d'utilisation minimale de cookies :
 
 • Cookies strictement nécessaires : Authentification Supabase, sécurité CSRF, préférences de session.
 • Aucun cookie publicitaire tiers ni de traçage commercial préjudiciable n'est utilisé.`,
@@ -206,8 +206,8 @@ Pour exercer un droit, envoyez un message à dpo@cybelis.io. Réponse garantie s
     title: "10. Contact DPO",
     content: `Pour toute question concernant le traitement de vos données personnelles :
 
-• Délégué à la Protection des Données (DPO) : dpo@cybelis.io
-• Adresse de l'entreprise : Cybelis — Service RGPD`,
+• Délégué à la Protection des Données (DPO) : dpo@clarveon.io
+• Adresse de l'entreprise : Clarveon — Service RGPD`,
   },
 ];
 

@@ -45,7 +45,7 @@ export function Navbar() {
           <Link href="/" className="flex items-center shrink-0 overflow-visible">
             <motion.img
               src="/logo.png"
-              alt="Cybelis"
+              alt="Clarveon"
               className="h-14 w-auto origin-left scale-[3.2] block"
               whileHover={{ opacity: 0.85 }}
               transition={{ duration: 0.2 }}

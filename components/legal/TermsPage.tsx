@@ -27,7 +27,7 @@ export function TermsPage() {
             Retour à l&apos;inscription
           </Link>
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Cybelis · Document légal
+            Clarveon · Document légal
           </span>
         </div>
       </header>
@@ -46,7 +46,7 @@ export function TermsPage() {
 
         {/* Introduction */}
         <div className="text-slate-700 text-sm leading-relaxed mb-8">
-          Veuillez lire attentivement les présentes Conditions Générales d&apos;Utilisation (CGU) avant d&apos;utiliser les services de la plateforme Cybelis. En créant un compte, vous acceptez l&apos;intégralité de ces conditions.
+          Veuillez lire attentivement les présentes Conditions Générales d&apos;Utilisation (CGU) avant d&apos;utiliser les services de la plateforme Clarveon. En créant un compte, vous acceptez l&apos;intégralité de ces conditions.
         </div>
 
         {/* Search Bar */}
@@ -85,8 +85,8 @@ export function TermsPage() {
         <div className="mt-14 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>
             Pour toute question :{" "}
-            <a href="mailto:legal@cybelis.io" className="text-slate-900 font-semibold underline">
-              legal@cybelis.io
+            <a href="mailto:legal@clarveon.io" className="text-slate-900 font-semibold underline">
+              legal@clarveon.io
             </a>
           </p>
 
@@ -108,7 +108,7 @@ export function TermsPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-slate-50 py-6 text-center text-xs text-slate-500">
-        &copy; 2026 Cybelis &bull; Tous droits réservés
+        &copy; 2026 Clarveon &bull; Tous droits réservés
       </footer>
     </div>
   );

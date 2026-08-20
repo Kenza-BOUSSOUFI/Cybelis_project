@@ -109,7 +109,7 @@ export function RegisterPage() {
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-slate-200">Confirmation requise</h3>
               <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
-                Pour des raisons de sécurité, vous devez valider votre adresse e-mail avant de pouvoir accéder à votre espace Cybelis.
+                Pour des raisons de sécurité, vous devez valider votre adresse e-mail avant de pouvoir accéder à votre espace Clarveon.
               </p>
             </div>
 

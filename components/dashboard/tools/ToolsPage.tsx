@@ -23,7 +23,7 @@ import {
 
 export function ToolsHubPage() {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const [targetDomain, setTargetDomain] = useState("cybelis.ma");
+  const [targetDomain, setTargetDomain] = useState("clarveon.ma");
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
 
@@ -190,7 +190,7 @@ export function ToolsHubPage() {
                     type="text"
                     value={targetDomain}
                     onChange={(e) => setTargetDomain(e.target.value)}
-                    placeholder="cybelis.ma"
+                    placeholder="clarveon.ma"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-850 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
                   />
                 </div>

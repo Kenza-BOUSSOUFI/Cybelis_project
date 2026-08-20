@@ -200,8 +200,8 @@ export function ReportDetailPage() {
     if (!scan) return;
     setIsExporting(true);
     try {
-      const { generateCybelisPDF } = await import("@/lib/pdf/generateReport");
-      await generateCybelisPDF(scan, issues, isoCompliance);
+      const { generateClarveonPDF } = await import("@/lib/pdf/generateReport");
+      await generateClarveonPDF(scan, issues, isoCompliance);
     } catch (error) {
       console.error("Failed to generate PDF:", error);
       alert("Erreur lors de la génération du PDF. Veuillez réessayer.");

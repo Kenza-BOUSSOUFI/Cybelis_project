@@ -193,7 +193,7 @@ export default function SettingsPage() {
               { key: "scanComplete" as const, label: "Scan terminé", description: "Recevoir une alerte lorsqu'un scan est complété." },
               { key: "criticalAlert" as const, label: "Alerte critique", description: "Notification immédiate en cas de faille critique détectée." },
               { key: "weeklyReport" as const, label: "Rapport hebdomadaire", description: "Résumé des analyses de la semaine chaque lundi." },
-              { key: "marketing" as const, label: "Actualités Cybelis", description: "Nouveautés, conseils et mises à jour de la plateforme." },
+              { key: "marketing" as const, label: "Actualités Clarveon", description: "Nouveautés, conseils et mises à jour de la plateforme." },
             ].map(({ key, label, description }) => (
               <div key={key} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
                 <div>
