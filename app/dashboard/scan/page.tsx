@@ -19,17 +19,15 @@ export default function ScanPage() {
   const handleReset        = ()            => { setStep("form"); setScanId(""); setErrorMsg(""); };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 py-6 px-4">
-      {/* Header */}
-      {step !== "running" && (
+    <div className="max-w-5xl mx-auto space-y-6 py-4 px-4">
+      {/* Header for Form Step */}
+      {step === "form" && (
         <div className="border-b border-slate-200 pb-4 text-center">
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            {step === "done" ? "Résultats de l'audit" : "Nouveau Scan de Sécurité"}
+            Nouveau Scan de Sécurité
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-lg mx-auto">
-            {step === "done"
-              ? "Résultats détaillés par outil et recommandations de sécurité."
-              : "Exécutez un audit complet sur les faiblesses SSL/TLS, DNS, en-têtes de sécurité et cookies."}
+            Exécutez un audit complet sur les faiblesses SSL/TLS, DNS, en-têtes de sécurité et cookies.
           </p>
         </div>
       )}

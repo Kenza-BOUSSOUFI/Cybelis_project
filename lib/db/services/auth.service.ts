@@ -9,20 +9,30 @@ export class AuthService {
     authUserId: string,
     email: string,
     fullName: string,
-    companyName: string
+    companyName: string,
+    phone?: string | null
   ) {
+    const updateData: { email: string; fullName: string; companyName?: string; phone?: string | null } = {
+      email,
+      fullName,
+    };
+
+    if (companyName) {
+      updateData.companyName = companyName;
+    }
+    if (phone !== undefined) {
+      updateData.phone = phone;
+    }
+
     return prisma.user.upsert({
       where: { authUserId },
-      update: {
-        email,
-        fullName,
-        companyName,
-      },
+      update: updateData,
       create: {
         authUserId,
         email,
         fullName,
-        companyName,
+        companyName: companyName || '',
+        phone: phone || null,
       },
       include: {
         subscription: true,

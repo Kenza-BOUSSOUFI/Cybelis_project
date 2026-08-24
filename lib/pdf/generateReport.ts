@@ -1,3 +1,15 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  Lock,
+  Globe,
+  Briefcase,
+  Calendar,
+  Clock,
+  Crosshair,
+  ShieldCheck,
+  Shield,
+} from "lucide-react";
 import type { OwaspInfo } from "@/lib/enrichment/owasp";
 import type { CveInfo } from "@/lib/enrichment/cve";
 import type { Iso27001Report } from "@/lib/enrichment/iso27001";
@@ -19,8 +31,13 @@ export interface PdfIssue {
 }
 
 export interface PdfScanData {
-  website: { domain: string };
+  id?: string;
+  type?: "FULL" | "CUSTOM" | string | null;
+  website: { domain: string | undefined };
   createdAt: string;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  companyName?: string | null;
   securityScore?: { score: number; grade: string } | null;
 }
 
@@ -43,20 +60,70 @@ export async function generateClarveonPDF(
       img.src = "/logo.png";
       img.onload = () => {
         const scale = 2; // High resolution scale factor
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve({
-            data: canvas.toDataURL("image/png"),
-            aspectRatio: img.width / img.height
-          });
-        } else {
-          resolve(null);
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        const tempCtx = tempCanvas.getContext("2d");
+        if (!tempCtx) return resolve(null);
+        tempCtx.drawImage(img, 0, 0);
+
+        // Auto-trim transparent padding
+        try {
+          const imgData = tempCtx.getImageData(0, 0, img.width, img.height);
+          const { data, width, height } = imgData;
+          let minX = width, minY = height, maxX = 0, maxY = 0;
+          let found = false;
+
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const alpha = data[(y * width + x) * 4 + 3];
+              if (alpha > 15) {
+                found = true;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+
+          if (!found) {
+            minX = 0; minY = 0; maxX = width; maxY = height;
+          }
+
+          const cropW = Math.max(1, maxX - minX + 1);
+          const cropH = Math.max(1, maxY - minY + 1);
+
+          const canvas = document.createElement("canvas");
+          canvas.width = cropW * scale;
+          canvas.height = cropH * scale;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, minX, minY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+            resolve({
+              data: canvas.toDataURL("image/png"),
+              aspectRatio: cropW / cropH
+            });
+          } else {
+            resolve(null);
+          }
+        } catch {
+          // Fallback if getImageData fails (e.g. cross-origin)
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve({
+              data: canvas.toDataURL("image/png"),
+              aspectRatio: img.width / img.height
+            });
+          } else {
+            resolve(null);
+          }
         }
       };
       img.onerror = () => resolve(null);
@@ -64,6 +131,64 @@ export async function generateClarveonPDF(
   };
 
   const logoObj = await loadLogoBase64();
+
+  // ─── LOAD LUCIDE ICONS (NON-HARDCODED) VIA HIGH-RES OFFSCREEN CANVAS ───────
+  const getLucideIconPng = (
+    iconElement: React.ReactElement,
+    canvasSize = 100
+  ): Promise<string> => {
+    return new Promise((resolve) => {
+      try {
+        const svgString = renderToStaticMarkup(iconElement);
+        const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvasSize;
+          canvas.height = canvasSize;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, 0, 0, canvasSize, canvasSize);
+            resolve(canvas.toDataURL("image/png"));
+          } else {
+            resolve("");
+          }
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve("");
+        };
+        img.src = url;
+      } catch (e) {
+        console.warn("Icon render failed:", e);
+        resolve("");
+      }
+    });
+  };
+
+  const [
+    lockIconPng,
+    globeIconPng,
+    briefcaseIconPng,
+    calendarIconPng,
+    clockIconPng,
+    crosshairIconPng,
+    shieldCheckIconPng,
+    shieldFooterPng,
+  ] = await Promise.all([
+    getLucideIconPng(React.createElement(Lock, { size: 28, color: "#ffffff", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(Globe, { size: 36, color: "#1d4ed8", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(Briefcase, { size: 28, color: "#1d4ed8", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(Calendar, { size: 28, color: "#1d4ed8", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(Clock, { size: 28, color: "#1d4ed8", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(Crosshair, { size: 28, color: "#1d4ed8", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(ShieldCheck, { size: 28, color: "#1d4ed8", strokeWidth: 2.2 })),
+    getLucideIconPng(React.createElement(Shield, { size: 24, color: "#1d4ed8", strokeWidth: 2.2 })),
+  ]);
 
   // ─── UTF-8 → LATIN-1 SAFE TEXT ENCODING FOR HELVETICA ──────────────────────
   const safeText = (s: string): string =>
@@ -133,34 +258,34 @@ export async function generateClarveonPDF(
     accentPill: [219, 234, 254] as [number, number, number], // #dbeafe
     accentText: [29, 78, 216] as [number, number, number], // #1d4ed8
 
-    // Severity Tones (Refined Navy / Blue / Slate Gray Palette — Zero Red, Green, or Yellow)
-    critical: [15, 23, 42] as [number, number, number], // #0f172a Deep Navy
-    criticalBg: [241, 245, 249] as [number, number, number], // #f1f5f9 Slate-100
-    criticalBd: [203, 213, 225] as [number, number, number], // #cbd5e1 Slate-300
+    // Severity — Functional semantic colors for audit report readability
+    critical: [220, 38, 38] as [number, number, number],   // red-600
+    criticalBg: [254, 242, 242] as [number, number, number], // red-50
+    criticalBd: [252, 165, 165] as [number, number, number], // red-300
 
-    high: [29, 78, 216] as [number, number, number], // #1d4ed8 Dark Blue
-    highBg: [239, 246, 255] as [number, number, number], // #eff6ff Blue-50
-    highBd: [191, 219, 254] as [number, number, number], // #bfdbfe Blue-200
+    high: [234, 88, 12] as [number, number, number],       // orange-600
+    highBg: [255, 247, 237] as [number, number, number],   // orange-50
+    highBd: [253, 186, 116] as [number, number, number],   // orange-300
 
-    medium: [37, 99, 235] as [number, number, number], // #2563eb Royal Blue
-    mediumBg: [239, 246, 255] as [number, number, number], // #eff6ff Blue-50
-    mediumBd: [191, 219, 254] as [number, number, number], // #bfdbfe Blue-200
+    medium: [217, 119, 6] as [number, number, number],     // amber-600
+    mediumBg: [255, 251, 235] as [number, number, number], // amber-50
+    mediumBd: [252, 211, 77] as [number, number, number],  // amber-300
 
-    low: [71, 85, 105] as [number, number, number], // #475569 Slate Gray
-    lowBg: [248, 250, 252] as [number, number, number], // #f8fafc Slate-50
-    lowBd: [226, 232, 240] as [number, number, number], // #e2e8f0 Slate-200
+    low: [5, 150, 105] as [number, number, number],        // emerald-600 (vert)
+    lowBg: [236, 253, 245] as [number, number, number],    // emerald-50
+    lowBd: [110, 231, 183] as [number, number, number],    // emerald-300
 
-    green: [29, 78, 216] as [number, number, number], // #1d4ed8 Blue
-    greenBg: [239, 246, 255] as [number, number, number],
-    greenBd: [191, 219, 254] as [number, number, number],
+    green: [5, 150, 105] as [number, number, number],      // emerald-600
+    greenBg: [236, 253, 245] as [number, number, number],  // emerald-50
+    greenBd: [110, 231, 183] as [number, number, number],  // emerald-300
 
-    purple: [30, 41, 59] as [number, number, number], // #1e293b Dark Slate
+    purple: [30, 41, 59] as [number, number, number],      // slate-800
     purpleBg: [241, 245, 249] as [number, number, number],
     purpleBd: [203, 213, 225] as [number, number, number],
   };
 
   // ─── DERIVED SCAN DATA ───────────────────────────────────────────────────
-  const domain = scan.website.domain;
+  const domain = scan.website.domain ?? "";
   const scanDate = new Date(scan.createdAt);
   const score = scan.securityScore?.score ?? 0;
   const grade = scan.securityScore?.grade ?? (score >= 90 ? "A" : score >= 70 ? "B" : score >= 50 ? "C" : score >= 30 ? "D" : "F");
@@ -168,32 +293,43 @@ export async function generateClarveonPDF(
   const highCount = issues.filter(i => i.severity === "high").length;
   const mediumCount = issues.filter(i => i.severity === "medium").length;
   const lowCount = issues.filter(i => i.severity === "low").length;
-  const scoreColor: [number, number, number] = C.navy;
-  const scoreLevel = score >= 80 ? "Bon" : score >= 60 ? "Modéré" : "Faible";
+  const scoreColor: [number, number, number] = score >= 85 ? [5, 150, 105] : score >= 65 ? C.medium : score >= 40 ? C.high : C.critical;
+  const scoreLevel = score >= 85 ? "Faible" : score >= 65 ? "Mod\xe9r\xe9" : score >= 40 ? "\xc9lev\xe9" : "Critique";
 
   // ─── LAYOUT & PAGINATION STATE ───────────────────────────────────────────
   let y = CONTENT_TOP;
   let currentPage = 1;
 
-  // ─── RECURRING HEADER & FOOTER (INTERNAL PAGES) ──────────────────────────
+  // ─── HEADER & FOOTER ON SUBSEQUENT PAGES ──────────────────────────────────
   const drawPageHeader = () => {
-    doc.setFillColor(...C.white);
+    // Full-width dark navy header band on internal pages
+    doc.setFillColor(11, 19, 41); // Deep Navy #0b1329
     doc.rect(0, 0, PW, HEADER_H, "F");
-    doc.setDrawColor(...C.border);
+    doc.setDrawColor(30, 58, 118);
+    doc.setLineWidth(0.35);
     doc.line(0, HEADER_H, PW, HEADER_H);
 
-    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text("CLARVEON", M, 6.5);
-    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-    doc.text("Cyber Security Assessment", M, 10.5);
+    // Left: Platform Logo in header
+    if (logoObj && logoObj.data) {
+      const hLogoH = 8.5;
+      const hLogoW = hLogoH * logoObj.aspectRatio;
+      doc.addImage(logoObj.data, "PNG", M, (HEADER_H - hLogoH) / 2, hLogoW, hLogoH);
+    } else {
+      doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+      doc.text("CLARVEON", M, HEADER_H / 2 + 2.5);
+    }
 
-    doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-    doc.text(domain, PW - M, 6.5, { align: "right" });
-    doc.text(safeText(`Audit du ${scanDate.toLocaleDateString("fr-FR")}`), PW - M, 10.5, { align: "right" });
+    // Center: Report Title (in pure white)
+    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text(safeText("RAPPORT D'AUDIT DE S\xc9CURIT\xc9"), PW / 2, HEADER_H / 2 + 2, { align: "center" });
+
+    // Right: Audited Domain
+    doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(203, 213, 225);
+    doc.text(domain, PW - M, HEADER_H / 2 + 2, { align: "right" });
   };
 
   const drawPageFooter = (page: number, totalPages: number) => {
-    doc.setFillColor(...C.bg);
+    doc.setFillColor(...C.white);
     doc.rect(0, PH - FOOTER_H, PW, FOOTER_H, "F");
     doc.setDrawColor(...C.border);
     doc.line(0, PH - FOOTER_H, PW, PH - FOOTER_H);
@@ -216,16 +352,54 @@ export async function generateClarveonPDF(
   };
 
   // ─── TYPOGRAPHY & COMPONENT HELPERS ──────────────────────────────────────
-  const sectionTitle = (title: string) => {
-    checkPage(16);
-    doc.setFillColor(...C.bgMid);
-    doc.rect(M, y, CW, 8, "F");
-    doc.setFillColor(...C.navy);
-    doc.rect(M, y, 3, 8, "F");
 
-    doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text(title, M + 7, y + 5.5);
-    y += 13;
+  /** Thin horizontal separator line */
+  const thinRule = (marginTop = 3, marginBottom = 4) => {
+    y += marginTop;
+    checkPage(4);
+    doc.setDrawColor(...C.border);
+    doc.setLineWidth(0.25);
+    doc.line(M, y, PW - M, y);
+    y += marginBottom;
+  };
+
+  const hRule = () => thinRule(2, 6);
+
+  /**
+   * Section header — number + title + thin underline
+   */
+  const sectionHeader = (num: string, title: string, intro?: string) => {
+    checkPage(intro ? 36 : 26);
+    // Section number
+    doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+    doc.text(num, M, y); y += 6;
+    // Section title — large bold, wrapped to stay within margins
+    doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    const titleLines = doc.splitTextToSize(safeText(title), CW);
+    titleLines.forEach((l: string) => { doc.text(l, M, y); y += 8; });
+    thinRule(2, intro ? 5 : 6);
+    if (intro) {
+      doc.setFontSize(8.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+      const introLines = doc.splitTextToSize(safeText(intro), CW);
+      introLines.forEach((l: string) => { checkPage(6); doc.text(l, M, y); y += 5; });
+      y += 4;
+    }
+  };
+
+  /** Sub-section label — e.g. "01.1  VUE D'ENSEMBLE" */
+  const subSection = (label: string) => {
+    checkPage(16);
+    y += 5;
+    doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accentText);
+    doc.text(safeText(label), M, y);
+    y += 10;
+  };
+
+  /** Small label in uppercase — e.g. "DESCRIPTION" */
+  const fieldLabel = (text: string, indentX = 0) => {
+    checkPage(6);
+    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    doc.text(safeText(text), M + indentX, y); y += 4.5;
   };
 
   const bodyText = (text: string, size = 8, color: [number, number, number] = C.slate, indent = 0) => {
@@ -248,247 +422,366 @@ export async function generateClarveonPDF(
     doc.text(label, x + w / 2, yPos, { align: "center" });
   };
 
-  const hRule = () => {
-    checkPage(5);
-    doc.setDrawColor(...C.border);
-    doc.line(M, y, PW - M, y);
-    y += 6;
+  /** Dot leaders between text and page number for TOC */
+  const tocLine = (num: string, title: string, page: number, indent = 0) => {
+    checkPage(7);
+    const numStr = num;
+    const pageStr = `${page}`;
+    doc.setFontSize(8.5); doc.setFont("helvetica", num && !num.includes(".") ? "bold" : "normal");
+    doc.setTextColor(...C.navy);
+    const xStart = M + indent;
+    if (num) {
+      doc.setFontSize(8.5); doc.setFont("helvetica", num.includes(".") ? "normal" : "bold"); doc.setTextColor(...C.muted);
+      doc.text(numStr, xStart, y);
+    }
+    const textX = xStart + (num ? 12 : 0);
+    doc.setFontSize(8.5); doc.setFont("helvetica", num && !num.includes(".") ? "bold" : "normal"); doc.setTextColor(...C.navy);
+    doc.text(safeText(title), textX, y);
+    const titleW = doc.getTextWidth(safeText(title));
+    doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accent);
+    const pageW = doc.getTextWidth(pageStr);
+    // Dot leaders
+    doc.setFontSize(7); doc.setTextColor(...C.muted);
+    const leaderStart = textX + titleW + 2;
+    const leaderEnd = PW - M - pageW - 4;
+    for (let lx = leaderStart; lx < leaderEnd; lx += 3) {
+      doc.text(".", lx, y);
+    }
+    doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    doc.text(pageStr, PW - M, y, { align: "right" });
+    y += num && !num.includes(".") ? 7 : 5.5;
   };
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ─── COVER PAGE — PREMIUM ENTERPRISE SAAS DESIGN ───────────────────────────
+  // ─── COVER PAGE — CLEAN MODERN ENTERPRISE DESIGN ───────────────────────────
   // ════════════════════════════════════════════════════════════════════════════
 
   // Pure White Background
   doc.setFillColor(...C.white);
   doc.rect(0, 0, PW, PH, "F");
 
-  // Top Accent Gradient Strip (3mm high blue accent bar)
-  doc.setFillColor(37, 99, 235); // #2563eb
-  doc.rect(0, 0, PW, 3.5, "F");
-
-  // Subtle Light Blue Waves Accent on Top-Right Background
-  doc.setDrawColor(224, 242, 254);
-  doc.setLineWidth(0.5);
-  doc.lines([[30, 10], [50, -5], [70, 15]], PW - 80, 5, [1, 1], "S");
-  doc.lines([[40, 15], [60, -2], [80, 20]], PW - 90, 8, [1, 1], "S");
-
-  // Fine Outer Frame
-  doc.setDrawColor(...C.borderDark);
-  doc.setLineWidth(0.3);
-  doc.rect(4, 4, PW - 8, PH - 8, "S");
-
-  // ── 1. TOP HEADER (LOGO LEFT, CONFIDENTIAL BADGE RIGHT) ──
-  const headerY = 14;
-
-  // Real Clarveon Logo
-  if (logoObj && logoObj.data) {
-    const logoW = 48;
-    const logoH = logoW / logoObj.aspectRatio;
-    doc.addImage(logoObj.data, "PNG", M, headerY, logoW, logoH);
-  } else {
-    doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text("CLARVEON", M, headerY + 10);
-  }
-
-  // Confidential Badge (Top Right)
-  const confW = 32, confH = 6.5;
-  const confX = PW - M - confW;
-  doc.setFillColor(239, 246, 255);
-  doc.setDrawColor(219, 234, 254);
-  doc.roundedRect(confX, headerY + 2, confW, confH, 3, 3, "FD");
-
-  // Lock vector icon inside badge
-  const lockX = confX + 4.5;
-  const lockY = headerY + 5.2;
-  doc.setDrawColor(29, 78, 216);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(lockX - 1.2, lockY - 0.5, 2.4, 2.2, 0.4, 0.4, "S");
-  doc.circle(lockX, lockY - 1.2, 0.9, "S");
-
-  doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(29, 78, 216);
-  doc.text(safeText("CONFIDENTIEL"), confX + 18, headerY + 6.3, { align: "center" });
-
-  // Header Divider Line
-  let cy = headerY + 22;
-  doc.setDrawColor(...C.border);
-  doc.setLineWidth(0.3);
-  doc.line(M, cy, PW - M, cy);
-  cy += 14;
-
-  // ── 2. HERO TITLE SECTION WITH LEFT BRAND ACCENT BAR ──
-  const titleCardX = M;
-  const titleCardW = CW;
-  const titleCardH = 34;
-
-  // Title Box Container Background
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(...C.border);
-  doc.roundedRect(titleCardX, cy, titleCardW, titleCardH, 3, 3, "FD");
-
-  // Solid Blue Left Accent Strip
-  doc.setFillColor(37, 99, 235);
-  doc.roundedRect(titleCardX, cy, 3.5, titleCardH, 1.5, 1.5, "F");
-
-  // Category Tag Pill Inside Title Box
-  const tagX = titleCardX + 10;
-  const tagY = cy + 6;
-  doc.setFillColor(219, 234, 254);
-  doc.roundedRect(tagX, tagY, 66, 6, 2, 2, "F");
-  doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(29, 78, 216);
-  doc.text(safeText("RAPPORT D'AUDIT & D'\xc9VALUATION DE S\xc9CURIT\xc9"), tagX + 33, tagY + 4.2, { align: "center" });
-
-  // Main Target Domain Title
-  doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(domain, tagX, cy + 20);
-
-  // Subtitle / Time
-  doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
-  const timeStr = `${scanDate.toLocaleDateString("fr-FR")} à ${scanDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
-  doc.text(safeText(`Posture de sécurité passive HTTPS, SSL/TLS, DNS & Headers • ${timeStr}`), tagX, cy + 28);
-
-  cy += titleCardH + 14;
-
-  // ── 3. METRICS SHOWCASE SECTION (2 COLUMNS) ──
-  const colW = (CW - 10) / 2; // 85mm each
-  const metricsH = 48;
-
-  // LEFT COLUMN: HERO SCORE CARD
-  const leftColX = M;
-  doc.setFillColor(...C.white);
-  doc.setDrawColor(...C.border);
-  doc.roundedRect(leftColX, cy, colW, metricsH, 3.5, 3.5, "FD");
-
-  // Ring Gauge Center
-  const ringX = leftColX + 24;
-  const ringY = cy + 24;
-  const ringR = 15;
-
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(3.5);
-  doc.circle(ringX, ringY, ringR, "S");
-
-  doc.setDrawColor(37, 99, 235);
-  doc.setLineWidth(3.5);
-  doc.circle(ringX, ringY, ringR, "S");
-
-  doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(`${score}`, ringX, ringY + 2.5, { align: "center" });
-  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-  doc.text("/100", ringX, ringY + 8, { align: "center" });
-
-  // Score Info Right of Ring
-  const sInfoX = leftColX + 44;
-  doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText("Score Global"), sInfoX, cy + 13);
-
-  // Grade Badge Pill
-  doc.setFillColor(219, 234, 254);
-  doc.roundedRect(sInfoX, cy + 17, 36, 7, 2, 2, "F");
-  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(29, 78, 216);
-  doc.text(safeText(`GRADE ${grade}`), sInfoX + 18, cy + 21.8, { align: "center" });
-
-  doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
-  doc.text("Niveau :", sInfoX, cy + 34);
-  doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText(scoreLevel), sInfoX + 16, cy + 34);
-
-  // RIGHT COLUMN: 4 SEVERITY CARDS (WITH COLORED STRIPS)
-  const rightColX = M + colW + 10;
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(...C.border);
-  doc.roundedRect(rightColX, cy, colW, metricsH, 3.5, 3.5, "FD");
-
-  doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText("Vulnérabilités Détectées"), rightColX + 8, cy + 10);
-
-  const sevGrid = [
-    { label: "Critique", count: criticalCount, fg: C.critical, bg: C.criticalBg, bd: C.criticalBd },
-    { label: safeText("Élevé"), count: highCount, fg: C.high, bg: C.highBg, bd: C.highBd },
-    { label: "Moyen", count: mediumCount, fg: C.medium, bg: C.mediumBg, bd: C.mediumBd },
-    { label: "Faible", count: lowCount, fg: C.low, bg: C.lowBg, bd: C.lowBd },
-  ];
-
-  const itemW = (colW - 20) / 2;
-  const itemH = 13;
-
-  sevGrid.forEach((item, idx) => {
-    const ix = rightColX + 8 + (idx % 2) * (itemW + 4);
-    const iy = cy + 15 + Math.floor(idx / 2) * (itemH + 3);
-
-    doc.setFillColor(...C.white);
-    doc.setDrawColor(...item.bd);
-    doc.roundedRect(ix, iy, itemW, itemH, 2, 2, "FD");
-
-    // Left Colored Accent Strip
-    doc.setFillColor(...item.fg);
-    doc.roundedRect(ix, iy, 2, itemH, 1, 1, "F");
-
-    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...item.fg);
-    doc.text(`${item.count}`, ix + 6, iy + 9);
-
-    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text(item.label, ix + 16, iy + 8.5);
-  });
-
-  cy += metricsH + 14;
-
-  // Divider Line
-  doc.setDrawColor(...C.border);
-  doc.setLineWidth(0.3);
-  doc.line(M, cy, PW - M, cy);
-  cy += 12;
-
-  // ── 4. INFORMATIONS D'AUDIT (ENTERPRISE CARD TABLE) ──
-  const infoCardW = CW;
-  const infoCardH = 48;
-
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(...C.border);
-  doc.roundedRect(M, cy, infoCardW, infoCardH, 3.5, 3.5, "FD");
-
-  doc.setFontSize(9.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText("Spécifications Générales de l'Audit"), M + 8, cy + 10);
-
-  const infoRows = [
-    { key: "Cible d'analyse", val: domain },
-    { key: "Date de l'évaluation", val: timeStr },
-    { key: "Périmètre technique", val: "Analyse passive HTTPS, certificats SSL/TLS, DNS & Headers" },
-    { key: "Référentiel ISO 27001", val: isoCompliance ? `${isoCompliance.compliancePercentage}% de contrôles satisfaits (${isoCompliance.passedCount}/${isoCompliance.totalControls})` : "50% de contrôles satisfaits (2/4)" },
-  ];
-
-  const rowH = 8.5;
-  infoRows.forEach((row, ri) => {
-    const ry = cy + 15 + ri * rowH;
-
-    doc.setDrawColor(241, 245, 249);
-    doc.line(M + 6, ry, M + infoCardW - 6, ry);
-
-    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text(safeText(row.key), M + 8, ry + 6);
-
-    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
-    doc.text(safeText(row.val), M + 54, ry + 6);
-  });
-
-  // ── 5. FULL-WIDTH DARK NAVY FOOTER BANNER ──
-  const footerY = PH - 20;
+  // ── 1. TOP HEADER — FULL-WIDTH DARK BLUE BAND (LEFT TO RIGHT) ──
+  const bandY = 0;
+  const bandH = 34; // Generous height for large logo
   doc.setFillColor(11, 19, 41); // Deep Navy #0b1329
-  doc.rect(0, footerY, PW, 20, "F");
+  doc.rect(0, bandY, PW, bandH, "F");
 
-  // Left Logo & Platform Title
+  // Subtle bottom accent border line on the band
+  doc.setDrawColor(30, 58, 118);
+  doc.setLineWidth(0.4);
+  doc.line(0, bandH, PW, bandH);
+
+  // Left: Clarveon Large Platform Logo inside dark band
   if (logoObj && logoObj.data) {
-    const fLogoW = 30;
-    const fLogoH = fLogoW / logoObj.aspectRatio;
-    doc.addImage(logoObj.data, "PNG", M, footerY + 4.5, fLogoW, fLogoH);
+    const lH = 18; // Large prominent platform logo
+    const lW = lH * logoObj.aspectRatio;
+    const logoY = (bandH - lH) / 2 - 1.5;
+    doc.addImage(logoObj.data, "PNG", M, logoY, lW, lH);
+    doc.setFontSize(5.5); doc.setFont("helvetica", "bold"); doc.setTextColor(148, 163, 184);
+    doc.text(safeText("PLATEFORME D'AUDIT DE S\xc9CURIT\xc9"), M, logoY + lH + 3.2);
   } else {
-    doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-    doc.text("CLARVEON", M, footerY + 10);
+    doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text("CLARVEON", M, 19);
+    doc.setFontSize(5.5); doc.setFont("helvetica", "bold"); doc.setTextColor(148, 163, 184);
+    doc.text(safeText("PLATEFORME D'AUDIT DE S\xc9CURIT\xc9"), M, 25);
   }
 
-  // Right Confidential Copyright
-  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
-  doc.text(safeText(`© ${new Date().getFullYear()} Clarveon — Document Confidentiel`), PW - M, footerY + 11, { align: "right" });
+  // Right: Confidential Block with Lock Icon inside dark band
+  const lockIconX = PW - M - 52;
+  const lockIconY = bandH / 2;
+
+  // Thin vertical separator line inside the dark band
+  doc.setDrawColor(30, 58, 118);
+  doc.setLineWidth(0.35);
+  doc.line(lockIconX - 8, 7, lockIconX - 8, bandH - 7);
+
+  // Lock Icon (clean without circle)
+  if (lockIconPng) {
+    doc.addImage(lockIconPng, "PNG", lockIconX - 2, lockIconY - 2.8, 5.6, 5.6);
+  }
+
+  // Confidential text block on dark band (CONFIDENTIEL in pure white)
+  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+  doc.text("CONFIDENTIEL", lockIconX + 7, lockIconY - 2.2);
+  doc.setFontSize(5.5); doc.setFont("helvetica", "normal"); doc.setTextColor(203, 213, 225);
+  doc.text("Document strictement confidentiel", lockIconX + 7, lockIconY + 1.6);
+  doc.setFontSize(5); doc.setFont("helvetica", "normal"); doc.setTextColor(148, 163, 184);
+  doc.text(safeText("\xe0 usage interne uniquement"), lockIconX + 7, lockIconY + 5);
+
+  // ── 2. HERO TITLE SECTION ──
+  doc.setFontSize(26); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
+  doc.text("RAPPORT D'AUDIT", M, 56);
+
+  doc.setFontSize(26); doc.setFont("helvetica", "bold"); doc.setTextColor(29, 78, 216);
+  doc.text(safeText("DE S\xc9CURIT\xc9"), M, 66.5);
+
+  // Solid Blue Accent Underline Bar
+  doc.setFillColor(29, 78, 216);
+  doc.roundedRect(M, 72.5, 18, 1.2, 0.6, 0.6, "F");
+
+  // Subtitle
+  doc.setFontSize(8.5); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+  doc.text(safeText("\xc9valuation compl\xe8te de la posture de s\xe9curit\xe9"), M, 81.5);
+  doc.text(safeText("et des risques associ\xe9s au domaine audit\xe9."), M, 86);
+
+  // ── 3. TWO-COLUMN MAIN CONTENT ──
+  const colGap = 8;
+  const leftW = 90;
+  const rightW = CW - leftW - colGap; // 82mm
+  const leftX = M;
+  const rightX = M + leftW + colGap;
+
+  // ── LEFT COLUMN ──
+  // Hero Domain Block (clean Globe icon without circle)
+  if (globeIconPng) {
+    doc.addImage(globeIconPng, "PNG", leftX, 109, 8, 8);
+  }
+
+  doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 116, 139);
+  doc.text(safeText("DOMAINE AUDIT\xc9"), leftX + 11, 111);
+
+  doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
+  doc.text(domain, leftX + 11, 118);
+
+  // Divider Line below Domain
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(0.4);
+  doc.line(leftX, 125.5, leftX + leftW, 125.5);
+
+  // Date Formatting
+  const scanDateFormatted = `${scanDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} \xe0 ${scanDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+
+  // Duration Formatting
+  let scanDurationStr = "24 secondes";
+  if (scan.startedAt && scan.finishedAt) {
+    const ms = new Date(scan.finishedAt).getTime() - new Date(scan.startedAt).getTime();
+    const totalSeconds = Math.max(1, Math.round(ms / 1000));
+    if (totalSeconds < 60) {
+      scanDurationStr = `${totalSeconds} seconde${totalSeconds > 1 ? "s" : ""}`;
+    } else {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      scanDurationStr = secs > 0 ? `${mins} min ${secs} s` : `${mins} min`;
+    }
+  }
+
+  // ISO 27001 Text
+  const isoSatStr = isoCompliance
+    ? `${isoCompliance.compliancePercentage}% de contr\xf4les satisfaits (${isoCompliance.passedCount}/${isoCompliance.totalControls})`
+    : "33% de contr\xf4les satisfaits (1/3)";
+
+  // Analyzed elements (categories)
+  const hasWeb = issues.some((i) => i.category === "website");
+  const hasEmail = issues.some((i) => i.category === "email");
+  const hasDns = issues.some((i) => i.category === "dns");
+
+  let elemLine1 = "S\xe9curit\xe9 Web, Messagerie & Email,";
+  let elemLine2: string | null = "DNS et configuration du domaine.";
+
+  const activeCategories: string[] = [];
+  if (hasWeb) activeCategories.push("S\xe9curit\xe9 Web");
+  if (hasEmail) activeCategories.push("Messagerie & Email");
+  if (hasDns) activeCategories.push("DNS et configuration du domaine");
+
+  if (activeCategories.length === 1) {
+    elemLine1 = activeCategories[0];
+    elemLine2 = null;
+  } else if (activeCategories.length === 2) {
+    elemLine1 = `${activeCategories[0]},`;
+    elemLine2 = `${activeCategories[1]}.`;
+  }
+
+  const auditTypeStr = scan.type === "CUSTOM" ? "Audit personnalis\xe9" : "Audit complet";
+
+  // Meta Specifications Items
+  const metaList = [
+    {
+      icon: briefcaseIconPng,
+      label: "TYPE D'AUDIT",
+      val1: auditTypeStr,
+      val2: null,
+      baseY: 133,
+    },
+    {
+      icon: calendarIconPng,
+      label: "DATE DE L'AUDIT",
+      val1: scanDateFormatted,
+      val2: null,
+      baseY: 154,
+    },
+    {
+      icon: clockIconPng,
+      label: "DUR\xc9E DU SCAN",
+      val1: scanDurationStr,
+      val2: null,
+      baseY: 175,
+    },
+    {
+      icon: crosshairIconPng,
+      label: "\xc9L\xc9MENTS ANALYS\xc9S",
+      val1: elemLine1,
+      val2: elemLine2,
+      baseY: 196,
+    },
+    {
+      icon: shieldCheckIconPng,
+      label: "R\xc9F\xc9RENTIEL",
+      val1: "ISO/IEC 27001:2022",
+      val2: isoSatStr,
+      baseY: 219,
+    },
+  ];
+
+  metaList.forEach((item) => {
+    // Clean icon without circle
+    if (item.icon) {
+      doc.addImage(item.icon, "PNG", leftX, item.baseY + 1.8, 5.5, 5.5);
+    }
+
+    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 116, 139);
+    doc.text(safeText(item.label), leftX + 9, item.baseY + 3);
+
+    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
+    doc.text(safeText(item.val1), leftX + 9, item.baseY + 8);
+
+    if (item.val2) {
+      doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+      doc.text(safeText(item.val2), leftX + 9, item.baseY + 12.5);
+    }
+  });
+
+  // ── RIGHT COLUMN: SUMMARY SCORE CARD ──
+  const cardW = rightW;
+  const cardH = 146;
+  const cardY = 104;
+  const cardCenterX = rightX + cardW / 2;
+
+  // Outer Container
+  doc.setFillColor(...C.white);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.35);
+  doc.roundedRect(rightX, cardY, cardW, cardH, 4, 4, "FD");
+
+  // Section 1: Score Global
+  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 116, 139);
+  doc.text("SCORE GLOBAL", cardCenterX, cardY + 12, { align: "center" });
+
+  // Big Score + "/ 100" aligned
+  doc.setFontSize(38); doc.setFont("helvetica", "bold");
+  const numScoreW = doc.getTextWidth(`${score}`);
+  doc.setFontSize(13); doc.setFont("helvetica", "bold");
+  const denomW = doc.getTextWidth(" / 100");
+  const combinedScoreW = numScoreW + denomW;
+  const scoreStartX = cardCenterX - combinedScoreW / 2;
+
+  doc.setFontSize(38); doc.setFont("helvetica", "bold"); doc.setTextColor(29, 78, 216);
+  doc.text(`${score}`, scoreStartX, cardY + 29);
+
+  doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 116, 139);
+  doc.text(" / 100", scoreStartX + numScoreW, cardY + 29);
+
+  // Horizontal Progress Bar
+  const barW = 56;
+  const barH = 2.4;
+  const barX = cardCenterX - barW / 2;
+  const barY = cardY + 34;
+
+  doc.setFillColor(241, 245, 249);
+  doc.roundedRect(barX, barY, barW, barH, 1.2, 1.2, "F");
+
+  const filledBarW = Math.max(2.4, barW * Math.min(1, Math.max(0, score / 100)));
+  doc.setFillColor(29, 78, 216);
+  doc.roundedRect(barX, barY, filledBarW, barH, 1.2, 1.2, "F");
+
+  // Section 2: Grade
+  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 116, 139);
+  doc.text("GRADE", cardCenterX, cardY + 49, { align: "center" });
+
+  doc.setFontSize(34); doc.setFont("helvetica", "bold"); doc.setTextColor(29, 78, 216);
+  doc.text(`${grade}`, cardCenterX, cardY + 66, { align: "center" });
+
+  // Severity Level Badge Pill
+  const badgeW = 46;
+  const badgeH = 7.5;
+  const badgeX = cardCenterX - badgeW / 2;
+  const badgeY = cardY + 72;
+
+  const badgeBg: [number, number, number] =
+    scoreLevel === "Critique"
+      ? [254, 226, 226]
+      : scoreLevel === "\xc9lev\xe9"
+      ? [255, 237, 213]
+      : scoreLevel === "Mod\xe9r\xe9"
+      ? [254, 243, 199]
+      : [220, 252, 231];
+
+  const badgeFg: [number, number, number] =
+    scoreLevel === "Critique"
+      ? [220, 38, 38]
+      : scoreLevel === "\xc9lev\xe9"
+      ? [194, 65, 12]
+      : scoreLevel === "Mod\xe9r\xe9"
+      ? [180, 83, 9]
+      : [21, 128, 61];
+
+  doc.setFillColor(...badgeBg);
+  doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 2, 2, "F");
+
+  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...badgeFg);
+  doc.text(safeText(`NIVEAU : ${scoreLevel.toUpperCase()}`), cardCenterX, badgeY + 5.2, { align: "center" });
+
+  // Section 3: Répartition des vulnérabilités
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(0.35);
+  doc.line(rightX + 6, cardY + 89, rightX + cardW - 6, cardY + 89);
+
+  doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 116, 139);
+  doc.text(safeText("R\xc9PARTITION DES VULN\xc9RABILIT\xc9S"), cardCenterX, cardY + 97, { align: "center" });
+
+  const col4W = (cardW - 8) / 4;
+  const col4StartX = rightX + 4;
+
+  // 1. Critique
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(220, 38, 38);
+  doc.text(`${criticalCount}`, col4StartX + col4W * 0.5, cardY + 112, { align: "center" });
+  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+  doc.text("Critique", col4StartX + col4W * 0.5, cardY + 118.5, { align: "center" });
+
+  // 2. Élevé
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(234, 88, 12);
+  doc.text(`${highCount}`, col4StartX + col4W * 1.5, cardY + 112, { align: "center" });
+  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+  doc.text(safeText("\xc9lev\xe9"), col4StartX + col4W * 1.5, cardY + 118.5, { align: "center" });
+
+  // 3. Moyen
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(217, 119, 6);
+  doc.text(`${mediumCount}`, col4StartX + col4W * 2.5, cardY + 112, { align: "center" });
+  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+  doc.text("Moyen", col4StartX + col4W * 2.5, cardY + 118.5, { align: "center" });
+
+  // 4. Faible
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(5, 150, 105);
+  doc.text(`${lowCount}`, col4StartX + col4W * 3.5, cardY + 112, { align: "center" });
+  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+  doc.text("Faible", col4StartX + col4W * 3.5, cardY + 118.5, { align: "center" });
+
+  // ── 4. FOOTER (BOTTOM OF COVER PAGE) ──
+  const footerLineY = 280;
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.35);
+  doc.line(M, footerLineY, PW - M, footerLineY);
+
+  if (shieldFooterPng) {
+    doc.addImage(shieldFooterPng, "PNG", M, footerLineY + 3.2, 4, 4);
+  }
+
+  doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+  doc.text(safeText(`\xa9 ${new Date().getFullYear()} Clarveon \x97 Tous droits r\xe9serv\xe9s`), M + 5.5, footerLineY + 6.2);
+
+  const scanRefSuffix = scan.id ? scan.id.substring(0, 8).toUpperCase() : "001";
+  const reportRefId = `RAPPORT N\xb0 CLV-${scanDate.getFullYear()}-${String(scanDate.getMonth() + 1).padStart(2, "0")}-${String(scanDate.getDate()).padStart(2, "0")}-${scanRefSuffix}`;
+  doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+  doc.text(safeText(reportRefId), PW - M, footerLineY + 6.2, { align: "right" });
 
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -498,423 +791,616 @@ export async function generateClarveonPDF(
   doc.addPage();
   currentPage = 2;
   drawPageHeader();
-  y = CONTENT_TOP + 4;
+  y = CONTENT_TOP + 8;
 
-  doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText("Table des Mati\xe8res"), M, y); y += 4;
-  doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-  doc.text(safeText(`Audit d'infrastructure — ${domain} — ${scanDate.toLocaleDateString("fr-FR")}`), M, y + 4); y += 10;
-  hRule();
+  // ── TOC Header ──
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+  doc.text(safeText("TABLE DES MATI\xc8RES"), M, y); y += 2;
+  thinRule(3, 6);
 
-  const tocItems = [
-    { num: "01", title: safeText("R\xe9sum\xe9 Ex\xe9cutif"), page: 3 },
-    { num: "02", title: safeText("D\xe9tail des Vuln\xe9rabilit\xe9s & R\xe9f\xe9rences OWASP / CVE"), page: 4 },
-    { num: "03", title: safeText("Matrice de Conformit\xe9 ISO/IEC 27001:2022"), page: issues.length > 5 ? 6 : 5 },
-    { num: "04", title: safeText("Conclusion & Priorit\xe9s de Rem\xe9diation"), page: issues.length > 8 ? 8 : 6 },
-  ];
+  doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+  doc.text(safeText(`Rapport d\x92audit de s\xe9curit\xe9 — ${domain} — ${scanDate.toLocaleDateString("fr-FR")}`), M, y);
+  y += 10;
 
-  tocItems.forEach((item, i) => {
-    checkPage(12);
-    if (i % 2 === 0) {
-      doc.setFillColor(...C.bg);
-      doc.rect(M, y - 5, CW, 9, "F");
-    }
-    doc.setFillColor(...C.navy);
-    doc.roundedRect(M, y - 4, 10, 7, 1, 1, "F");
-    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-    doc.text(item.num, M + 5, y, { align: "center" });
+  // ── TOC Entries ──
+  // Page estimates (static but realistic)
+  const p3 = 3;
+  const p4 = 4;
+  const pIso = issues.length > 8 ? 5 + Math.ceil(issues.length / 3) : 5;
+  const pConc = pIso + 1;
 
-    doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
-    doc.text(item.title, M + 14, y);
-
-    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accent);
-    doc.text(`p. ${item.page}`, PW - M, y, { align: "right" });
-
-    doc.setDrawColor(...C.border);
-    const titleW = doc.getTextWidth(item.title);
-    const pageW = doc.getTextWidth(`p. ${item.page}`);
-    const leaderStart = M + 14 + titleW + 4;
-    const leaderEnd = PW - M - pageW - 6;
-    for (let lx = leaderStart; lx < leaderEnd; lx += 3.5) {
-      doc.setFillColor(...C.borderDark);
-      doc.circle(lx, y - 1.5, 0.35, "F");
-    }
-    y += 12;
-  });
+  tocLine("01", safeText("Synth\xe8se de s\xe9curit\xe9"), p3);
+  tocLine("01.1", safeText("Vue d\x92ensemble & score global"), p3, 4);
+  tocLine("01.2", safeText("R\xe9partition des vuln\xe9rabilit\xe9s"), p3, 4);
+  tocLine("01.3", safeText("R\xe9sultats par outil"), p3, 4);
+  y += 3;
+  tocLine("02", safeText("Findings & vuln\xe9rabilit\xe9s d\xe9tect\xe9es"), p4);
+  if (issues.some(i => i.category === "website")) {
+    tocLine("02.1", safeText("S\xe9curit\xe9 Web"), p4, 4);
+  }
+  if (issues.some(i => i.category === "email")) {
+    tocLine("02.2", safeText("Messagerie & Email"), p4, 4);
+  }
+  if (issues.some(i => i.category === "dns")) {
+    tocLine("02.3", safeText("DNS & Domaine"), p4, 4);
+  }
+  y += 3;
+  if (isoCompliance && isoCompliance.totalControls > 0) {
+    tocLine("03", safeText("Conformit\xe9 ISO/IEC 27001:2022"), pIso);
+    y += 3;
+  }
+  tocLine(isoCompliance && isoCompliance.totalControls > 0 ? "04" : "03", safeText("Conclusion & Priorit\xe9s de rem\xe9diation"), pConc);
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ─── PAGE 3+: RÉSUMÉ EXÉCUTIF ───────────────────────────────────────────────
+  // ─── PAGE 3+: SYNTHÈSE DE SÉCURITÉ ─────────────────────────────────────────
   // ════════════════════════════════════════════════════════════════════════════
 
   newPage();
-  sectionTitle(safeText("01 \x97 R\xe9sum\xe9 Ex\xe9cutif"));
+  sectionHeader("01", "SYNTH\xc8SE DE S\xc9CURIT\xc9",
+    safeText(`Pr\xe9sentation du score global, de la distribution des vuln\xe9rabilit\xe9s et des principaux constats de l\x92audit r\xe9alis\xe9 sur le domaine ${domain}.`));
 
-  checkPage(42);
-  doc.setFillColor(...C.bg);
-  doc.setDrawColor(...C.border);
-  doc.roundedRect(M, y, CW, 38, 2, 2, "FD");
+  // ── 01.1 Score global ──
+  subSection(safeText("01.1  SCORE GLOBAL"));
 
-  const sc = { x: M + 20, y: y + 19 };
-  doc.setFillColor(...scoreColor);
-  doc.circle(sc.x, sc.y, 13, "F");
-  doc.setFillColor(...C.white);
-  doc.circle(sc.x, sc.y, 10.5, "F");
-  doc.setFontSize(15); doc.setFont("helvetica", "bold"); doc.setTextColor(...scoreColor);
-  doc.text(`${score}`, sc.x, sc.y + 2, { align: "center" });
-  doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-  doc.text("/100", sc.x, sc.y + 6.5, { align: "center" });
-  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(`Grade ${grade}`, sc.x, sc.y + 12, { align: "center" });
+  // Score display — typographic, no donut
+  checkPage(38);
 
-  const statsX = M + 42;
-  const statGap = (CW - 42) / 4;
-  const statItems = [
-    { label: "Domaine", value: domain },
-    { label: "Date scan", value: scanDate.toLocaleDateString("fr-FR") },
-    { label: "Vulnérabilités", value: `${issues.length} détectée(s)` },
+  // Score number
+  doc.setFontSize(36); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+  doc.text(`${score}`, M, y + 12);
+  const scoreNumW = doc.getTextWidth(`${score}`);
+  doc.setFontSize(14); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+  doc.text(" / 100", M + scoreNumW, y + 10);
+
+  // Grade and level on same line, right-aligned
+  doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accentText);
+  doc.text(`Grade ${grade}`, PW - M - 60, y + 8);
+
+  const levelFg: [number, number, number] =
+    scoreLevel === "Critique" ? C.critical :
+    scoreLevel === "\xc9lev\xe9" ? C.high :
+    scoreLevel === "Mod\xe9r\xe9" ? C.medium : [5, 150, 105];
+
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(...levelFg);
+  doc.text(safeText(`Risque : ${scoreLevel}`), PW - M - 60, y + 14);
+
+  y += 17;
+  thinRule(2, 5);
+
+  // Stats row: Domaine | Date | Vulnérabilités | Conformité ISO
+  const statCols = [
+    { label: "DOMAINE", value: domain },
+    { label: "DATE DE L'AUDIT", value: scanDate.toLocaleDateString("fr-FR") },
+    { label: safeText("VULN\xc9RABILIT\xc9S"), value: `${issues.length} d\xe9tect\xe9e${issues.length > 1 ? "s" : ""}` },
     { label: "ISO 27001", value: isoCompliance ? `${isoCompliance.compliancePercentage}%` : "N/A" },
   ];
-  statItems.forEach((s, i) => {
+  checkPage(14);
+  const statColW = CW / 4;
+  statCols.forEach((st, i) => {
     doc.setFontSize(6); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
-    doc.text(s.label.toUpperCase(), statsX + i * statGap, y + 10);
-    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    const vl = doc.splitTextToSize(s.value, statGap - 2);
-    vl.forEach((l: string, li: number) => doc.text(l, statsX + i * statGap, y + 16 + li * 4.5));
+    doc.text(safeText(st.label), M + i * statColW, y);
+    doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    doc.text(safeText(st.value), M + i * statColW, y + 5.5);
   });
-  y += 44;
+  y += 13;
+  thinRule(2, 6);
 
-  checkPage(38);
-  doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText("R\xe9partition des vuln\xe9rabilit\xe9s par niveau de s\xe9v\xe9rit\xe9"), M, y); y += 6;
+  // ── 01.2 Répartition des vulnérabilités ──
+  subSection(safeText("01.2  R\xc9PARTITION DES VULN\xc9RABILIT\xc9S"));
 
-  const totalIssues = issues.length || 1;
-  const barGroups = [
-    { label: "Critique", count: criticalCount, fg: C.critical, bg: C.criticalBg },
-    { label: safeText("\xc9LEV\xc9"), count: highCount, fg: C.high, bg: C.highBg },
-    { label: "Moyen", count: mediumCount, fg: C.medium, bg: C.mediumBg },
-    { label: "Faible", count: lowCount, fg: C.low, bg: C.lowBg },
+  doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+  doc.text(safeText(`L\x92audit a identifi\xe9 ${issues.length} vuln\xe9rabilit\xe9${issues.length > 1 ? "s" : ""} r\xe9parties comme suit :`), M, y); y += 7;
+
+  const totalIssues = Math.max(issues.length, 1);
+  const barGroups: Array<{ label: string; count: number; fg: [number, number, number] }> = [
+    { label: "CRITIQUE", count: criticalCount, fg: C.critical },
+    { label: safeText("\xc9LEV\xc9"), count: highCount, fg: C.high },
+    { label: "MOYEN", count: mediumCount, fg: C.medium },
+    { label: "FAIBLE", count: lowCount, fg: C.low },
   ];
-  const barMaxW = CW - 48;
+
+  const barLabelW = 24;
+  const barCountW = 12;
+  const barTrackW = CW - barLabelW - barCountW - 8;
 
   barGroups.forEach(bg_item => {
-    checkPage(8.5);
-    const barW = Math.max((bg_item.count / totalIssues) * barMaxW, bg_item.count > 0 ? 3 : 0);
-
-    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    checkPage(8);
+    // Label in bold black
+    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
     doc.text(bg_item.label, M, y + 0.5);
 
-    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...bg_item.fg);
-    doc.text(`${bg_item.count}`, M + 24, y + 0.5);
-
-    doc.setFillColor(...C.bgMid);
-    doc.roundedRect(M + 30, y - 3, barMaxW, 5, 1, 1, "F");
-
-    doc.setFillColor(...bg_item.fg);
-    if (barW > 0) doc.roundedRect(M + 30, y - 3, barW, 5, 1, 1, "F");
-
+    // Track
+    doc.setFillColor(...C.borderLight);
+    doc.rect(M + barLabelW, y - 2.5, barTrackW, 4, "F");
+    // Black fill bar
+    if (bg_item.count > 0) {
+      const fillW = Math.max(3, (bg_item.count / totalIssues) * barTrackW);
+      doc.setFillColor(...C.navy);
+      doc.rect(M + barLabelW, y - 2.5, fillW, 4, "F");
+    }
+    // Count in bold black
+    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    doc.text(`${bg_item.count}`, M + barLabelW + barTrackW + 4, y + 0.5);
     y += 8.5;
   });
 
   y += 4;
-  hRule();
+  thinRule(0, 6);
+
+  // ── 01.3 Résultats par outil ──
+  subSection(safeText("01.3  R\xc9SULTATS PAR OUTIL"));
+
+  if (issues.length > 0) {
+    // Build tool summary: group by tool, get count & max severity
+    const sevOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+    const toolMap: Map<string, { tool: string; category: string; count: number; maxSev: string }> = new Map();
+
+    issues.forEach(issue => {
+      const existing = toolMap.get(issue.toolSlug);
+      if (!existing) {
+        toolMap.set(issue.toolSlug, { tool: issue.tool, category: issue.category, count: 1, maxSev: issue.severity });
+      } else {
+        existing.count++;
+        if ((sevOrder[issue.severity] ?? 0) > (sevOrder[existing.maxSev] ?? 0)) {
+          existing.maxSev = issue.severity;
+        }
+      }
+    });
+
+    const toolRows = Array.from(toolMap.values()).sort((a, b) =>
+      (sevOrder[b.maxSev] ?? 0) - (sevOrder[a.maxSev] ?? 0)
+    );
+
+    // Table header
+    checkPage(12);
+    const tColTool = M;
+    const tColCat = M + 65;
+    const tColIssues = M + 115;
+    const tColStatus = M + 138;
+
+    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
+    doc.text("OUTIL", tColTool, y);
+    doc.text("CAT\xc9GORIE", tColCat, y);
+    doc.text("PROBL\xc8MES", tColIssues, y);
+    doc.text("STATUT", tColStatus, y);
+    y += 3;
+    thinRule(0, 4);
+
+    const catLabel = (cat: string) => {
+      if (cat === "website") return "S\xe9curit\xe9 Web";
+      if (cat === "email") return "Messagerie";
+      return "DNS";
+    };
+
+    const statusLabel = (maxSev: string): { text: string; color: [number, number, number] } => {
+      if (maxSev === "critical") return { text: "Critique", color: C.critical };
+      if (maxSev === "high") return { text: "\xc9lev\xe9", color: C.high };
+      if (maxSev === "medium") return { text: "Attention", color: C.medium };
+      return { text: "Faible", color: C.green };
+    };
+
+    toolRows.forEach((row, ri) => {
+      checkPage(9);
+      if (ri % 2 === 0) {
+        doc.setFillColor(...C.bg);
+        doc.rect(M, y - 2.5, CW, 8, "F");
+      }
+
+      const st = statusLabel(row.maxSev);
+
+      // Tool name
+      doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
+      const toolName = row.tool.length > 30 ? row.tool.substring(0, 27) + "..." : row.tool;
+      doc.text(safeText(toolName), tColTool, y + 1);
+
+      // Category
+      doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+      doc.text(safeText(catLabel(row.category)), tColCat, y + 1);
+
+      // Issue count
+      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(15, 23, 42);
+      doc.text(`${row.count}`, tColIssues + 6, y + 1, { align: "center" });
+
+      // Status — colored dot + text
+      doc.setFillColor(...st.color);
+      doc.circle(tColStatus + 1.2, y - 0.3, 1, "F");
+      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...st.color);
+      doc.text(safeText(st.text), tColStatus + 4, y + 1);
+
+      y += 8.5;
+    });
+
+    thinRule(3, 5);
+  } else {
+    // All tools passed
+    doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(5, 150, 105);
+    doc.text(safeText("Tous les outils ont pass\xe9 l\x92ensemble des v\xe9rifications."), M, y);
+    y += 8;
+    thinRule(2, 6);
+  }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ─── PAGE 4+: VULNERABILITIES DETAIL ────────────────────────────────────────
+  // ─── FINDINGS & VULNÉRABILITÉS ───────────────────────────────────────────────
   // ════════════════════════════════════════════════════════════════════════════
 
-  sectionTitle(safeText("02 \x97 D\xe9tail des Vuln\xe9rabilit\xe9s"));
+  newPage();
+  sectionHeader("02", "FINDINGS & VULN\xc9RABILIT\xc9S D\xc9TECT\xc9ES",
+    safeText(`Analyse d\xe9taill\xe9e des ${issues.length} vuln\xe9rabilit\xe9${issues.length > 1 ? "s" : ""} identifi\xe9e${issues.length > 1 ? "s" : ""} lors du scan du domaine ${domain}.`));
 
   if (issues.length === 0) {
     checkPage(14);
-    doc.setFillColor(...C.greenBg);
-    doc.setDrawColor(...C.greenBd);
-    doc.roundedRect(M, y, CW, 11, 1.5, 1.5, "FD");
-    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.green);
-    doc.text(safeText("\u2713  Aucune vuln\xe9rabilit\xe9 d\xe9tect\xe9e lors de cet audit."), M + 5, y + 7);
-    y += 16;
+    y += 4;
+    doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(5, 150, 105);
+    doc.text(safeText("Aucune vuln\xe9rabilit\xe9 d\xe9tect\xe9e lors de cet audit."), M, y);
+    y += 5;
+    doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+    doc.text(safeText("Le domaine audit\xe9 a pass\xe9 l\x92ensemble des contr\xf4les de s\xe9curit\xe9 analys\xe9s."), M, y);
+    y += 10;
   } else {
-    issues.forEach((issue, idx) => {
-      checkPage(50);
-      const sev = severityColors(issue.severity);
-      const impactInfo = getSecurityImpact(issue.toolSlug);
+    // Group by category
+    const categories: Array<{ key: "website" | "email" | "dns"; num: string; label: string }> = [
+      { key: "website", num: "02.1", label: "S\xc9CURIT\xc9 WEB" },
+      { key: "email", num: "02.2", label: "MESSAGERIE & EMAIL" },
+      { key: "dns", num: "02.3", label: "DNS & DOMAINE" },
+    ];
 
-      doc.setFillColor(...sev.bg);
-      doc.setDrawColor(...sev.bd);
-      doc.roundedRect(M, y, CW, 7.5, 1.5, 1.5, "FD");
-      doc.setFillColor(...sev.fg);
-      doc.roundedRect(M, y, 3, 7.5, 1.5, 0, "F");
-      doc.rect(M + 1.5, y, 1.5, 7.5, "F");
+    let findingIndex = 0;
 
-      doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
-      doc.text(`#${String(idx + 1).padStart(2, "0")}`, M + 6, y + 5);
-      doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-      const titleTruncated = issue.title.length > 70 ? issue.title.substring(0, 67) + "..." : issue.title;
-      doc.text(safeText(titleTruncated), M + 16, y + 5);
-      drawBadge(sev.label, sev.fg, sev.bg, PW - M - 24, y + 5);
-      y += 9.5;
+    categories.forEach(cat => {
+      const catIssues = issues.filter(i => i.category === cat.key);
+      if (catIssues.length === 0) return;
 
-      doc.setFillColor(...C.bg);
-      doc.rect(M, y, CW, 5, "F");
-      doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-      doc.text(safeText(`Outil : ${issue.tool}  |  Cat\xe9gorie : ${issue.category.toUpperCase()}`), M + 4, y + 3.5);
-      y += 7;
+      subSection(safeText(`${cat.num}  ${cat.label}`));
 
-      checkPage(12);
-      doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-      doc.text("Description", M, y); y += 4.5;
-      bodyText(safeText(impactInfo.description || issue.description), 7.5, C.slate, 0);
-      y += 2;
+      catIssues.forEach((issue) => {
+        findingIndex++;
+        const sev = severityColors(issue.severity);
+        const impactInfo = getSecurityImpact(issue.toolSlug);
 
-      if (impactInfo.businessImpact.length > 0) {
-        const bizH = impactInfo.businessImpact.length * 5 + 8;
-        checkPage(bizH + 3);
-        doc.setFillColor(...C.highBg);
-        doc.setDrawColor(...C.highBd);
-        doc.roundedRect(M, y, CW, bizH, 1.5, 1.5, "FD");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.high);
-        doc.text(safeText("Impact M\xe9tier"), M + 4, y + 5.5);
-        y += 8;
-        impactInfo.businessImpact.forEach((item) => {
-          doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.high);
-          const bLines = doc.splitTextToSize(safeText(`- ${item}`), CW - 10);
-          bLines.forEach((bl: string) => {
-            doc.text(bl, M + 4, y);
-            y += 4;
-          });
+        // ── Finding header — visually distinct, purely typographic ──
+        checkPage(60);
+        y += 6;
+
+        // Finding number (left) + Severity (right) — on same baseline
+        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
+        doc.text(`FINDING ${String(findingIndex).padStart(2, "0")}`, M, y);
+        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...sev.fg);
+        doc.text(safeText(sev.label), PW - M, y, { align: "right" });
+        y += 6;
+
+        // Title — large bold, wrapped within margins (reserve 0 right since severity is on row above)
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+        const titleLines = doc.splitTextToSize(safeText(issue.title), CW);
+        // Show max 2 lines to keep it compact
+        titleLines.slice(0, 2).forEach((tl: string) => {
+          checkPage(8);
+          doc.text(tl, M, y);
+          y += 7;
         });
-        y += 3;
-      }
 
-      checkPage(30);
-      doc.setFillColor(...C.bg);
-      doc.setDrawColor(...C.border);
-      doc.roundedRect(M, y, CW, 25, 1.5, 1.5, "FD");
-      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-      doc.text(safeText("Impact Technique \x97 Mod\xe8le CIA"), M + 4, y + 5.5);
-      y += 8;
+        // Tool & category line — keywords in bold black
+        doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+        doc.text("Outil :", M, y);
+        const outilW = doc.getTextWidth("Outil : ");
+        doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+        doc.text(safeText(issue.tool), M + outilW, y);
+        const toolValW = doc.getTextWidth(safeText(issue.tool));
 
-      const ciaItems = [
-        { name: safeText("Confidentialit\xe9"), score: impactInfo.technicalImpact.confidentiality },
-        { name: safeText("Int\xe9grit\xe9"), score: impactInfo.technicalImpact.integrity },
-        { name: safeText("Disponibilit\xe9"), score: impactInfo.technicalImpact.availability },
-      ];
+        const sepX = M + outilW + toolValW + 3;
+        doc.setTextColor(...C.borderDark);
+        doc.text("|", sepX, y);
 
-      ciaItems.forEach((cia) => {
-        const info = getCiaCategoryInfo(cia.score);
-        const badgeFg: [number, number, number] =
-          info.level === "Faible" ? C.green :
-            info.level === safeText("Mod\xe9r\xe9") ? C.high : C.critical;
-        const badgeBg: [number, number, number] =
-          info.level === "Faible" ? C.greenBg :
-            info.level === safeText("Mod\xe9r\xe9") ? C.highBg : C.criticalBg;
-
-        doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-        doc.text(cia.name, M + 4, y + 2.5);
-        drawBadge(safeText(`${info.level}`), badgeFg, badgeBg, M + 36, y + 2.5, 18, 4.5);
-
-        const barX = M + 60;
-        const barW = 80;
-        doc.setFillColor(...C.bgMid);
-        doc.roundedRect(barX, y, barW, 3, 1, 1, "F");
-        const fillW = (info.percentage / 100) * barW;
-        doc.setFillColor(...badgeFg);
-        if (fillW > 0) doc.roundedRect(barX, y, fillW, 3, 1, 1, "F");
-        doc.setFontSize(6); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
-        doc.text(`${info.percentage}%`, barX + barW + 3, y + 2.5);
-
+        const catX = sepX + 4;
+        doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+        doc.text(safeText("Cat\xe9gorie :"), catX, y);
+        const catW = doc.getTextWidth(safeText("Cat\xe9gorie : "));
+        doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+        doc.text(safeText(issue.category.toUpperCase()), catX + catW, y);
         y += 5;
-      });
-      y += 3;
+        thinRule(0, 5);
 
-      if (issue.owasp && issue.owasp.length > 0) {
-        const owaspBlockH = issue.owasp.length * 12 + 7;
-        checkPage(owaspBlockH + 3);
-        doc.setFillColor(...C.purpleBg);
-        doc.setDrawColor(...C.purpleBd);
-        doc.roundedRect(M, y, CW, owaspBlockH, 1.5, 1.5, "FD");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.purple);
-        doc.text(safeText("OWASP Top 10 2021"), M + 4, y + 5.5);
-        y += 7;
-        issue.owasp.forEach(o => {
-          doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.purple);
-          doc.text(`[${o.code}]`, M + 4, y);
-          doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
-          doc.text(safeText(o.title), M + 22, y);
+        // ── DESCRIPTION ──
+        fieldLabel("DESCRIPTION");
+        bodyText(safeText(impactInfo.description || issue.description), 8, C.slate);
+        y += 3;
+
+        // ── IMPACT MÉTIER ──
+        if (impactInfo.businessImpact.length > 0) {
+          checkPage(8 + impactInfo.businessImpact.length * 5);
+          fieldLabel("IMPACT M\xc9TIER");
+          doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+          impactInfo.businessImpact.forEach(item => {
+            checkPage(5);
+            const bLines = doc.splitTextToSize(safeText(`\x96  ${item}`), CW - 4);
+            bLines.forEach((bl: string) => { doc.text(bl, M + 2, y); y += 4.5; });
+          });
+          y += 3;
+        }
+
+        // ── IMPACT TECHNIQUE — MODÈLE CIA ──
+        checkPage(28);
+        fieldLabel("IMPACT TECHNIQUE \x97 MOD\xc8LE CIA");
+
+        const ciaItems = [
+          { name: "Confidentialit\xe9", score: impactInfo.technicalImpact.confidentiality },
+          { name: "Int\xe9grit\xe9", score: impactInfo.technicalImpact.integrity },
+          { name: "Disponibilit\xe9", score: impactInfo.technicalImpact.availability },
+        ];
+
+        const ciaBarX = M + 30;
+        const ciaBarW = 60;
+
+        ciaItems.forEach(cia => {
+          const info = getCiaCategoryInfo(cia.score);
+
+          checkPage(7);
+          doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accentText);
+          doc.text(safeText(cia.name), M, y + 1);
+
+          doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+          doc.text(safeText(info.level), M + 30, y + 1);
+
+          // Small bar — black fill
+          doc.setFillColor(...C.borderLight);
+          doc.rect(ciaBarX + 15, y - 1.5, ciaBarW, 3, "F");
+          const fillW = Math.max(1.5, (info.percentage / 100) * ciaBarW);
+          doc.setFillColor(...C.navy);
+          doc.rect(ciaBarX + 15, y - 1.5, fillW, 3, "F");
+          doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+          doc.text(`${info.percentage}%`, ciaBarX + 15 + ciaBarW + 3, y + 1);
+          y += 7;
+        });
+        y += 2;
+
+        // ── RÉFÉRENCES OWASP ──
+        if (issue.owasp && issue.owasp.length > 0) {
+          checkPage(10 + issue.owasp.length * 9);
+          fieldLabel("R\xc9F\xc9RENCES OWASP");
+          issue.owasp.forEach(o => {
+            checkPage(9);
+            doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accentText);
+            doc.text(`[${o.code}]`, M, y);
+            doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
+            // Wrap OWASP title within remaining width
+            const owTitleLines = doc.splitTextToSize(safeText(o.title), CW - 18);
+            owTitleLines.slice(0, 1).forEach((l: string) => { doc.text(l, M + 16, y); });
+            y += 4.5;
+            doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+            const owLines = doc.splitTextToSize(safeText(o.description), CW - 4);
+            owLines.slice(0, 2).forEach((l: string) => { checkPage(5); doc.text(l, M + 2, y); y += 4; });
+          });
+          y += 3;
+        }
+
+        // ── RÉFÉRENCE CVE ──
+        checkPage(12);
+        fieldLabel("R\xc9F\xc9RENCE CVE / CVSS");
+        if (issue.cve) {
+          doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+          doc.text(`${issue.cve.cveId}`, M, y);
+          doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+          doc.text(`   CVSS ${issue.cve.cvssScore}  —  ${issue.cve.severity}`, M + doc.getTextWidth(`${issue.cve.cveId}`), y);
+          y += 4.5;
+          if (issue.cve.url) {
+            doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.accent);
+            // Truncate URL to fit within margins
+            const maxUrlW = CW;
+            let displayUrl = issue.cve.url;
+            while (displayUrl.length > 10 && doc.getTextWidth(displayUrl) > maxUrlW) {
+              displayUrl = displayUrl.slice(0, -4) + "...";
+            }
+            doc.text(displayUrl, M, y); y += 4;
+          }
+          y += 3;
+        } else {
+          doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+          doc.text(safeText("Non applicable \x97 D\xe9faut de configuration (aucune r\xe9f\xe9rence CVE logicielle)"), M, y);
           y += 5;
-          const owLines = doc.splitTextToSize(safeText(o.description), CW - 10);
-          doc.setFontSize(6); doc.setTextColor(...C.slate);
-          owLines.slice(0, 2).forEach((l: string) => { doc.text(l, M + 4, y); y += 4; });
-        });
-        y += 3;
-      }
+        }
 
-      checkPage(14);
-      if (issue.cve) {
-        doc.setFillColor(...C.criticalBg);
-        doc.setDrawColor(...C.criticalBd);
-        doc.roundedRect(M, y, CW, 15, 1.5, 1.5, "FD");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.critical);
-        doc.text(safeText("R\xe9f\xe9rence CVE / CVSS"), M + 4, y + 5.5);
-        doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
-        doc.text(`${issue.cve.cveId}`, M + 4, y + 10.5);
-        drawBadge(`CVSS ${issue.cve.cvssScore}`, C.critical, C.criticalBg, M + 36, y + 10.5, 20, 5);
-        drawBadge(issue.cve.severity, C.critical, C.criticalBg, M + 60, y + 10.5, 20, 5);
-        doc.setFontSize(5.5); doc.setTextColor(...C.accent);
-        doc.text(issue.cve.url, M + 4, y + 14);
-        y += 18;
-      } else {
-        doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
-        doc.text(safeText("Aucune r\xe9f\xe9rence CVE disponible pour cette vuln\xe9rabilit\xe9 de configuration."), M, y + 3.5);
-        y += 8;
-      }
+        // ── RECOMMANDATION ──
+        const recText = impactInfo.recommendation || issue.fix;
+        if (recText) {
+          checkPage(10);
+          fieldLabel("RECOMMANDATION");
+          bodyText(safeText(recText), 8, C.slate);
+          y += 2;
+        }
 
-      const recText = impactInfo.recommendation || issue.fix;
-      if (recText) {
-        const recLines = doc.splitTextToSize(safeText(recText), CW - 10);
-        const recH = recLines.length * 4 + 8;
-        checkPage(recH + 3);
-        doc.setFillColor(...C.accentBg);
-        doc.setDrawColor(...C.accent);
-        doc.roundedRect(M, y, CW, recH, 1.5, 1.5, "FD");
-        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.accent);
-        doc.text(safeText("Recommandation G\xe9n\xe9rale"), M + 4, y + 5);
-        y += 8;
-        doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navyMid);
-        recLines.forEach((fl: string) => {
-          doc.text(fl, M + 4, y);
-          y += 4;
-        });
-        y += 3;
-      }
-
-      y += 2;
-      hRule();
+        // Separator between findings
+        thinRule(4, 7);
+      });
     });
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ─── ISO 27001 COMPLIANCE MATRIX ────────────────────────────────────────────
+  // ─── ISO 27001 COMPLIANCE ───────────────────────────────────────────────────
   // ════════════════════════════════════════════════════════════════════════════
 
   if (isoCompliance && isoCompliance.totalControls > 0) {
     newPage();
-    sectionTitle(safeText("03 \x97 Matrice de Conformit\xe9 ISO/IEC 27001:2022"));
+    sectionHeader("03", "CONFORMIT\xc9 ISO/IEC 27001:2022",
+      safeText(`\xc9valuation de la conformit\xe9 aux contr\xf4les de la norme ISO/IEC 27001:2022 (Annexe A) en fonction des r\xe9sultats du scan.`));
 
-    checkPage(12);
+    // ── Compliance summary bar ──
+    checkPage(18);
+    subSection(safeText("03.1  TAUX DE CONFORMIT\xc9 GLOBAL"));
+
     const isoBarW = CW;
     const isoBarFill = (isoCompliance.passedCount / isoCompliance.totalControls) * isoBarW;
-    doc.setFillColor(...C.bgMid);
-    doc.roundedRect(M, y, isoBarW, 4.5, 1, 1, "F");
-    doc.setFillColor(...C.green);
-    doc.roundedRect(M, y, isoBarFill, 4.5, 1, 1, "F");
-    y += 6.5;
-    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text(safeText(`${isoCompliance.compliancePercentage}% de conformit\xe9 \x97 ${isoCompliance.passedCount} conformes / ${isoCompliance.totalControls} contr\xf4les analys\xe9s`), M, y);
-    y += 9;
+    doc.setFillColor(...C.borderLight);
+    doc.rect(M, y, isoBarW, 5, "F");
+    doc.setFillColor(5, 150, 105);
+    if (isoBarFill > 0) doc.rect(M, y, isoBarFill, 5, "F");
+    y += 8;
 
+    doc.setFontSize(8.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
+    doc.text(safeText(`${isoCompliance.compliancePercentage}% de conformit\xe9`), M, y);
+    doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+    doc.text(safeText(`  \x97  ${isoCompliance.passedCount} contr\xf4le${isoCompliance.passedCount > 1 ? "s" : ""} conforme${isoCompliance.passedCount > 1 ? "s" : ""} sur ${isoCompliance.totalControls} analys\xe9s`), M + doc.getTextWidth(`${isoCompliance.compliancePercentage}% de conformit\xe9`), y);
+    y += 10;
+    thinRule(2, 6);
+
+    // ── Detailed control list ──
+    subSection(safeText("03.2  D\xc9TAIL DES CONTR\xd4LES ANALYS\xc9S"));
+
+    // Table header
     checkPage(10);
-    doc.setFillColor(...C.navy);
-    doc.rect(M, y, CW, 6.5, "F");
-    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.white);
-    const colCode = M + 2, colStatus = M + 22, colName = M + 46, colRec = M + 102;
-    doc.text("Code", colCode, y + 4.5);
-    doc.text("Statut", colStatus, y + 4.5);
-    doc.text(safeText("Contr\xf4le"), colName, y + 4.5);
-    doc.text(safeText("Recommandation"), colRec, y + 4.5);
-    y += 6.5;
+    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
+    const colCode = M;
+    const colStatus = M + 30;
+    const colName = M + 54;
+    const colRec = M + 108;
+    doc.text("CODE", colCode, y);
+    doc.text("STATUT", colStatus, y);
+    doc.text("CONTR\xd4LE", colName, y);
+    doc.text("RECOMMANDATION", colRec, y);
+    y += 3;
+    thinRule(0, 4);
 
     isoCompliance.controls.forEach((ctrl, ri) => {
-      const rowH = 8.5;
-      checkPage(rowH + 2);
+      checkPage(10);
+      const isConform = ctrl.status === "CONFORME";
+      const sColor: [number, number, number] = isConform ? [5, 150, 105] : C.critical;
+
+      // Alternating light bg
       if (ri % 2 === 0) {
         doc.setFillColor(...C.bg);
-        doc.rect(M, y, CW, rowH, "F");
+        doc.rect(M, y - 2.5, CW, 8.5, "F");
       }
-      const sColor: [number, number, number] = ctrl.status === "CONFORME" ? C.green : C.critical;
-      const sBg: [number, number, number] = ctrl.status === "CONFORME" ? C.greenBg : C.criticalBg;
 
-      doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
-      doc.text(ctrl.code, colCode, y + 5.5);
-      drawBadge(ctrl.status === "CONFORME" ? "CONFORME" : "NON CONF.", sColor, sBg, colStatus, y + 5.5, 20, 5);
-      doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
-      const nameStr = safeText(ctrl.name.length > 30 ? ctrl.name.substring(0, 27) + "..." : ctrl.name);
-      doc.text(nameStr, colName, y + 5.5);
-      const recStr = safeText((ctrl.status === "NON_CONFORME" && ctrl.recommendation)
-        ? (ctrl.recommendation.length > 40 ? ctrl.recommendation.substring(0, 37) + "..." : ctrl.recommendation)
-        : "\x97");
-      doc.setTextColor(...C.muted);
-      doc.text(recStr, colRec, y + 5.5);
-      y += rowH;
+      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
+      doc.text(ctrl.code, colCode, y + 1);
+
+      // Minimal status text
+      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...sColor);
+      doc.text(isConform ? "CONFORME" : "NON CONFORME", colStatus, y + 1);
+
+      doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.navy);
+      const nameStr = safeText(ctrl.name.length > 28 ? ctrl.name.substring(0, 25) + "..." : ctrl.name);
+      doc.text(nameStr, colName, y + 1);
+
+      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+      let recStr = safeText((!isConform && ctrl.recommendation) ? ctrl.recommendation : "\x97");
+      const maxRecW = PW - M - colRec - 2;
+      if (doc.getTextWidth(recStr) > maxRecW) {
+        while (recStr.length > 5 && doc.getTextWidth(recStr + "...") > maxRecW) {
+          recStr = recStr.slice(0, -1);
+        }
+        recStr += "...";
+      }
+      doc.text(recStr, colRec, y + 1);
+      y += 9;
     });
-    y += 5;
-    hRule();
+
+    thinRule(4, 6);
+
+    // ── ISO Recommendations (if any non-conformities) ──
+    if (isoCompliance.recommendations.length > 0) {
+      checkPage(14);
+      subSection(safeText("03.3  RECOMMANDATIONS ISO 27001"));
+      doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+      isoCompliance.recommendations.forEach(rec => {
+        checkPage(10);
+        const rLines = doc.splitTextToSize(safeText(rec), CW - 4);
+        rLines.forEach((l: string) => { checkPage(5); doc.text(l, M + 2, y); y += 4.5; });
+        y += 2;
+      });
+      thinRule(3, 6);
+    }
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ─── CONCLUSION & REMEDIATION PRIORITIES ────────────────────────────────────
+  // ─── CONCLUSION & PRIORITÉS DE REMÉDIATION ──────────────────────────────────
   // ════════════════════════════════════════════════════════════════════════════
 
-  checkPage(55);
-  sectionTitle(safeText("04 \x97 Conclusion & Priorit\xe9s de Rem\xe9diation"));
+  checkPage(50);
+  const sectionNum = (isoCompliance && isoCompliance.totalControls > 0) ? "04" : "03";
+  sectionHeader(sectionNum, "CONCLUSION & PRIORIT\xc9S DE R\xc9M\xc9DIATION",
+    safeText(`Synth\xe8se du niveau de risque global et actions de rem\xe9diation \xe0 engager en priorit\xe9.`));
 
-  const overallRisk = criticalCount > 0 ? { label: "CRITIQUE", color: C.critical, bg: C.criticalBg, bd: C.criticalBd }
-    : highCount > 0 ? { label: safeText("\xc9LEV\xc9"), color: C.high, bg: C.highBg, bd: C.highBd }
-      : mediumCount > 0 ? { label: "MOYEN", color: C.medium, bg: C.mediumBg, bd: C.mediumBd }
-        : { label: "FAIBLE", color: C.low, bg: C.lowBg, bd: C.lowBd };
+  // ── Overall risk level (typographic, no big colored box) ──
+  const overallRisk = criticalCount > 0 ? { label: "CRITIQUE", color: C.critical }
+    : highCount > 0 ? { label: "\xc9LEV\xc9", color: C.high }
+    : mediumCount > 0 ? { label: "MOYEN", color: C.medium }
+    : { label: "FAIBLE", color: C.muted };
 
-  checkPage(18);
-  doc.setFillColor(...overallRisk.bg);
-  doc.setDrawColor(...overallRisk.bd);
-  doc.roundedRect(M, y, CW, 13, 1.5, 1.5, "FD");
-  doc.setFillColor(...overallRisk.color);
-  doc.roundedRect(M, y, 3, 13, 1, 0, "F");
-  doc.rect(M + 1.5, y, 1.5, 13, "F");
+  checkPage(22);
+  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
+  doc.text("NIVEAU DE RISQUE GLOBAL", M, y); y += 5;
+  doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...overallRisk.color);
+  doc.text(safeText(overallRisk.label), M, y); y += 5;
+  doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+  doc.text(safeText(`Score de s\xe9curit\xe9 : ${score}/100 (Grade ${grade})   |   ${issues.length} vuln\xe9rabilit\xe9(s) d\xe9tect\xe9e(s)`), M, y);
+  y += 8;
+  thinRule(2, 6);
 
-  doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...overallRisk.color);
-  doc.text(safeText(`Niveau de Risque Global : ${overallRisk.label}`), M + 7, y + 5.5);
-  doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
-  doc.text(safeText(`Score de s\xe9curit\xe9 : ${score}/100 (Grade ${grade})  |  ${issues.length} vuln\xe9rabilit\xe9(s) d\xe9tect\xe9e(s)`), M + 7, y + 10);
-  y += 18;
+  // ── Priority actions ──
+  subSection(safeText("ACTIONS PRIORITAIRES DE R\xc9M\xc9DIATION"));
 
-  const priorities = [
-    criticalCount > 0 ? `Traiter imm\xe9diatement les ${criticalCount} vuln\xe9rabilit\xe9(s) CRITIQUE(S) \x97 risque de compromission imm\xe9diate.` : null,
-    highCount > 0 ? `Planifier la correction des ${highCount} vuln\xe9rabilit\xe9(s) \xc9LEV\xc9E(S) dans les 30 prochains jours.` : null,
-    mediumCount > 0 ? `Corriger les ${mediumCount} vuln\xe9rabilit\xe9(s) MOYENNE(S) dans les 90 prochains jours.` : null,
-    isoCompliance && isoCompliance.totalControls > isoCompliance.passedCount
-      ? `Am\xe9liorer la conformit\xe9 ISO 27001:2022 : ${isoCompliance.totalControls - isoCompliance.passedCount} contr\xf4le(s) non conformes.`
-      : null,
-    `Effectuer un nouveau scan de s\xe9curit\xe9 apr\xe8s chaque correction pour valider l\x92am\xe9lioration.`,
-  ].filter(Boolean) as string[];
+  const priorities: Array<{ priority: string; color: [number,number,number]; text: string }> = [];
 
-  checkPage(10);
-  doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-  doc.text(safeText("Actions Prioritaires de Rem\xe9diation"), M, y); y += 6;
-
-  priorities.forEach((p, i) => {
-    checkPage(10);
-    const pColor: [number, number, number] = i === 0 && criticalCount > 0 ? C.critical
-      : i <= 1 && highCount > 0 ? C.high
-        : C.slate;
-
-    doc.setFillColor(...C.bgMid);
-    doc.roundedRect(M, y - 3.5, 7, 6, 1, 1, "F");
-    doc.setFontSize(6.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.navy);
-    doc.text(`${i + 1}`, M + 3.5, y, { align: "center" });
-
-    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...pColor);
-    const bLines = doc.splitTextToSize(safeText(p), CW - 12);
-    bLines.forEach((l: string, li: number) => {
-      checkPage(5);
-      doc.text(l, M + 10, y + (li === 0 ? 0 : li * 4.5));
+  if (criticalCount > 0) priorities.push({
+    priority: "CRITIQUE \x97 ACTION IMM\xc9DIATE",
+    color: C.critical,
+    text: safeText(`Traiter imm\xe9diatement les ${criticalCount} vuln\xe9rabilit\xe9${criticalCount > 1 ? "s" : ""} critique${criticalCount > 1 ? "s" : ""} — risque de compromission imm\xe9diate.`),
+  });
+  if (highCount > 0) priorities.push({
+    priority: "\xc9LEV\xc9 \x97 ACTION PRIORITAIRE",
+    color: C.high,
+    text: safeText(`Planifier la correction des ${highCount} vuln\xe9rabilit\xe9${highCount > 1 ? "s" : ""} \xe9lev\xe9e${highCount > 1 ? "s" : ""} dans les 30 prochains jours.`),
+  });
+  if (mediumCount > 0) priorities.push({
+    priority: "MOYEN \x97 DANS LES 90 JOURS",
+    color: C.medium,
+    text: safeText(`Corriger les ${mediumCount} vuln\xe9rabilit\xe9${mediumCount > 1 ? "s" : ""} de niveau moyen dans les 90 prochains jours.`),
+  });
+  if (lowCount > 0) priorities.push({
+    priority: "FAIBLE \x97 AM\xc9LIORATION RECOMMAND\xc9E",
+    color: C.low,
+    text: safeText(`${lowCount} vuln\xe9rabilit\xe9${lowCount > 1 ? "s" : ""} de faible impact \xe0 traiter lors du prochain cycle de rem\xe9diation.`),
+  });
+  if (isoCompliance && isoCompliance.totalControls > isoCompliance.passedCount) {
+    priorities.push({
+      priority: "CONFORMIT\xc9 ISO 27001",
+      color: C.accentText,
+      text: safeText(`Am\xe9liorer la conformit\xe9 ISO/IEC 27001:2022 : ${isoCompliance.totalControls - isoCompliance.passedCount} contr\xf4le${(isoCompliance.totalControls - isoCompliance.passedCount) > 1 ? "s" : ""} non conforme${(isoCompliance.totalControls - isoCompliance.passedCount) > 1 ? "s" : ""} \xe0 adresser.`),
     });
-    y += bLines.length * 4.5 + 2.5;
+  }
+  priorities.push({
+    priority: "SUIVI CONTINU",
+    color: C.muted,
+    text: safeText("Effectuer un nouveau scan de s\xe9curit\xe9 apr\xe8s chaque correction pour valider l\x92am\xe9lioration."),
   });
 
-  y += 3;
-  hRule();
+  priorities.forEach((p, i) => {
+    checkPage(16);
+    // Number badge — small text, not a colored circle
+    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...C.muted);
+    doc.text(`${String(i + 1).padStart(2, "0")}`, M, y);
+    // Priority label
+    doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(...p.color);
+    doc.text(safeText(p.priority), M + 8, y);
+    y += 5;
+    // Text
+    doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.slate);
+    const bLines = doc.splitTextToSize(p.text, CW - 8);
+    bLines.forEach((l: string) => { checkPage(5); doc.text(l, M + 8, y); y += 4.5; });
+    y += 4;
+    if (i < priorities.length - 1) {
+      doc.setDrawColor(...C.borderLight);
+      doc.setLineWidth(0.2);
+      doc.line(M + 8, y, PW - M, y);
+      y += 5;
+    }
+  });
 
+  y += 4;
+  thinRule(2, 6);
+
+  // ── Legal disclaimer ──
   checkPage(12);
-  doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
+  doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.muted);
   doc.text(safeText("Ce rapport a \xe9t\xe9 g\xe9n\xe9r\xe9 automatiquement par la plateforme Clarveon \xe0 partir de donn\xe9es r\xe9elles d\x92analyse externe passive."), M, y);
   y += 4.5;
   doc.text(safeText("Il ne refl\xe8te que les donn\xe9es disponibles publiquement au moment du scan et ne constitue pas un audit de s\xe9curit\xe9 exhaustif."), M, y);

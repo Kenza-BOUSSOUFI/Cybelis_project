@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  HelpCircle, ChevronDown, ChevronUp, Mail, BookOpen, Search,
-  Send, CheckCircle2, ShieldAlert, Zap, Globe, FileText, Loader2, Sparkles, MessageSquare
+  HelpCircle, ChevronDown, ChevronUp, Search,
+  Send, CheckCircle2, Zap, Loader2, MessageSquare
 } from "lucide-react";
 
 interface FAQ {
@@ -157,32 +157,7 @@ export default function HelpPage() {
         </div>
       </div>
 
-      {/* ── Severity Glossary ──────────────────────────────── */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
-        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-blue-600" />
-          Comprendre les niveaux de vulnérabilité
-        </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 space-y-1">
-            <div className="text-xs font-bold text-red-700 uppercase tracking-wider">Critique</div>
-            <p className="text-[11px] text-red-600 leading-relaxed">Faille majeure à corriger d'urgence. Risque direct d'exploitation.</p>
-          </div>
-          <div className="p-3.5 rounded-xl bg-orange-50 border border-orange-200 space-y-1">
-            <div className="text-xs font-bold text-orange-700 uppercase tracking-wider">Élevé</div>
-            <p className="text-[11px] text-orange-600 leading-relaxed">Absence de protection essentielle (ex: pas d'HSTS ou SPF absent).</p>
-          </div>
-          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1">
-            <div className="text-xs font-bold text-amber-700 uppercase tracking-wider">Moyen</div>
-            <p className="text-[11px] text-amber-600 leading-relaxed">Mauvaise configuration ou recommandation de durcissement.</p>
-          </div>
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
-            <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Faible / Conforme</div>
-            <p className="text-[11px] text-emerald-600 leading-relaxed">Le contrôle est validé avec succès sans risque détecté.</p>
-          </div>
-        </div>
-      </div>
 
       {/* ── FAQ Section ────────────────────────────────────── */}
       <div className="space-y-4">

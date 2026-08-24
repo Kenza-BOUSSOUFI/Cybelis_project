@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Activity,
-  Sliders,
   TrendingUp,
   History,
   Settings,
@@ -19,7 +18,8 @@ import {
   ChevronDown,
   FileText,
   Search,
-  Shield
+  Shield,
+  Building2
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -39,7 +39,6 @@ export function DashboardLayout({
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userCompany, setUserCompany] = useState("");
-  const [userInitials, setUserInitials] = useState("?");
 
   const supabase = createClient();
 
@@ -54,14 +53,6 @@ export function DashboardLayout({
         setUserName(fullName || email.split("@")[0]);
         setUserEmail(email);
         setUserCompany(company);
-
-        // Initials from full name or email
-        const parts = (fullName || email).split(/[\s@]/);
-        const initials = parts
-          .slice(0, 2)
-          .map((p: string) => p[0]?.toUpperCase() ?? "")
-          .join("");
-        setUserInitials(initials || "?");
       }
     };
     loadUser();
@@ -78,7 +69,6 @@ export function DashboardLayout({
     { name: "Nouveau Scan", href: "/dashboard/scan", icon: Activity },
     { name: "Historique", href: "/dashboard/history", icon: History },
     { name: "Rapports", href: "/dashboard/reports", icon: FileText },
-    { name: "Outils", href: "/dashboard/tools", icon: Sliders },
     { name: "Comparaison", href: "/dashboard/compare", icon: TrendingUp },
     { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
     { name: "Profil", href: "/dashboard/profile", icon: User },
@@ -101,26 +91,21 @@ export function DashboardLayout({
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans selection:bg-slate-900 selection:text-white">
 
       {/* 1. SIDEBAR (DESKTOP) — ENTERPRISE NAVY / SLATE */}
-      <aside className="hidden lg:flex flex-col w-64 fixed inset-y-0 left-0 bg-[#0f172a] border-r border-slate-800 shrink-0 z-20 shadow-sm">
+      <aside className="hidden lg:flex flex-col w-72 fixed inset-y-0 left-0 bg-[#0f172a] border-r border-slate-800 shrink-0 z-20 shadow-sm">
 
         {/* Sidebar Logo / Company */}
-        <div className="h-16 px-6 border-b border-slate-800/80 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-white tracking-tight truncate max-w-[140px] block">
-                {userCompany || "Clarveon"}
-              </span>
-              <span className="text-[9px] block font-mono text-slate-400 font-medium uppercase tracking-wider">CYBERSECURITY SAAS</span>
-            </div>
+        <div className="h-20 px-6 border-b border-slate-800/80 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <Building2 className="w-8 h-8 text-blue-500 shrink-0" />
+            <span className="text-lg font-bold text-white tracking-tight truncate max-w-[180px]">
+              {userCompany || "Cybelis"}
+            </span>
           </Link>
         </div>
 
         {/* Sidebar Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <div className="px-3 mb-2 text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
+        <nav className="flex-1 px-4 py-5 space-y-1.5 overflow-y-auto">
+          <div className="px-3 mb-3 text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider">
             PLATEFORME
           </div>
           {navItems.map((item) => {
@@ -130,12 +115,12 @@ export function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${isActive
+                className={`flex items-center gap-3.5 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
                   ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800/70"
                   }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"}`} />
                 <span>{item.name}</span>
               </Link>
             );
@@ -143,12 +128,12 @@ export function DashboardLayout({
         </nav>
 
         {/* Sidebar Footer info */}
-        <div className="p-3.5 border-t border-slate-800/80 bg-[#090d16]">
+        <div className="p-4 border-t border-slate-800/80 bg-[#090d16]">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-md bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 text-xs font-medium text-slate-300 transition-colors"
+            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 text-sm font-medium text-slate-300 transition-colors"
           >
-            <LogOut className="w-3.5 h-3.5 text-slate-400" />
+            <LogOut className="w-4 h-4 text-slate-400" />
             <span>Déconnexion</span>
           </button>
         </div>
@@ -156,10 +141,10 @@ export function DashboardLayout({
       </aside>
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto lg:ml-64">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto lg:ml-72">
 
         {/* Top Header */}
-        <header className="h-16 border-b border-slate-200 bg-white/90 backdrop-blur-md px-6 flex items-center justify-between fixed top-0 right-0 left-0 lg:left-64 z-40">
+        <header className="h-16 border-b border-slate-200 bg-white/90 backdrop-blur-md px-6 flex items-center justify-between fixed top-0 right-0 left-0 lg:left-72 z-40">
 
           {/* Mobile hamburger & title */}
           <div className="flex items-center gap-4">
@@ -235,8 +220,8 @@ export function DashboardLayout({
                 }}
                 className="flex items-center gap-2 p-1.5 pr-2.5 rounded-md bg-white border border-slate-200 text-left hover:border-slate-300 transition-colors"
               >
-                <div className="w-6 h-6 rounded bg-[#0f172a] flex items-center justify-center text-xs font-bold text-white">
-                  {userInitials}
+                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+                  <User className="w-3.5 h-3.5" />
                 </div>
                 <div className="hidden md:block">
                   <div className="text-xs font-semibold text-slate-900 truncate max-w-[100px]">{userName || "..."}</div>
@@ -294,21 +279,19 @@ export function DashboardLayout({
           <div className="w-64 bg-[#0f172a] p-5 flex flex-col justify-between shadow-xl">
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <Link href="/" className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white">
-                    <Shield className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-sm font-bold text-white tracking-tight">Clarveon</span>
+                <Link href="/" className="flex items-center gap-2.5">
+                  <Building2 className="w-8 h-8 text-blue-500 shrink-0" />
+                  <span className="text-base font-bold text-white tracking-tight">{userCompany || "Cybelis"}</span>
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white"
+                  className="p-1.5 rounded-md bg-slate-800 text-slate-400 hover:text-white"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <nav className="space-y-0.5">
+              <nav className="space-y-1.5">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -317,12 +300,12 @@ export function DashboardLayout({
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${isActive
+                      className={`flex items-center gap-3.5 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
                         ? "bg-blue-600 text-white font-semibold"
-                        : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+                        : "text-slate-300 hover:text-white hover:bg-slate-800/70"
                         }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                      <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"}`} />
                       <span>{item.name}</span>
                     </Link>
                   );
@@ -330,16 +313,16 @@ export function DashboardLayout({
               </nav>
             </div>
 
-            <div className="p-3 rounded-md bg-[#090d16] border border-slate-800 flex items-center gap-2.5 text-xs">
-              <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                {userInitials}
+            <div className="p-3.5 rounded-lg bg-[#090d16] border border-slate-800 flex items-center gap-3 text-sm">
+              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0">
+                <User className="w-4 h-4" />
               </div>
               <div className="overflow-hidden flex-1">
-                <div className="font-semibold text-white truncate">{userName || "..."}</div>
-                <div className="text-[10px] text-slate-400 font-mono truncate">{userCompany || userEmail}</div>
+                <div className="font-semibold text-white truncate text-sm">{userName || "..."}</div>
+                <div className="text-xs text-slate-400 font-mono truncate">{userCompany || userEmail}</div>
               </div>
-              <button onClick={handleSignOut} className="p-1 text-slate-400 hover:text-red-400 rounded shrink-0">
-                <LogOut className="w-3.5 h-3.5" />
+              <button onClick={handleSignOut} className="p-1.5 text-slate-400 hover:text-red-400 rounded-md shrink-0">
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
 

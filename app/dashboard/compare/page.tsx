@@ -171,19 +171,19 @@ export default function ComparePage() {
         <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-5">
           {/* Domain header row */}
           <div className="grid grid-cols-3 gap-4 text-center border-b border-slate-100 pb-4">
-            <div className={`p-3 rounded-xl border ${scoreBg(scanA.score)}`}>
-              <div className="flex items-center justify-center gap-1.5 text-slate-500 text-[10px] font-mono mb-1"><Globe className="w-3.5 h-3.5" />Scan A</div>
-              <div className="text-sm font-bold text-slate-900">{scanA.domain}</div>
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center justify-center gap-1.5 text-slate-500 text-[10px] font-mono mb-1"><Globe className="w-3.5 h-3.5 text-slate-400" />Scan A</div>
+              <div className="text-sm font-bold text-slate-900 truncate">{scanA.domain}</div>
               <div className="text-[10px] text-slate-500 mt-1">{new Date(scanA.date).toLocaleDateString()}</div>
             </div>
             <div className="flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
                 <ArrowRight className="w-4 h-4 text-slate-400" />
               </div>
             </div>
-            <div className={`p-3 rounded-xl border ${scoreBg(scanB.score)}`}>
-              <div className="flex items-center justify-center gap-1.5 text-slate-500 text-[10px] font-mono mb-1"><Globe className="w-3.5 h-3.5" />Scan B</div>
-              <div className="text-sm font-bold text-slate-900">{scanB.domain}</div>
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center justify-center gap-1.5 text-slate-500 text-[10px] font-mono mb-1"><Globe className="w-3.5 h-3.5 text-slate-400" />Scan B</div>
+              <div className="text-sm font-bold text-slate-900 truncate">{scanB.domain}</div>
               <div className="text-[10px] text-slate-500 mt-1">{new Date(scanB.date).toLocaleDateString()}</div>
             </div>
           </div>

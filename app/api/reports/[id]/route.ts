@@ -22,7 +22,8 @@ export async function GET(
       user.id,
       user.email ?? '',
       user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
-      user.user_metadata?.company_name ?? ''
+      user.user_metadata?.company ?? user.user_metadata?.companyName ?? user.user_metadata?.company_name ?? '',
+      user.user_metadata?.phone ?? null
     );
     if (!dbUser) {
       return NextResponse.json({ error: "User not found in DB" }, { status: 404 });

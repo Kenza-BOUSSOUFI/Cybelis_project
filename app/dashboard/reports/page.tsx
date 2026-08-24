@@ -136,8 +136,13 @@ async function generateAndDownloadPDF(reportId: string) {
   // 5. Generate the professional PDF using the shared utility
   await generateClarveonPDF(
     {
+      id: scanData.id,
+      type: scanData.type,
       website: { domain: scanData.website.domain },
       createdAt: scanData.createdAt,
+      startedAt: scanData.startedAt ?? null,
+      finishedAt: scanData.finishedAt ?? null,
+      companyName: scanData.website?.user?.companyName ?? null,
       securityScore: scanData.securityScore,
     },
     issues,

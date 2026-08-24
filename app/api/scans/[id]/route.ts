@@ -16,10 +16,24 @@ export async function GET(
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
+    const userCompany = user.user_metadata?.company ?? user.user_metadata?.companyName ?? user.user_metadata?.company_name ?? '';
+    const userPhone = user.user_metadata?.phone ?? null;
+
+    // Verify/update user in db
+    const dbUser = await AuthService.upsertUser(
+      user.id,
+      user.email ?? '',
+      user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+      userCompany,
+      userPhone
+    );
+
     const scan = await prisma.scan.findUnique({
       where: { id: scanId },
       include: {
-        website: true,
+        website: {
+          include: { user: { select: { companyName: true } } }
+        },
         securityScore: true,
         results: {
           include: {
@@ -34,16 +48,16 @@ export async function GET(
       return NextResponse.json({ error: 'Scan non trouvé.' }, { status: 404 });
     }
 
-    // Verify ownership
-    const dbUser = await AuthService.upsertUser(
-      user.id,
-      user.email ?? '',
-      user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
-      user.user_metadata?.company_name ?? ''
-    );
-
     if (!dbUser || scan.website.userId !== dbUser.id) {
       return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });
+    }
+
+    // Ensure companyName is populated from dbUser or metadata
+    const finalCompanyName = scan.website?.user?.companyName || dbUser?.companyName || userCompany;
+    if (scan.website) {
+      scan.website.user = {
+        companyName: finalCompanyName
+      } as any;
     }
 
     return NextResponse.json({ success: true, data: scan });

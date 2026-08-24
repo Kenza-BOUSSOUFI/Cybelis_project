@@ -232,20 +232,62 @@ export function PlatformLanding() {
     <LightSection id="resources" pattern="dots">
       <SectionHeading eyebrow="Recherche et analyses" title="Gardez une longueur d'avance en matière de sécurité web." />
       <div className="mx-auto mt-14 grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {[["Renseignement sur les menaces","Avril 2025","Cyberattaque CNSS : Leçons de l'une des plus grandes failles au Maroc.","/cnsss.png"],["Gestion des risques","Mai 2026","Fuite de données Mokhalafa.ma : Comprendre les risques des services exposés.","/mokhalafa.jpg"],["Bases de la sécurité","Avril 2026","Les erreurs de sécurité web les plus courantes en 2026.","/exp3.png"],["TLS & confiance","Avril 2026","Pourquoi la configuration SSL compte toujours.","/ssl.png"]].map(([category,date,title,imageSrc]) => (
-          <motion.article key={title} whileHover={{ y: -5 }} className={`group overflow-hidden hover:shadow-[0_20px_50px_-24px_rgba(59,130,246,0.18)] ${lightCardCx}`}>
-            <div className="relative h-40 w-full overflow-hidden">
-              <Image src={imageSrc} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+        {[
+          {
+            category: "Renseignement sur les menaces",
+            date: "Avril 2025",
+            title: "Cyberattaque CNSS : Leçons de l'une des plus grandes failles au Maroc.",
+            image: "/cnsss.png",
+            description: "Le 8 avril 2025, le groupe «\u202fJabarootDZ\u202f» a exfiltré des données relatives à ~2 millions de personnes et 500\u202f000 entreprises — dont identifiants, salaires et coordonnées bancaires.",
+            source: "Le360.ma",
+            href: "https://le360.ma/maroc-tech/cybersecurite/cyberattaque-contre-la-cnss-voici-ce-que-lon-sait-288630/",
+          },
+          {
+            category: "Gestion des risques",
+            date: "2025",
+            title: "Watiqa.ma : Quand une API exposée compromet des millions de documents.",
+            image: "/mokhalafa.jpg",
+            description: "La plateforme Watiqa.ma a été victime d'une fuite via une interface API insuffisamment sécurisée, illustrant les risques concrets des services gouvernementaux exposés sans contrôle d'accès strict.",
+            source: "SecureWeb.ma",
+            href: "https://secureweb.ma",
+          },
+          {
+            category: "Bases de la sécurité",
+            date: "2026",
+            title: "OWASP Top 10 2025 : Les erreurs de sécurité web les plus critiques.",
+            image: "/exp3.png",
+            description: "Analysé sur 175\u202f000 CVE et 589 CWE, le nouveau classement place le contrôle d'accès défaillant en #1 pour la 4e fois consécutive, suivi des erreurs de configuration — désormais en forte hausse.",
+            source: "OWASP.org",
+            href: "https://owasp.org/www-project-top-ten/",
+          },
+          {
+            category: "TLS & confiance",
+            date: "2026",
+            title: "Pourquoi la configuration SSL compte encore plus en 2026.",
+            image: "/ssl.png",
+            description: "Depuis mars 2026, les certificats SSL sont limités à 200 jours (47 jours d'ici 2029). TLS 1.3 représente plus de 90\u202f% des connexions chez les grands acteurs. Une mauvaise configuration = perte SEO + sanctions RGPD.",
+            source: "SSLDragon.com",
+            href: "https://www.ssldragon.com/fr/blog/statistiques-ssl/",
+          },
+        ].map(({ category, date, title, image, description, source, href }) => (
+          <motion.article key={title} whileHover={{ y: -5 }} className={`group flex flex-col h-full overflow-hidden hover:shadow-[0_20px_50px_-24px_rgba(59,130,246,0.18)] ${lightCardCx}`}>
+            <div className="relative h-40 w-full shrink-0 overflow-hidden">
+              <Image src={image} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/30 via-transparent to-transparent" />
             </div>
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
               <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-blue-600">
                 <span>{category}</span>
                 <span className="text-slate-400">{date}</span>
               </div>
-              <h3 className="mt-4 min-h-20 text-base font-semibold leading-6 tracking-tight text-slate-900">{title}</h3>
-              <p className="mt-2 text-xs leading-5 text-slate-500">Une perspective pratique pour aider les équipes à prendre des décisions plus sûres.</p>
-              <a href="#" className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-blue-700">Lire plus <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></a>
+              <h3 className="mt-3 text-base font-semibold leading-6 tracking-tight text-slate-900 min-h-[3rem]">{title}</h3>
+              <p className="mt-2 text-xs leading-5 text-slate-500">{description}</p>
+              <div className="mt-auto pt-5 flex items-center justify-between border-t border-slate-100">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wide truncate max-w-[130px]" title={`Source : ${source}`}>Source : {source}</span>
+                <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800 shrink-0 ml-2">
+                  Lire plus <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                </a>
+              </div>
             </div>
           </motion.article>
         ))}

@@ -13,12 +13,37 @@ export async function GET() {
     }
 
     const metadata = user.user_metadata || {};
-    const fullName = metadata.full_name || 'Utilisateur';
-    const companyName = metadata.company || 'Entreprise';
+    const fullName = metadata.full_name || metadata.name || 'Utilisateur';
+    const companyName = metadata.company || metadata.companyName || metadata.company_name || 'Entreprise';
+    const phone = metadata.phone || null;
+
     let dbUser = await AuthService.getCurrentUser(user.id);
 
     if (!dbUser) {
-      dbUser = await AuthService.upsertUser(user.id, user.email || '', fullName, companyName);
+      dbUser = await AuthService.upsertUser(user.id, user.email || '', fullName, companyName, phone);
+    } else {
+      // Synchronisation si des champs sont manquants dans la table Prisma
+      const updates: { companyName?: string; fullName?: string; phone?: string } = {};
+
+      if (!dbUser.companyName && (metadata.company || metadata.companyName || metadata.company_name)) {
+        updates.companyName = metadata.company || metadata.companyName || metadata.company_name;
+      }
+      if ((!dbUser.fullName || dbUser.fullName === 'Utilisateur') && (metadata.full_name || metadata.name)) {
+        updates.fullName = metadata.full_name || metadata.name;
+      }
+      if (!dbUser.phone && metadata.phone) {
+        updates.phone = metadata.phone;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        dbUser = await prisma.user.update({
+          where: { id: dbUser.id },
+          data: updates,
+          include: {
+            subscription: true,
+          },
+        });
+      }
     }
 
     if (!dbUser) {

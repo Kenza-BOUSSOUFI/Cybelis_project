@@ -49,9 +49,10 @@ export async function POST(request: Request) {
 
     // Sync user profile
     const metadata = user.user_metadata || {};
-    const fullName = metadata.full_name || 'Utilisateur';
-    const companyName = metadata.company || 'Entreprise';
-    const dbUser = await AuthService.upsertUser(user.id, user.email || '', fullName, companyName);
+    const fullName = metadata.full_name || metadata.name || 'Utilisateur';
+    const companyName = metadata.company || metadata.companyName || metadata.company_name || 'Entreprise';
+    const phone = metadata.phone || null;
+    const dbUser = await AuthService.upsertUser(user.id, user.email || '', fullName, companyName, phone);
 
     // Find/Create website
     const website = await ScanService.findOrCreateWebsite(dbUser.id, url);

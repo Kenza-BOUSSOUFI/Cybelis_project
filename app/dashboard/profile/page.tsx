@@ -138,8 +138,8 @@ export default function ProfilePage() {
 
         {/* Top Banner & Avatar Header */}
         <div className="p-6 bg-slate-50/50 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-lg shadow-blue-500/20 shrink-0">
-            {profile.initials}
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0 ring-4 ring-white">
+            <User className="w-10 h-10 text-white stroke-[1.75]" />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold text-slate-900 truncate">{profile.fullName}</h2>

@@ -15,9 +15,6 @@ import {
   Loader2,
   Plus,
   AlertCircle,
-  MoreHorizontal,
-  TrendingUp,
-  Download
 } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/ui/EmptyState";
 
@@ -38,8 +35,18 @@ interface HistoryScanItem {
   medium: number;
 }
 
-type SortField = "domain" | "score" | "date" | "status";
+type SortField = "domain" | "score" | "date" | "status" | "duration";
 type SortDir = "asc" | "desc";
+
+const formatDuration = (seconds?: number | null, status?: string) => {
+  if (status && status !== "COMPLETED") return "—";
+  if (seconds === undefined || seconds === null || seconds <= 0) return "< 1s";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins === 0) return `${secs}s`;
+  if (secs === 0) return `${mins}m`;
+  return `${mins}m ${secs}s`;
+};
 
 const getScoreStyle = (score: number, status: string) => {
   if (status !== "COMPLETED") return "text-slate-400 font-mono text-xs";
@@ -197,8 +204,13 @@ export default function HistoryPage() {
 
       await generateClarveonPDF(
         {
+          id: scanData.id,
+          type: scanData.type,
           website: { domain: scanData.website.domain },
           createdAt: scanData.createdAt,
+          startedAt: scanData.startedAt ?? null,
+          finishedAt: scanData.finishedAt ?? null,
+          companyName: scanData.website?.user?.companyName ?? null,
           securityScore: scanData.securityScore,
         },
         issues,
@@ -224,6 +236,7 @@ export default function HistoryPage() {
         if (sort.field === "domain") diff = a.domain.localeCompare(b.domain);
         else if (sort.field === "score") diff = a.score - b.score;
         else if (sort.field === "date") diff = new Date(a.date).getTime() - new Date(b.date).getTime();
+        else if (sort.field === "duration") diff = (a.duration || 0) - (b.duration || 0);
         else if (sort.field === "status") diff = a.status.localeCompare(b.status);
         return sort.dir === "asc" ? diff : -diff;
       });
@@ -383,6 +396,11 @@ export default function HistoryPage() {
                     </button>
                   </th>
                   <th className="py-3 px-4">
+                    <button className="flex items-center gap-1 font-semibold hover:text-slate-900 transition-colors" onClick={() => toggleSort("duration")}>
+                      Durée <SortIcon field="duration" />
+                    </button>
+                  </th>
+                  <th className="py-3 px-4">
                     <button className="flex items-center gap-1 font-semibold hover:text-slate-900 transition-colors" onClick={() => toggleSort("score")}>
                       Score <SortIcon field="score" />
                     </button>
@@ -415,6 +433,10 @@ export default function HistoryPage() {
 
                       <td className="py-3.5 px-4 text-slate-500 font-mono whitespace-nowrap">
                         {formatDate(scan.date)}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-slate-500 font-mono whitespace-nowrap">
+                        {formatDuration(scan.duration, scan.status)}
                       </td>
 
                       <td className="py-3.5 px-4 whitespace-nowrap">
