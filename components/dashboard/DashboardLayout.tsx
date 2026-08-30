@@ -18,8 +18,6 @@ import {
   ChevronDown,
   FileText,
   Search,
-  Shield,
-  Building2
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -46,12 +44,26 @@ export function DashboardLayout({
     const loadUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const fullName: string = user.user_metadata?.full_name ?? "";
-        const company: string = user.user_metadata?.company ?? "";
+        const fullName: string = user.user_metadata?.full_name ?? user.user_metadata?.name ?? "";
+        let company: string = user.user_metadata?.company ?? user.user_metadata?.companyName ?? user.user_metadata?.company_name ?? "";
         const email: string = user.email ?? "";
 
         setUserName(fullName || email.split("@")[0]);
         setUserEmail(email);
+
+        if (!company) {
+          try {
+            const res = await fetch("/api/user/profile");
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.user?.companyName) {
+                company = data.user.companyName;
+              }
+            }
+          } catch {
+            // ignore fallback error
+          }
+        }
         setUserCompany(company);
       }
     };
@@ -93,13 +105,14 @@ export function DashboardLayout({
       {/* 1. SIDEBAR (DESKTOP) — ENTERPRISE NAVY / SLATE */}
       <aside className="hidden lg:flex flex-col w-72 fixed inset-y-0 left-0 bg-[#0f172a] border-r border-slate-800 shrink-0 z-20 shadow-sm">
 
-        {/* Sidebar Logo / Company */}
-        <div className="h-20 px-6 border-b border-slate-800/80 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <Building2 className="w-8 h-8 text-blue-500 shrink-0" />
-            <span className="text-lg font-bold text-white tracking-tight truncate max-w-[180px]">
-              {userCompany || "Cybelis"}
-            </span>
+        {/* Sidebar Logo — Clarveon */}
+        <div className="h-20 px-6 border-b border-slate-800/80 flex items-center overflow-hidden">
+          <Link href="/dashboard" className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="Clarveon"
+              className="h-12 w-auto origin-left scale-[2.85] block"
+            />
           </Link>
         </div>
 
@@ -218,21 +231,31 @@ export function DashboardLayout({
                   setShowUserDropdown(!showUserDropdown);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 pr-2.5 rounded-md bg-white border border-slate-200 text-left hover:border-slate-300 transition-colors"
+                className="flex items-center gap-2.5 p-1.5 pr-3 rounded-lg bg-white border border-slate-200 text-left hover:border-slate-300 hover:bg-slate-50/60 shadow-sm transition-all"
               >
-                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
                   <User className="w-3.5 h-3.5" />
                 </div>
-                <div className="hidden md:block">
-                  <div className="text-xs font-semibold text-slate-900 truncate max-w-[100px]">{userName || "..."}</div>
+                <div className="hidden sm:block text-left">
+                  <div className="text-xs font-semibold text-slate-900 truncate max-w-[140px]">
+                    {userCompany || userName || "..."}
+                  </div>
+                  {userCompany && userName && (
+                    <div className="text-[10px] text-slate-400 truncate max-w-[140px]">
+                      {userName}
+                    </div>
+                  )}
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               </button>
 
               {showUserDropdown && (
                 <div className="absolute right-0 mt-2 w-52 p-2 rounded-lg bg-white border border-slate-200 shadow-lg z-50 space-y-0.5">
                   <div className="px-2.5 py-1.5 border-b border-slate-100 mb-1">
-                    <span className="block text-xs font-bold text-slate-900">{userName || "..."}</span>
+                    <span className="block text-xs font-bold text-slate-900">{userCompany || userName || "..."}</span>
+                    {userCompany && userName && (
+                      <span className="block text-[11px] text-slate-600 font-medium">{userName}</span>
+                    )}
                     <span className="block text-[9.5px] text-slate-400 font-mono truncate">{userEmail}</span>
                   </div>
                   <Link
@@ -279,9 +302,12 @@ export function DashboardLayout({
           <div className="w-64 bg-[#0f172a] p-5 flex flex-col justify-between shadow-xl">
             <div className="space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <Link href="/" className="flex items-center gap-2.5">
-                  <Building2 className="w-8 h-8 text-blue-500 shrink-0" />
-                  <span className="text-base font-bold text-white tracking-tight">{userCompany || "Cybelis"}</span>
+                <Link href="/dashboard" className="flex items-center overflow-hidden">
+                  <img
+                    src="/logo.png"
+                    alt="Clarveon"
+                    className="h-11 w-auto origin-left scale-[2.5] block"
+                  />
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -318,8 +344,8 @@ export function DashboardLayout({
                 <User className="w-4 h-4" />
               </div>
               <div className="overflow-hidden flex-1">
-                <div className="font-semibold text-white truncate text-sm">{userName || "..."}</div>
-                <div className="text-xs text-slate-400 font-mono truncate">{userCompany || userEmail}</div>
+                <div className="font-semibold text-white truncate text-sm">{userCompany || userName || "..."}</div>
+                <div className="text-xs text-slate-400 font-mono truncate">{userEmail}</div>
               </div>
               <button onClick={handleSignOut} className="p-1.5 text-slate-400 hover:text-red-400 rounded-md shrink-0">
                 <LogOut className="w-4 h-4" />
